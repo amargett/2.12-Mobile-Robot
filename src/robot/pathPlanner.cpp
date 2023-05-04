@@ -97,6 +97,7 @@ void loop(){
 //and k curvature in 1/m representing 1/(radius of curvature)
 void setDesiredVel(float vel, float k){
     //TODO convert the velocity and k curvature to new values for desiredVelBL and desiredVelBR
+    
     desiredVelBL = 0;
     desiredVelFL = 0;
     desiredVelBR = 0;
