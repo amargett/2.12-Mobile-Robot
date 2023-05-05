@@ -16,11 +16,16 @@ unsigned long prevLoopTimeMicros = 0; // in microseconds
 // how long to wait before updating PID parameters
 unsigned long loopDelayMicros = 5000; // in microseconds
 
+double ACCEL_VEL_TRANSITION = (double)loopDelayMicros * 1e-6;
+double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
+double DEG_2_RAD = 0.01745329251; // trig functions require radians, BNO055 outputs degrees
+
 float desired_v = 0.2;
 float desired_k = 1 / 2;
 
 void getPosition();
 void setDesiredVel(float vel, float k);
+void setWheelVel();
 // void updateRobotPose(float dPhiL, float dPhiR);
 // void updateOdometry();
 // void printOdometry();
@@ -70,7 +75,7 @@ void setDesiredVel(float vel, float k)
 {
     // TODO: update pos and heading from IMU data
     V = vel;
-    w = (heading - old_heading) / time_step;
+    w = (heading - old_heading) / (loopDelayMicros * 1e-6);
     curr_k = w / V;
     float newErrorK = k - curr_k;
 

@@ -86,6 +86,11 @@ float lastRadBL = 0;
 float lastRadFR = 0;
 float lastRadBR = 0;
 
+float dPhiFL = 0;
+float dPhiBL = 0;
+float dPhiFR = 0;
+float dPhiBR = 0;
+
 // allows the intergral control to max contribution at the max drive voltage
 // prevents integral windum
 float maxSumError = (DRIVE_VOLTAGE / ki) / 2;
