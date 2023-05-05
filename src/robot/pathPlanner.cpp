@@ -4,8 +4,8 @@
 #include "wireless.h"
 #include "PID.h"
 // #include <Wire.h>
-// #include <Adafruit_Sensor.h>
-// #include <Adafruit_BNO055.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
 
 // wheel radius in meters
 #define r 0.06
@@ -17,7 +17,7 @@ unsigned long prevLoopTimeMicros = 0; // in microseconds
 unsigned long loopDelayMicros = 5000; // in microseconds
 
 float desired_v = 0.2;
-float desired_k = 1/2;
+float desired_k = 1 / 2;
 
 void getPosition();
 void setDesiredVel(float vel, float k);
@@ -35,19 +35,20 @@ void setup()
 }
 void loop()
 {
-    if (micros()< 100000){ // run for 10 seconds
-    if (micros() - prevLoopTimeMicros > loopDelayMicros)
-    {
-        prevLoopTimeMicros = micros();
+    if (micros() < 100000)
+    { // run for 10 seconds
+        if (micros() - prevLoopTimeMicros > loopDelayMicros)
+        {
+            prevLoopTimeMicros = micros();
 
-        updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
+            updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
 
-        getPosition(); // get current x,y,heading based on IMU data
+            getPosition(); // get current x,y,heading based on IMU data
 
-        setDesiredVel(desired_v, desired_k); // set new desired wheel velocities
+            setDesiredVel(desired_v, desired_k); // set new desired wheel velocities
 
-        setWheelVel(); // send new desired wheel velocities
-    }
+            setWheelVel(); // send new desired wheel velocities
+        }
     }
 }
 
@@ -76,7 +77,7 @@ void setDesiredVel(float vel, float k)
     R = runPID(newErrorK, errorK, kpK, kiK, kdK, sumErrorK, maxSumError, loopDelayMicros * 1e-6);
 
     float left = V / (1 + R);
-    float right = V / (1 + 1/R);
+    float right = V / (1 + 1 / R);
 
     desiredVelBL = left;
     desiredVelFL = 0;
@@ -86,19 +87,20 @@ void setDesiredVel(float vel, float k)
 }
 
 // run PID controller for desired velocities
-void setWheelVel(){
-        // calculate error for each motor
-        float newErrorFL = desiredVelFL - filtVelFL;
-        float newErrorBL = desiredVelBL - filtVelBL;
-        float newErrorFR = desiredVelFR - filtVelFR;
-        float newErrorBR = desiredVelBR - filtVelBR;
+void setWheelVel()
+{
+    // calculate error for each motor
+    float newErrorFL = desiredVelFL - filtVelFL;
+    float newErrorBL = desiredVelBL - filtVelBL;
+    float newErrorFR = desiredVelFR - filtVelFR;
+    float newErrorBR = desiredVelBR - filtVelBR;
 
-        // get control signal by running PID on all four motors
-        voltageFL = runPID(newErrorFL, errorFL, kp, ki, kd, sumErrorFL, maxSumError, loopDelayMicros * 1e-6);
-        voltageBL = runPID(newErrorBL, errorBL, kp, ki, kd, sumErrorBL, maxSumError, loopDelayMicros * 1e-6);
-        voltageFR = runPID(newErrorFR, errorFR, kp, ki, kd, sumErrorFR, maxSumError, loopDelayMicros * 1e-6);
-        voltageBR = runPID(newErrorBR, errorBR, kp, ki, kd, sumErrorBR, maxSumError, loopDelayMicros * 1e-6);
+    // get control signal by running PID on all four motors
+    voltageFL = runPID(newErrorFL, errorFL, kp, ki, kd, sumErrorFL, maxSumError, loopDelayMicros * 1e-6);
+    voltageBL = runPID(newErrorBL, errorBL, kp, ki, kd, sumErrorBL, maxSumError, loopDelayMicros * 1e-6);
+    voltageFR = runPID(newErrorFR, errorFR, kp, ki, kd, sumErrorFR, maxSumError, loopDelayMicros * 1e-6);
+    voltageBR = runPID(newErrorBR, errorBR, kp, ki, kd, sumErrorBR, maxSumError, loopDelayMicros * 1e-6);
 
-        // only drive the back motors
-        driveVolts(0, voltageBL, 0, voltageBR);
+    // only drive the back motors
+    driveVolts(0, voltageBL, 0, voltageBR);
 }
