@@ -1,0 +1,8 @@
+adafruit/Adafruit BusIO@^1.14.1
+Wire
+adafruit/Adafruit seesaw Library@^1.6.3
+adafruit/Adafruit GFX Library@^1.11.3
+SPI
+adafruit/Adafruit BNO055@^1.6.1
+adafruit/Adafruit Unified Sensor@^1.1.9
+adafruit/Adafruit SH110X@^2.1.8
