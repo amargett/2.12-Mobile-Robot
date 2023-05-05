@@ -3,6 +3,29 @@
 #include "drive.h"
 #include "PID.h"
 
+float pathDistance = 0;
+// position metrics: x,y (m) heading (degrees)
+float x = 0;
+float y = 0;
+float heading = 0;
+// values for curvature PID
+float old_heading = 0;
+float w = 0;
+float curr_k = 0;
+float V = 0; // sum of the target wheel velocities
+float R = 1; // ratio of L/R wheel velocities
+
+// spline values
+float x_i = 0.0;
+float y_i = 0.0;
+float x_f = 1.0;
+float y_f = 1.0;
+std::vector<double> X = {x_i, x_f};
+std::vector<double> Y = {y_i, y_f};
+double spline_a = 0;
+double spline_b = 0;
+double spline_c = 0;
+double spline_d = 0;
 
 // instantaneous velocity of each wheel in radians per second
 float velFL = 0;
@@ -27,7 +50,7 @@ float sumErrorFL = 0;
 float sumErrorBL = 0;
 float sumErrorFR = 0;
 float sumErrorBR = 0;
-
+float sumErrorK = 0;
 
 // desired velocity setpoints in rad/s
 float desiredVelFL = 0;
@@ -46,70 +69,25 @@ float errorFL = 0;
 float errorBL = 0;
 float errorFR = 0;
 float errorBR = 0;
-
+float errorK = 0;
 
 // PID Constants
 float kp = 5;
 float ki = 20;
 float kd = 0;
 
+float kpK = 0.05;
+float kiK = 0;
+float kdK = 0;
 
 float lastRadFL = 0;
 float lastRadBL = 0;
 float lastRadFR = 0;
 float lastRadBR = 0;
 
-void getSetPointDriveTest(float angVel)
-{
-    // make a 20 second loop
-    unsigned long time = (millis() / 1000) % 20;
-    if (0 <= time && time < 4)
-    {
-        // forward
-        // Serial.println("Forward");
-        desiredVelFL = angVel;
-        desiredVelBL = angVel;
-        desiredVelFR = angVel;
-        desiredVelBR = angVel;
-    }
-    else if (4 <= time && time < 8)
-    {
-        // backwards
-        // Serial.println("Backwards");
-        desiredVelFL = -angVel;
-        desiredVelBL = -angVel;
-        desiredVelFR = -angVel;
-        desiredVelBR = -angVel;
-    }
-    else if (8 <= time && time < 12)
-    {
-        // left
-        // Serial.println("Left");
-        desiredVelFL = -angVel;
-        desiredVelBL = -angVel;
-        desiredVelFR = angVel;
-        desiredVelBR = angVel;
-    }
-    else if (12 <= time && time < 16)
-    {
-        // right
-        // Serial.println("Right");
-        desiredVelFL = angVel;
-        desiredVelBL = angVel;
-        desiredVelFR = -angVel;
-        desiredVelBR = -angVel;
-    }
-    else if (16 <= time && time < 20)
-    {
-        // stop
-        // Serial.println("Stop");
-        desiredVelFL = 0;
-        desiredVelBL = 0;
-        desiredVelFR = 0;
-        desiredVelBR = 0;
-    }
-}
-
+// allows the intergral control to max contribution at the max drive voltage
+// prevents integral windum
+float maxSumError = (DRIVE_VOLTAGE / ki) / 2;
 // updates the filtered velocity values
 // dt is the time in seconds since the last update
 void updateVelocity(float dt)
@@ -126,7 +104,6 @@ void updateVelocity(float dt)
     dPhiBL = encBLRad - lastRadBL;
     dPhiFR = encFRRad - lastRadFR;
     dPhiBR = encBRRad - lastRadBR;
-
     // get (change in angle)/time
     velFL = dPhiFL / dt;
     velBL = dPhiBL / dt;
@@ -139,9 +116,7 @@ void updateVelocity(float dt)
     filtVelBR = alpha * velBR + (1 - alpha) * filtVelBR;
 }
 
-// returns the command signal for an academic PID loop
-// sum_error will be update to maintain the cumulative error sum
-// this requires tracking of variables outside of the PID function
+// Standard PID controller
 float runPID(float error, float last_error, float kp, float ki, float kd, float &sumError, float maxSumError, float loopTime)
 {
     sumError += error * loopTime;
