@@ -12,20 +12,17 @@
 // distance from back wheel to center in meters
 #define b 0.2
 
+int state = 0; 
+
 unsigned long prevLoopTimeMicros = 0; // in microseconds
 // how long to wait before updating PID parameters
 unsigned long loopDelayMicros = 5000; // in microseconds
-
 double ACCEL_VEL_TRANSITION = (double)loopDelayMicros * 1e-6;
 double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 double DEG_2_RAD = 0.01745329251; // trig functions require radians, BNO055 outputs degrees
-
-float desired_v = 0.2;
-float desired_k = 1 / 2;
-
 void getPosition();
-void setDesiredVel(float vel, float k);
-void setWheelVel();
+// void setDesiredVel(float vel, float k);
+// void setWheelVel();
 // void updateRobotPose(float dPhiL, float dPhiR);
 // void updateOdometry();
 // void printOdometry();
@@ -40,7 +37,7 @@ void setup()
 }
 void loop()
 {
-    if (micros() < 100000)
+    if (micros() < 10000000)
     { // run for 10 seconds
         if (micros() - prevLoopTimeMicros > loopDelayMicros)
         {
@@ -48,9 +45,11 @@ void loop()
 
             updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
 
-            getPosition(); // get current x,y,heading based on IMU data
+            // getPosition(); // get current x,y,heading based on IMU data
 
-            setDesiredVel(desired_v, desired_k); // set new desired wheel velocities
+            getState(); 
+
+            setDesiredVel(state); // set new desired wheel velocities
 
             setWheelVel(); // send new desired wheel velocities
         }
@@ -65,30 +64,39 @@ void getPosition()
     bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
     x = x + ACCEL_POS_TRANSITION * linearAccelData.acceleration.x;
     y = y + ACCEL_POS_TRANSITION * linearAccelData.acceleration.y;
+    Serial.println(x); 
     // V = ACCEL_VEL_TRANSITION * linearAccelData.acceleration.x / cos(DEG_2_RAD * orientationData.orientation.x);
     heading = orientationData.orientation.x;
 }
 
-// sets the desired velocity based on desired velocity vel in m/s
-// and k curvature in 1/m representing 1/(radius of curvature)
-void setDesiredVel(float vel, float k)
-{
-    // TODO: update pos and heading from IMU data
-    V = vel;
-    w = (heading - old_heading) / (loopDelayMicros * 1e-6);
-    curr_k = w / V;
-    float newErrorK = k - curr_k;
 
-    R = runPID(newErrorK, errorK, kpK, kiK, kdK, sumErrorK, maxSumError, loopDelayMicros * 1e-6);
+//sets the desired velocity based on desired velocity vel in m/s
+//and k curvature in 1/m representing 1/(radius of curvature)
 
-    float left = V / (1 + R);
-    float right = V / (1 + 1 / R);
-
+void setDesiredVel(int state){
+    //TODO convert the velocity and k curvature to new values for desiredVelBL and desiredVelBR
+    float left = 0; 
+    float right = 0; 
+    if (state == 0){ //go forward 
+        left = 1; 
+        right = 1; 
+    }
+    if (state ==1){ //turn left 
+        left = 0; 
+        right = 1; 
+    }
+    if (state == 2){// turn right
+        left = 1; 
+        right = 0.0; 
+    }
+    if (state ==3){ // stop 
+        left = 0; 
+        right = 0;
+    }
     desiredVelBL = left;
     desiredVelFL = 0;
-    desiredVelBR = right;
+    desiredVelBR = right; 
     desiredVelFR = 0;
-    old_heading = heading;
 }
 
 // run PID controller for desired velocities
@@ -108,4 +116,35 @@ void setWheelVel()
 
     // only drive the back motors
     driveVolts(0, voltageBL, 0, voltageBR);
+    Serial.println(voltageBL);
 }
+
+void getState()
+{
+    if(micros() < 4000000){
+        state = 0; 
+    }
+    if(micros() > 4000000){
+        if (micros() < 8000000){
+        state = 1; 
+        }
+        if (micros() > 8000000){
+            if (micros() < 12000000){
+                state = 0;
+            }
+            if (micros() > 12000000){
+                if (micros() < 16000000){
+                state = 1;
+                }
+                if (micros() > 12000000){
+                state = 0; 
+                }
+        }
+    }
+    }
+}
+
+
+// void sendIMU(){
+//     // send imu data to jetson
+// }
