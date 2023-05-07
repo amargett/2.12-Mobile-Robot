@@ -1,5 +1,8 @@
 import serial
 import time
+import cv2
+import numpy as np
+from pupil_apriltags import Detector
 
 # arduino = serial.Serial(port='dev/TTYUSB0', baudrate=115200, timeout=.1) # bradyn
 # arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1) # josh
@@ -61,9 +64,44 @@ def pickup_aed(leftVel, rightVel, servoAngle):
     servoAngle = pickup_angle
     return leftVel, rightVel, servoAngle
 
-def april_tag(): 
-    # implement, detects whether there is an april tag in view
-    return True
+def detect_apriltag(frame):
+
+    detector = Detector(families='tag36h11', 
+                    nthreads=1,
+                    quad_decimate=1.0,
+                    quad_sigma=0.0,
+                    refine_edges=1,
+                    decode_sharpening=0.25,
+                    debug=0,
+                    ) 
+
+    intrisic = [820,814,320,240] # camera parameters, [fx, fy cx, cy]
+    tagsize = 0.100  #physical size of printed tag, unit = meter
+
+    frame = cv2.resize(frame, (640,480))
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
+    
+    if not tags:
+        return 0  #nothing
+    else:
+        for tag in tags:
+            #print(tag)
+            center = [320,240]
+            #frame = plotPoint(frame, tag.center, CENTER_COLOR)
+            #frame = plotPoint(frame, center, CENTER_COLOR)
+            #frame = plotText(frame, tag.center, CENTER_COLOR, tag.pose_R)
+            #for corner in tag.corners:
+            #    frame = plotPoint(frame, corner, CORNER_COLOR)
+            #print(frame.shape)
+            if tag.center[0] < 320 - 5:
+                return 1   #turn left
+            elif tag.center[0] > 320 + 5:
+                return 2   #turn right
+            else:
+                return 3   # go straight
+
+    # Return the detections
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -84,6 +122,32 @@ def main():
     state = 0
     success = False
     prev_time = time.time()
+
+    ##Apriltag detection
+    cap=cv2.VideoCapture(0)  #camera used
+    looping = True
+    while looping:
+        ret, frame = cap.read()
+        state = detect_apriltag(frame)
+        if state == 0:
+            print("NOTHING")
+        elif state == 1:
+            print("TURN LEFT")
+        elif state == 2:
+            print("TURN RIGHT")
+        elif state == 3:
+            print("GO STRAIGHT")
+
+        key = cv2.waitKey(1000) #ms
+	# terminate the loop if the 'Return' key is hit
+        if key == 13:
+            looping = False
+
+    cv2.destroyAllWindows()
+
+    #####
+
+
     while True:
         x, y, heading = readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
