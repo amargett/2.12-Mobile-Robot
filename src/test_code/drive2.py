@@ -1,9 +1,15 @@
 import serial
 import time
 
-# arduino = serial.Serial(port='dev/TTYUSB0', baudrate=115200, timeout=.1)
-arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
+# arduino = serial.Serial(port='dev/TTYUSB0', baudrate=115200, timeout=.1) # bradyn
+# arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1) # josh
+arduino = serial.Serial(port='/dev/cu.usbserial-0264FEA5', baudrate=115200, timeout=.1) # ashley
 
+# if arduino.is_open(): 
+#     print("port is open")
+# else: 
+#     print("port is closed")
+    
 VEL = 3
 pickup_angle = 90
 target_x = 1
