@@ -5,28 +5,12 @@
 #include <iostream>
 
 float pathDistance = 0;
-// position metrics: x,y (m) heading (degrees)
-float x = 0;
-float y = 0;
-float heading = 0;
 // values for curvature PID
 float old_heading = 0;
 float w = 0;
 float curr_k = 0;
 float V = 0; // sum of the target wheel velocities
 float R = 1; // ratio of L/R wheel velocities
-
-// // spline values
-// float x_i = 0.0;
-// float y_i = 0.0;
-// float x_f = 1.0;
-// float y_f = 1.0;
-// std::vector<double> X = {x_i, x_f};
-// std::vector<double> Y = {y_i, y_f};
-// double spline_a = 0;
-// double spline_b = 0;
-// double spline_c = 0;
-// double spline_d = 0;
 
 // instantaneous velocity of each wheel in radians per second
 float velFL = 0;

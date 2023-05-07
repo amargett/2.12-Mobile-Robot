@@ -4,10 +4,6 @@ extern float velBL;
 extern float velFR;
 extern float velBR;
 
-extern float x;
-extern float y;
-extern float heading;
-
 extern float old_heading;
 extern float w;
 extern float curr_k;
@@ -74,6 +70,3 @@ extern float dPhiBR;
 // function prototypes
 void updateVelocity(float dt);
 float runPID(float error, float last_error, float kp, float ki, float kd, float &sumError, float maxSumError, float loopTime);
-void getState();
-void setDesiredVel(int state);
-void setWheelVel(); 

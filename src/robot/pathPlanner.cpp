@@ -3,30 +3,36 @@
 #include "drive.h"
 #include "wireless.h"
 #include "PID.h"
-// #include <Wire.h>
+#include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
+#include "ESP32Servo.h"
 
 // wheel radius in meters
 #define r 0.06
 // distance from back wheel to center in meters
 #define b 0.2
 
-int state = 0; 
+float x = 0;
+float y = 0;
+float heading = 0;
+float servo_angle = 0;
 
 unsigned long prevLoopTimeMicros = 0; // in microseconds
 // how long to wait before updating PID parameters
 unsigned long loopDelayMicros = 5000; // in microseconds
+
 double ACCEL_VEL_TRANSITION = (double)loopDelayMicros * 1e-6;
 double ACCEL_POS_TRANSITION = 0.5 * ACCEL_VEL_TRANSITION * ACCEL_VEL_TRANSITION;
 double DEG_2_RAD = 0.01745329251; // trig functions require radians, BNO055 outputs degrees
-void getPosition();
-// void setDesiredVel(float vel, float k);
-// void setWheelVel();
-// void updateRobotPose(float dPhiL, float dPhiR);
-// void updateOdometry();
-// void printOdometry();
+void readIMU();
+void sendIMU(); 
+void readDesiredVel();
+void setWheelVel();
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+
+int servoPin = 13;
+Servo myservo;
 
 void setup()
 {
@@ -34,73 +40,96 @@ void setup()
     encoderSetup();
     driveSetup();
     wirelessSetup();
+
+    pinMode(servoPin, OUTPUT);
+    
+    myservo.setPeriodHertz(50);    // standard 50 hz servo
+	myservo.attach(servoPin, 1000, 2000); // attaches the servo on pin 18 to the servo object
+
+    if(!bno.begin())
+    {
+        /* There was a problem detecting the BNO055 ... check your connections */
+        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+        while(1);
+    }
+
+    delay(1000);
+    
+    bno.setExtCrystalUse(true);
 }
 void loop()
 {
-    if (micros() < 10000000)
-    { // run for 10 seconds
-        if (micros() - prevLoopTimeMicros > loopDelayMicros)
-        {
-            prevLoopTimeMicros = micros();
+    if (micros() - prevLoopTimeMicros > loopDelayMicros)
+    {
+        prevLoopTimeMicros = micros();
 
-            updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
+        updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
 
-            // getPosition(); // get current x,y,heading based on IMU data
+        readIMU();
 
-            getState(); 
+        sendIMU(); 
 
-            setDesiredVel(state); // set new desired wheel velocities
+        readDesiredVel();
 
-            setWheelVel(); // send new desired wheel velocities
-        }
+        myservo.write(servo_angle);
+
+        setWheelVel(); // send new desired wheel velocities
     }
 }
 
-// get current poisition from IMU data
-void getPosition()
+void readIMU()
+/**
+* Reads position and orientation data from IMU 
+*
+* Position: (x, y) [m]
+* Orientation: heading [rad]
+*/
+
 {
     sensors_event_t orientationData, linearAccelData;
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
     bno.getEvent(&linearAccelData, Adafruit_BNO055::VECTOR_LINEARACCEL);
     x = x + ACCEL_POS_TRANSITION * linearAccelData.acceleration.x;
     y = y + ACCEL_POS_TRANSITION * linearAccelData.acceleration.y;
-    Serial.println(x); 
     // V = ACCEL_VEL_TRANSITION * linearAccelData.acceleration.x / cos(DEG_2_RAD * orientationData.orientation.x);
     heading = orientationData.orientation.x;
 }
 
+void sendIMU()
+/**
+* Send position, orientation, and wheel encoder data to Jetson
+*/
+{
+    // Serial.print("VelL: ");
+    // Serial.print(filtVelBL);
+    // Serial.println("/t");
+    // Serial.print("VelR: ");
+    // Serial.print(filtVelBR);
+    // Serial.println("/t");
 
-//sets the desired velocity based on desired velocity vel in m/s
-//and k curvature in 1/m representing 1/(radius of curvature)
 
-void setDesiredVel(int state){
-    //TODO convert the velocity and k curvature to new values for desiredVelBL and desiredVelBR
-    float left = 0; 
-    float right = 0; 
-    if (state == 0){ //go forward 
-        left = 1; 
-        right = 1; 
-    }
-    if (state ==1){ //turn left 
-        left = 0; 
-        right = 1; 
-    }
-    if (state == 2){// turn right
-        left = 1; 
-        right = 0.0; 
-    }
-    if (state ==3){ // stop 
-        left = 0; 
-        right = 0;
-    }
-    desiredVelBL = left;
-    desiredVelFL = 0;
-    desiredVelBR = right; 
-    desiredVelFR = 0;
+    Serial.printf("%.2f, %.2f, %.2f\n", x, y, heading);
 }
 
-// run PID controller for desired velocities
+void readDesiredVel(){
+/**
+* Reads desired velocity data from Jetson
+*/
+    if (Serial.available()> 0 )  {
+        String data = Serial.readStringUntil('\n');
+        int firstCommaIndex = data.indexOf(',');
+        int secondCommaIndex = data.indexOf(',', firstCommaIndex + 1);
+
+        desiredVelBL = data.substring(0, firstCommaIndex).toFloat();
+        desiredVelBR = data.substring(firstCommaIndex + 1, secondCommaIndex).toFloat();
+        servo_angle = data.substring(secondCommaIndex + 1).toFloat();
+    }
+}
+
 void setWheelVel()
+/**
+* Run a PID controller for desired velocities
+*/
 {
     // calculate error for each motor
     float newErrorFL = desiredVelFL - filtVelFL;
@@ -116,35 +145,4 @@ void setWheelVel()
 
     // only drive the back motors
     driveVolts(0, voltageBL, 0, voltageBR);
-    Serial.println(voltageBL);
 }
-
-void getState()
-{
-    if(micros() < 4000000){
-        state = 0; 
-    }
-    if(micros() > 4000000){
-        if (micros() < 8000000){
-        state = 1; 
-        }
-        if (micros() > 8000000){
-            if (micros() < 12000000){
-                state = 0;
-            }
-            if (micros() > 12000000){
-                if (micros() < 16000000){
-                state = 1;
-                }
-                if (micros() > 12000000){
-                state = 0; 
-                }
-        }
-    }
-    }
-}
-
-
-// void sendIMU(){
-//     // send imu data to jetson
-// }
