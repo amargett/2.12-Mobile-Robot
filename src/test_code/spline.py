@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 
-def cubic_spline(x_i, x_f, theta_i):
+def cubic_spline(x_i, y_i, heading_i, x_f, y_f, heading_f):
     '''
     Generates a cubic spline curve based on 2 points.
 
@@ -15,8 +15,11 @@ def cubic_spline(x_i, x_f, theta_i):
         f (function): spline curve as a function of x
         k (function): curvature as a function of x
     '''
-
-    cs = CubicSpline([x_i[0], x_f[0]], [x_i[1], x_f[1]], bc_type=((1, theta_i), (1, 0)))
+    path_x = [x_i, x_f]
+    path_y = [y_i, y_f]
+    cs = CubicSpline(path_x, path_y, bc_type=((1, heading_i), (1, heading_f)))
+    t = np.linspace(0,1,len(path_x))
+    print(t)
 
     a, b, c, d = cs.c
 
@@ -36,14 +39,16 @@ def cubic_spline(x_i, x_f, theta_i):
     return f, k
 
 
-x_i = [0, 0]
-# x_w = [2, 4]
-x_f = [4, 2]
-theta_i = 0
+x_i = 0
+y_i = 0
+x_f = 4
+y_f = 2
+heading_i = 0
+heading_f = 1
 
-f, k = cubic_spline(x_i, x_f, theta_i)
+f, k = cubic_spline(x_i, y_i, heading_i, x_f, y_f, heading_f)
 
-x = np.linspace(0, 4, 100)
+x = np.linspace(x_i, x_f, 100)
 y = f(x)
 k = k(x)
 plt.plot(x, y, label='path')
@@ -61,4 +66,3 @@ plt.show()
 
 # def omegaR(x):
 #     return (V/(2*np.pi*r))*(1 + d/R(x))
-
