@@ -16,6 +16,7 @@ arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1) # brad
 STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 pickup_angle = 40
+dropoff_angle = 120
 target_x1 = 1
 target_y1 = 1.65
 alpha = 0.15
@@ -69,6 +70,10 @@ def stop(leftVel, rightVel, servoAngle):
 
 def pickup_aed(leftVel, rightVel, servoAngle):
     servoAngle = pickup_angle
+    return leftVel, rightVel, servoAngle
+
+def dropoff_aed(leftVel, rightVel, servoAngle):
+    servoAngle = dropoff_angle
     return leftVel, rightVel, servoAngle
 
 def detect_apriltag(frame):
@@ -130,6 +135,7 @@ def main():
     success = False
     prev_time = time.time()
     pickup_counter = 0
+    dropoff_counter = 0
 
     # ##Apriltag detection
     # cap=cv2.VideoCapture(0)  #camera used
@@ -194,17 +200,22 @@ def main():
                     state = 7
             elif state == 7: # turn backwards
                 leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-                if abs(heading - 25) < epsilon_heading:
+                if abs(heading - 20) < epsilon_heading:
                     state = 8
-            elif state == 8:
+            elif state == 8: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dx >= 3:
+                if dx >= 2.9:
+                    state = 9
+            elif state == 9: # dropoff aed
+                leftVel, rightVel, servoAngle = dropoff_aed(leftVel, rightVel, servoAngle)
+                leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
+                dropoff_counter += 1
+                if dropoff_counter > 200:
                     success = True
 
             prev_time = time.time()
             print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (state, dx, dy, heading, servoAngle))
             if success is True:
-                leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
                 print('Success!')
             filtLeftVel = alpha*leftVel + (1 - alpha)*filtLeftVel
             filtRightVel = alpha*rightVel + (1 - alpha)*filtRightVel
