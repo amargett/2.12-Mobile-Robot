@@ -4,11 +4,12 @@ import time
 # arduino = serial.Serial(port='dev/TTYUSB0', baudrate=115200, timeout=.1)
 arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
 
-VEL = 3
+STRAIGHT_VEL = 3
+TURN_VEL = STRAIGHT_VEL/2
 pickup_angle = 90
 target_x = 1
 target_y = 1
-alpha = 0.2
+alpha = 0.15
 epsilon_dist = 0.1
 epsilon_heading = 1
 
@@ -27,90 +28,58 @@ def readArduino():
             pass
     return [None, None, None]
 
-def sendArduino(left_velocity, right_velocity, servo_angle):
-    # if arduino.in_waiting > 0:
-    # print(left_velocity, right_velocity, servo_angle)
-    msg = f"{left_velocity},{right_velocity},{servo_angle}\n".encode() # encode message as bytes
-    arduino.write(msg)
-    
-def go_straight(leftVel, rightVel, servoAngle):
-    leftVel = -VEL
-    rightVel = -VEL
-    return leftVel, rightVel, servoAngle
-
-def turn_left(leftVel, rightVel, servoAngle):
-    leftVel = -VEL
-    rightVel = VEL
-    return leftVel, rightVel, servoAngle
-
-def turn_right(leftVel, rightVel, servoAngle):
-    leftVel = VEL
-    rightVel = -VEL
-    return leftVel, rightVel, servoAngle
-
-def stop(leftVel, rightVel, servoAngle):
-    leftVel = 0
-    rightVel = 0
-    return leftVel, rightVel, servoAngle
-
-def pickup_aed(leftVel, rightVel, servoAngle):
-    servoAngle = pickup_angle
-    return leftVel, rightVel, servoAngle
-
 def april_tag(): 
     # detects whether there is an april tag in view
-    return apriltag_detection()
+    return False
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
-    return obstacle_detection()
+    return False
 
 def close(): 
     # ToF sensor, will decide whether we are close enough to AED
     return True
 
-def go(x_i, y_i, heading_i, x_f, y_f, heading_f, mini_state, success): 
+def go(target_x, target_y, car, ob = False): 
     '''
     Args:
-        x_i (float)
-        y_i (float)
-        heading_i (float)
-        x_f (float)
-        y_f (float)
-        heading_f (float)
+        target_x(float)
+        target_y(float)
+        car(Car object)
+        ob(whether or not this is called from an obstacle, bool)
 
     Returns:
-        leftVel (float)
-        rightVel (float)
-        servoAngle (float)
-        mini_state (int)
-        success (bool)
+        car (Car object)
     '''
     # mini_state == 0: drive straight until x/y value
     # mini_state == 1: turn towards x value
     # mini_state == 2: drive straight until x/y value
     # mini_state == 3: turn towards goal heading
-
-    if abs(x_f - x_i) < epsilon_dist and abs(y_f - y_i) < epsilon_dist and heading_
-    
-    if mini_state == 0: # go straight
-        leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-        if dy >= target_y: # reached target y
-            mini_state = 1
-    elif mini_state == 1: # turn left
-        leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-        if 180 <= dheading and dheading <= 270: # turned 90 degrees
-            mini_state = 2
-    elif mini_state == 2: # go straight
-        leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-        if dx <= target_x: # reached target x
-            mini_state = 3
-    elif mini_state == 3: # turn left
-        leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-        if 90 <= dheading and dheading <= 180: # turned 90 degrees
-            leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
-            success = True
-
+    mini_state = 0
+    while True: 
+        if abs(target_x - car.x) < epsilon_dist and abs(target_y - car.y) < epsilon_dist: 
+            if not ob and obstacle(): 
+                go(car.x + 0.5, car.y+0.5, car, True)
+            else: 
+                if mini_state == 0: # go straight
+                    car.straight()
+                    if abs(car.y-car.y0) >= target_y: # reached target y
+                        mini_state = 1
+                elif mini_state == 1: # turn left
+                    car.left()
+                    dheading = abs(car.heading - car.heading0)
+                    if 180 <= dheading and dheading <= 270: # turned 90 degrees
+                        mini_state = 2
+                elif mini_state == 2: # go straight
+                    car.straight()
+                    if abs(car.x - car.x0) <= target_x: # reached target x
+                        mini_state = 3
+                elif mini_state == 3: # turn left
+                    car.left()
+                    dheading = abs(car.heading - car.heading0)
+                    if 90 <= dheading and dheading <= 180: # turned 90 degrees
+                        car.stop()
+                        return car
 def main():
     car = Car()
     while car.getArduino0 == [None, None, None]: # wait until readArduino receives usable data
@@ -120,20 +89,19 @@ def main():
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if car.getArduinoRaw() != [None, None, None] and (time.time() - car.prev_time) > 5e-3: 
             car.setXYH()
-        if car.state == 0:
+        if car.state == 0: ## attempting to go to aed
             # go to a point (x, y)
-            if obstacle(): 
-                
-                return
-            car.setVelAngle() ### should pass in same arguments as go()
+            car = go(target_x, target_y, car)
             car.prev_time = time.time()
             car.printCurr()
             car.filter()
-            sendArduino(car.filtLeftVel, car.filtRightVel, car.filtServoAngle)
+            car.send()
             if car.success:
-                print('Success!')
+                car.pickupAED()
+                car.send()
+                print('Success! AED picked up')
+                car.state = 1
                 return
-        else:
             pass
             
 class Car(object): 
@@ -174,10 +142,25 @@ class Car(object):
         self.x, self.y, self.heading = readArduino()
     def getArduino(self):
         return [self.x, self.y, self.heading]
+    
+    def straight(self): 
+        self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
+
+    def left(self): 
+        self.leftVel, self.rightVel = -TURN_VEL, TURN_VEL
+
+    def left(self): 
+        self.leftV
+
+    def stop(self):
+        self.leftVel, self.rightVel = 0, 0
+
+    def pickupAED(self): 
+        self.servoAngle = 40
 
     def setVelAngle(self): 
         self.leftVel, self.rightVel, self.servoAngle = go()
-    
+
     def setXYH(self): 
         self.x = self.x0 - self.x_raw
         self.y = self.y0 - self.y_raw
@@ -190,6 +173,9 @@ class Car(object):
         self.filtLeftVel = alpha*self.leftVel + (1 - alpha)*self.filtLeftVel
         self.filtRightVel = alpha*self.rightVel + (1 - alpha)*self.filtRightVel
         self.servoAngle = alpha*self.servoAngle + (1 - alpha)*self.filtServoAngle
+    def send(self): 
+        msg = f"{self.filtLeftVel},{self.filtRightVel},{self.filtServoAngle}\n".encode() # encode message as bytes
+        arduino.write(msg)
 
 if __name__ == "__main__":
     main()

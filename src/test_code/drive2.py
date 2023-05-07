@@ -13,11 +13,13 @@ arduino = serial.Serial(port='/dev/cu.usbserial-0264FEA5', baudrate=115200, time
 # else: 
 #     print("port is closed")
     
-VEL = 3
-pickup_angle = 90
-target_x = 1
-target_y = 1
-alpha = 0.2
+STRAIGHT_VEL = 5
+TURN_VEL = STRAIGHT_VEL/2
+pickup_angle = 40
+target_x1 = 1
+target_y1 = 1.7
+alpha = 0.15
+epsilon_heading = 2
 
 def readArduino():
     '''
@@ -41,18 +43,23 @@ def sendArduino(left_velocity, right_velocity, servo_angle):
     arduino.write(msg)
     
 def go_straight(leftVel, rightVel, servoAngle):
-    leftVel = -VEL
-    rightVel = -VEL
+    leftVel = -STRAIGHT_VEL
+    rightVel = -STRAIGHT_VEL
+    return leftVel, rightVel, servoAngle
+
+def go_back(leftVel, rightVel, servoAngle):
+    leftVel = STRAIGHT_VEL
+    rightVel = STRAIGHT_VEL
     return leftVel, rightVel, servoAngle
 
 def turn_left(leftVel, rightVel, servoAngle):
-    leftVel = -VEL
-    rightVel = VEL
+    leftVel = -TURN_VEL
+    rightVel = TURN_VEL
     return leftVel, rightVel, servoAngle
 
 def turn_right(leftVel, rightVel, servoAngle):
-    leftVel = VEL
-    rightVel = -VEL
+    leftVel = TURN_VEL
+    rightVel = -TURN_VEL
     return leftVel, rightVel, servoAngle
 
 def stop(leftVel, rightVel, servoAngle):
@@ -122,30 +129,31 @@ def main():
     state = 0
     success = False
     prev_time = time.time()
+    pickup_counter = 0
 
-    ##Apriltag detection
-    cap=cv2.VideoCapture(0)  #camera used
-    looping = True
-    while looping:
-        ret, frame = cap.read()
-        state = detect_apriltag(frame)
-        if state == 0:
-            print("NOTHING")
-        elif state == 1:
-            print("TURN LEFT")
-        elif state == 2:
-            print("TURN RIGHT")
-        elif state == 3:
-            print("GO STRAIGHT")
+    # ##Apriltag detection
+    # cap=cv2.VideoCapture(0)  #camera used
+    # looping = True
+    # while looping:
+    #     ret, frame = cap.read()
+    #     state = detect_apriltag(frame)
+    #     if state == 0:
+    #         print("NOTHING")
+    #     elif state == 1:
+    #         print("TURN LEFT")
+    #     elif state == 2:
+    #         print("TURN RIGHT")
+    #     elif state == 3:
+    #         print("GO STRAIGHT")
 
-        key = cv2.waitKey(1000) #ms
-	# terminate the loop if the 'Return' key is hit
-        if key == 13:
-            looping = False
+    #     key = cv2.waitKey(1000) #ms
+	# # terminate the loop if the 'Return' key is hit
+    #     if key == 13:
+    #         looping = False
 
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
-    #####
+    # #####
 
 
     while True:
@@ -153,35 +161,54 @@ def main():
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [x, y, heading] != [None, None, None] and (time.time() - prev_time) > 5e-3: 
             dx = x0 - x
-            dy = y0 - y
-            dheading = heading - heading0
+            dy = y - y0
             if state == 0: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dy >= target_y: # reached target y
+                if dx >= target_x1: # reached target x
                     state = 1
             elif state == 1: # turn left
                 leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-                if 180 <= dheading and dheading <= 270: # turned 90 degrees
+                if abs(heading - 270) < epsilon_heading: # turned 90 degrees
                     state = 2
             elif state == 2: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dx >= target_x: # reached target x
+                if dy >= target_y1: # reached target y
                     state = 3
             elif state == 3: # turn left
                 leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-                if 90 <= dheading and dheading <= 180: # turned 90 degrees
-                    leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
+                if abs(heading - 180) < epsilon_heading: # turned 180 degrees
+                    state = 4
+            elif state == 4: # go straight
+                leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
+                if dx <= -0.1:
+                    state = 5
+            elif state == 5:
+                leftVel, rightVel, servoAngle = pickup_aed(leftVel, rightVel, servoAngle)
+                pickup_counter += 1 
+                if pickup_counter > 200:
+                    state = 6
+            elif state == 6:
+                leftVel, rightVel, servoAngle = go_back(leftVel, rightVel, servoAngle)
+                if dx >= 4:
+                    state = 7
+            elif state == 7:
+                leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
+                if abs(heading - 90) < epsilon_heading:
+                    state = 8
+            elif state == 8:
+                leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
+                if dy <= 0.8:
                     success = True
 
             prev_time = time.time()
-            print(state, dx, dy, dheading)
+            print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (state, dx, dy, heading, servoAngle))
+            if success is True:
+                leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
+                print('Success!')
             filtLeftVel = alpha*leftVel + (1 - alpha)*filtLeftVel
             filtRightVel = alpha*rightVel + (1 - alpha)*filtRightVel
-            servoAngle = alpha*servoAngle + (1 - alpha)*filtServoAngle
+            filtServoAngle = alpha*servoAngle + (1 - alpha)*filtServoAngle
             sendArduino(filtLeftVel, filtRightVel, filtServoAngle)
-            if success is True:
-                print('Success!')
-                return
         else:
             pass
             
