@@ -4,10 +4,10 @@ import time
 # arduino = serial.Serial(port='dev/TTYUSB0', baudrate=115200, timeout=.1)
 arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
 
-VEL = 1
+VEL = 3
 pickup_angle = 90
-target_x = 0.2
-target_y = 0.2
+target_x = 1
+target_y = 1
 alpha = 0.2
 
 def readArduino():
@@ -46,6 +46,11 @@ def turn_right(leftVel, rightVel, servoAngle):
     rightVel = -VEL
     return leftVel, rightVel, servoAngle
 
+def stop(leftVel, rightVel, servoAngle):
+    leftVel = 0
+    rightVel = 0
+    return leftVel, rightVel, servoAngle
+
 def pickup_aed(leftVel, rightVel, servoAngle):
     servoAngle = pickup_angle
     return leftVel, rightVel, servoAngle
@@ -71,6 +76,7 @@ def main():
     leftVel, rightVel, servoAngle = [0, 0, 90]
     filtLeftVel, filtRightVel, filtServoAngle = [0, 0, 90]
     state = 0
+    success = False
     prev_time = time.time()
     while True:
         x, y, heading = readArduino()
@@ -78,29 +84,34 @@ def main():
         if [x, y, heading] != [None, None, None] and (time.time() - prev_time) > 5e-3: 
             dx = x0 - x
             dy = y0 - y
+            dheading = heading - heading0
             if state == 0: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
                 if dy >= target_y: # reached target y
                     state = 1
             elif state == 1: # turn left
                 leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-                if dheading >= 90: # turned 90 degrees
+                if 180 <= dheading and dheading <= 270: # turned 90 degrees
                     state = 2
             elif state == 2: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dx <= target_x: # reached target x
+                if dx >= target_x: # reached target x
                     state = 3
             elif state == 3: # turn left
                 leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-                if dheading >= 180: # turned 90 degrees
-                    print('Success!')
-                    return
+                if 90 <= dheading and dheading <= 180: # turned 90 degrees
+                    leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
+                    success = True
+
             prev_time = time.time()
-            print(state, dx, dy, heading)
+            print(state, dx, dy, dheading)
             filtLeftVel = alpha*leftVel + (1 - alpha)*filtLeftVel
             filtRightVel = alpha*rightVel + (1 - alpha)*filtRightVel
             servoAngle = alpha*servoAngle + (1 - alpha)*filtServoAngle
             sendArduino(filtLeftVel, filtRightVel, filtServoAngle)
+            if success is True:
+                print('Success!')
+                return
         else:
             pass
             
