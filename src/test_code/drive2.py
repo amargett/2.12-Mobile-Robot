@@ -4,9 +4,9 @@ import cv2
 import numpy as np
 from pupil_apriltags import Detector
 
-# arduino = serial.Serial(port='dev/TTYUSB0', baudrate=115200, timeout=.1) # bradyn
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1) # bradyn
 # arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1) # josh
-arduino = serial.Serial(port='/dev/cu.usbserial-0264FEA5', baudrate=115200, timeout=.1) # ashley
+# arduino = serial.Serial(port='/dev/cu.usbserial-0264FEA5', baudrate=115200, timeout=.1) # ashley
 
 # if arduino.is_open(): 
 #     print("port is open")
@@ -180,24 +180,24 @@ def main():
                     state = 4
             elif state == 4: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dx <= -0.1:
+                if dx <= -0.05:
                     state = 5
-            elif state == 5:
+            elif state == 5: # pick up aed
                 leftVel, rightVel, servoAngle = pickup_aed(leftVel, rightVel, servoAngle)
                 pickup_counter += 1 
                 if pickup_counter > 200:
                     state = 6
-            elif state == 6:
+            elif state == 6: # go back a little bit
                 leftVel, rightVel, servoAngle = go_back(leftVel, rightVel, servoAngle)
-                if dx >= 4:
+                if dx >= 0.5:
                     state = 7
-            elif state == 7:
+            elif state == 7: # turn backwards
                 leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-                if abs(heading - 90) < epsilon_heading:
+                if abs(heading - 15) < epsilon_heading:
                     state = 8
             elif state == 8:
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dy <= 0.8:
+                if dx >= 2:
                     success = True
 
             prev_time = time.time()
