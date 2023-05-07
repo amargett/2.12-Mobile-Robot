@@ -17,7 +17,7 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 pickup_angle = 40
 target_x1 = 1
-target_y1 = 1.7
+target_y1 = 1.65
 alpha = 0.15
 epsilon_heading = 2
 
@@ -181,6 +181,7 @@ def main():
             elif state == 4: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
                 if dx <= -0.05:
+                    leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
                     state = 5
             elif state == 5: # pick up aed
                 leftVel, rightVel, servoAngle = pickup_aed(leftVel, rightVel, servoAngle)
@@ -193,11 +194,11 @@ def main():
                     state = 7
             elif state == 7: # turn backwards
                 leftVel, rightVel, servoAngle = turn_left(leftVel, rightVel, servoAngle)
-                if abs(heading - 15) < epsilon_heading:
+                if abs(heading - 25) < epsilon_heading:
                     state = 8
             elif state == 8:
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dx >= 2:
+                if dx >= 3:
                     success = True
 
             prev_time = time.time()
