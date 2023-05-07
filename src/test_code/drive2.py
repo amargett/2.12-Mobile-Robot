@@ -180,7 +180,7 @@ def main():
                     state = 4
             elif state == 4: # go straight
                 leftVel, rightVel, servoAngle = go_straight(leftVel, rightVel, servoAngle)
-                if dx <= -0.05:
+                if dx <= -0.1:
                     leftVel, rightVel, servoAngle = stop(leftVel, rightVel, servoAngle)
                     state = 5
             elif state == 5: # pick up aed
