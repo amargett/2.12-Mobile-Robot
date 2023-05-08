@@ -15,7 +15,7 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
-ALPHA = 0.15
+ALPHA = 0.2
 EPSILON_HEADING = 1
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
@@ -304,13 +304,13 @@ class Car(object):
             self.rightVel = -STRAIGHT_VEL
 
     def detect_april_tag(self): 
-        # detects whether there is an april tag in view
         self.cap = cv2.VideoCapture(0)
         
         self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.MIDPOINT = self.SCREEN_WIDTH // 2
-
+        
+        # detects whether there is an april tag in view
         detector = Detector(families='tag36h11', 
                         nthreads=1,
                         quad_decimate=1.0,
@@ -323,7 +323,7 @@ class Car(object):
         tagsize = 0.100  #physical size of printed tag, unit = meter
         threshold = 5  # tolerable yaw
         ret, self.frame = self.cap.read()
-        self.frame = cv2.resize(self.frame, (640,480))
+        # self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=False, camera_params=intrisic, tag_size=tagsize)
         if tags:
