@@ -62,9 +62,9 @@ def main():
 
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            # print(car.x, car.y, car.heading)
+            print(car.x, car.y, car.heading)
             car.look_for_cone()
-            print('cone position:', car.cone_position)
+            # print('cone position:', car.cone_position)
             if car.cone_position: 
                 car.avoid_cone()
                 pass
