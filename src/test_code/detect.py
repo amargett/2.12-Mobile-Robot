@@ -1,6 +1,7 @@
 import argparse
 import shutil
 import time
+import threading
 
 from pathlib import Path
 from sys import platform
@@ -17,13 +18,18 @@ obstacle_detected = False
 def motor_control(result):
     # code to control the motor based on the result
     global obstacle_detected
-    if result:
-        obstacle_detected = True
-        print("turning")
+    if result == 1:
+        #obstacle_detected = True
+        #return 1
+        print("Far")
         # send command to rotate car
+    elif result == 2:
+        print("Close")
     else:
-        obstacle_detected = False
+        #obstacle_detected = False
+        #return 0
         print("straight")
+
 
 def detectobstacle(
         cfg,
@@ -61,6 +67,7 @@ def detectobstacle(
     if webcam:
         save_images = False
         dataloader = LoadWebcam(img_size=img_size)
+        
     else:
         dataloader = LoadImages(images, img_size=img_size)
 
@@ -84,8 +91,8 @@ def detectobstacle(
         pred = pred[pred[:, :, 4] > conf_thres]  # remove boxes < threshold
 
         if len(pred) > 0:
-            motor_control(True)
-            callback()
+            
+            
             # Run NMS on predictions
             detections = non_max_suppression(pred.unsqueeze(0), conf_thres, nms_thres)[0]
 
@@ -94,18 +101,23 @@ def detectobstacle(
 
             # Draw bounding boxes and labels of detections
             for x1, y1, x2, y2, conf, cls_conf, cls in detections:
-                if save_txt:  # Write to file
-                    with open(save_path + '.txt', 'a') as file:
-                        file.write('%g %g %g %g %g %g\n' %
-                                   (x1, y1, x2, y2, cls, cls_conf * conf))
+                #if save_txt:  # Write to file
+                #    with open(save_path + '.txt', 'a') as file:
+                #        file.write('%g %g %g %g %g %g\n' %
+                #                   (x1, y1, x2, y2, cls, cls_conf * conf))
 
                 # Add bbox to the image
-                label = plot_one_box([x1, y1, x2, y2], im0)
+                #label = plot_one_box([x1, y1, x2, y2], im0)
                 #print(label,end=', ')
-            
+                if (x2-x1)*(y2-y1) < 10000:
+                    motor_control(1)
+                    callback()
+                else:
+                    motor_control(2)
+                    callback()
             #obstacle = 1
         else:
-            motor_control(False)        
+            motor_control(0)        
 
         dt = time.time() - t
         #print('Done. (%.3fs)' % dt)
@@ -122,44 +134,3 @@ def detectobstacle(
 # Define a global variable
 #detected_object = 0
 
-def main():
-    global obstacle
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
-    parser.add_argument('--weights', type=str, default='weights/best.pt', help='path to weights file')
-    parser.add_argument('--images', type=str, default='data/samples', help='path to images')
-    parser.add_argument('--img-size', type=int, default=32 * 13, help='size of each image dimension')
-    parser.add_argument('--conf-thres', type=float, default=0.50, help='object confidence threshold')
-    parser.add_argument('--nms-thres', type=float, default=0.45, help='iou threshold for non-maximum suppression')
-    opt = parser.parse_args()
-    print(opt)
-    def callback():
-        global obstacle_detected
-        #print("Obstacle detected: ", obstacle_detected)
-    with torch.no_grad():
-        result = detectobstacle(
-            opt.cfg,
-            opt.weights,
-            opt.images,
-            img_size=opt.img_size,
-            conf_thres=opt.conf_thres,
-            nms_thres=opt.nms_thres,
-            callback=callback
-        )
-    
-
-    # Check if an object is detected
-    #if detected_object == 1:
-        # Do something
-    #    print("Object detected!")
-    #else:
-        # Do something else
-    #    print("No object detected.")
-
-
-if __name__ == '__main__':
-    main()
-    
-   
-        
