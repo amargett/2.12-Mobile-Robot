@@ -207,14 +207,14 @@ class Car(object):
             target_dx = self.target_x - self.x
             target_dy = self.target_y - self.y
             self.target_dheading = 360 - (np.degrees(np.arctan2(target_dy, target_dx)) + 360) % 360
-            print(self.heading, self.target_dheading)
+            print(self.mini_state, self.heading, self.target_dheading)
             if abs(self.heading - self.target_dheading) < EPSILON_HEADING:
                 self.mini_state = 1
             elif target_dy > 0: 
                 self.left(abs(self.heading - self.target_dheading))
             else: 
                 self.right(self.heading)
-        if self.mini_state == 1: # go straight
+        elif self.mini_state == 1: # go straight
             self.straight()
             if abs(self.x - self.target_x) < EPISLON_DIST and abs(self.y - self.target_y) < EPISLON_DIST:
                 self.mini_state = 2
