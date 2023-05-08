@@ -102,8 +102,8 @@ class Car(object):
         self.SCREEN_HEIGHT = None
         self.MIDPOINT = None
         
-        self.target_x = 1
-        self.target_y = 1.65
+        self.target_x = 0
+        self.target_y = 0
         self.target_heading = 0
         
         self.leftVel = 0
