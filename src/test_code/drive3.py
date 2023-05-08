@@ -160,6 +160,8 @@ class Car(object):
         self.cone_position = None
         self.april_tag = None
 
+        self.frame = None
+
     def readArduino(self):
         '''
         Read output from Arduino: x, y, heading.
@@ -305,9 +307,9 @@ class Car(object):
         intrisic = [640,640,960,540]
         tagsize = 0.100  #physical size of printed tag, unit = meter
         threshold = 5  # tolerable yaw
-        ret, frame = self.cap.read()
-        frame = cv2.resize(frame, (640,480))
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        ret, self.frame = self.cap.read()
+        self.frame = cv2.resize(self.frame, (640,480))
+        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
         if tags:
             for tag in tags:
