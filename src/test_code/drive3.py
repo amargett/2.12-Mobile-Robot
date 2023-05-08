@@ -52,6 +52,7 @@ def main():
         # if obstacle():
         #     car.go()
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 5e-3: 
+            print('in loop')
             car.setXYH()
             if car.state == 0: ## go to AED waypoint
                 car.target_x = 1
@@ -68,12 +69,12 @@ def main():
                     car.success = True
     
             car.prev_time = time.time()
-            car.printCurr()
             if car.success:
                 print('Success! AED picked up')
                 car.stop()
                 car.pickupAED()
             car.filter()
+            car.printCurr()
             car.sendArduino()
                 
 class Car(object): 
