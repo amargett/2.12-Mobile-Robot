@@ -62,14 +62,20 @@ def main():
             #     car.avoid_cone()
                 # pass
             if car.state == 0: ## go to AED waypoint
-                car.target_x = 1
+                car.target_x = 1.5
                 car.target_y = 1.65
-                print('car should go')
                 car.go()
                 if car.mini_state == 2:
                     car.mini_state = 0
                     car.state = 1
-            elif car.state == 1: # go to AED and pick it up
+            elif car.state == 1:
+                car.target_x = 1
+                car.target_y = 1.65
+                car.go()
+                if car.mini_state == 2:
+                    car.mini_state = 0
+                    car.state = 2
+            elif car.state == 2: # go to AED and pick it up
                 car.detect_april_tag()
                 if car.april_tag == 0: 
                     car.left(10)
@@ -88,13 +94,13 @@ def main():
                     car.pickup_counter += 1 
                     if car.pickup_counter > 200:
                         car.mini_state = 0
-                        car.state = 2
-            elif car.state == 2: # back up
+                        car.state = 3
+            elif car.state == 3: # back up
                 car.back()
                 car.backup_counter += 1
                 if car.backup_counter > 200:
-                    car.state = 3
-            elif car.state == 3: # turn around
+                    car.state = 4
+            elif car.state == 4: # turn around
                 car.target_x = 3
                 car.target_y = 1
                 car.go()
@@ -102,7 +108,9 @@ def main():
                     car.stop()
                     car.dropoffAED()
                     print('Success! AED dropped up')
-            elif car.state == 4:
+                    car.state = 5
+                    car.mini_state = 0
+            elif car.state == 5:
                 car.stop()
             car.prev_time = time.time()
             car.filter()
