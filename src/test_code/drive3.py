@@ -2,8 +2,8 @@ import serial
 import time
 import numpy as np
 
-# arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
-arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+# arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
 
 STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
