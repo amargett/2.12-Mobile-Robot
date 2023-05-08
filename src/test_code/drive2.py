@@ -3,6 +3,16 @@ import time
 import cv2
 import numpy as np
 from pupil_apriltags import Detector
+import argparse
+import shutil
+from detect import detectobstacle
+from detect import motor_control
+from pathlib import Path
+from sys import platform
+
+from models import *
+from utils.datasets import *
+from utils.utils import *
 
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1) # bradyn
 # arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1) # josh
@@ -160,7 +170,32 @@ def main():
     # cv2.destroyAllWindows()
 
     # #####
+## obstacle detection	
+    global obstacle
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
+    parser.add_argument('--weights', type=str, default='weights/best.pt', help='path to weights file')
+    parser.add_argument('--images', type=str, default='data/samples', help='path to images')
+    parser.add_argument('--img-size', type=int, default=32 * 13, help='size of each image dimension')
+    parser.add_argument('--conf-thres', type=float, default=0.50, help='object confidence threshold')
+    parser.add_argument('--nms-thres', type=float, default=0.45, help='iou threshold for non-maximum suppression')
+    opt = parser.parse_args()
+    print(opt)
+    def callback():
+        global obstacle_detected
+        #print("Obstacle detected: ", obstacle_detected)
+    with torch.no_grad():
+        result = detectobstacle(
+            opt.cfg,
+            opt.weights,
+            opt.images,
+            img_size=opt.img_size,
+            conf_thres=opt.conf_thres,
+            nms_thres=opt.nms_thres,
+            callback=callback
+        )
+##obstacle detection
 
     while True:
         x, y, heading = readArduino()
