@@ -3,8 +3,8 @@ import time
 import numpy as np
 import cv2
 
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
-# arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
+# arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
 
 orange_lower = np.array([1, 100, 150])
 orange_upper = np.array([15, 200, 255])
@@ -66,6 +66,7 @@ def main():
             car.look_for_cone()
             # print('cone position:', car.cone_position)
             if car.cone_position: 
+                print('i see a cone!')
                 car.avoid_cone()
                 pass
             if car.state == 0: ## go to AED waypoint
