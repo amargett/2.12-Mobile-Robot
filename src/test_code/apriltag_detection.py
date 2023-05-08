@@ -31,8 +31,8 @@ def plotText(image, center, color, text):
 
 
 def detect_apriltag(frame):
-cap=cv2.VideoCapture(0)  #camera used
-detector = Detector(families='tag36h11', 
+    cap=cv2.VideoCapture(0)  #camera used
+    detector = Detector(families='tag36h11', 
                     nthreads=1,
                     quad_decimate=1.0,
                     quad_sigma=0.0,
@@ -42,13 +42,13 @@ detector = Detector(families='tag36h11',
                     ) #physical size of the apriltag
 
 #intrisic = [777.60876405,777.24415999,385.3505718,320.0302134] # camera parameters, [fx, fy cx, cy]
-intrisic = [640,640,960,540]
+    intrisic = [640,640,960,540]
 
-tagsize = 0.100  #physical size of printed tag, unit = meter
+    tagsize = 0.100  #physical size of printed tag, unit = meter
 
-threshold = 5  # tolerable yaw
+    threshold = 5  # tolerable yaw
 
-looping = True
+    looping = True
 
 
 while (looping):
