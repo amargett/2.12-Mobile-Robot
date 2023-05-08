@@ -164,6 +164,9 @@ class Car(object):
         self.april_tag = None
 
         self.frame = None
+        self.intrisic = [640,640,960,540]
+        self.tagsize = 0.100  #physical size of printed tag, unit = meter
+        self.threshold = 10  # tolerable yaw
 
     def readArduino(self):
         '''
@@ -307,18 +310,15 @@ class Car(object):
                         decode_sharpening=0.25,
                         debug=0,
                         ) #physical size of the apriltag
-        intrisic = [640,640,960,540]
-        tagsize = 0.100  #physical size of printed tag, unit = meter
-        threshold = 10  # tolerable yaw
-        ret, self.frame = self.cap.read()
+        _, self.frame = self.cap.read()
         self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray, estimate_tag_pose=False, camera_params=intrisic, tag_size=tagsize)
+        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrisic, tag_size=self.tagsize)
         if tags:
             for tag in tags:
-                if tag.center[0] < 320 - threshold:
+                if tag.center[0] < 320 - self.threshold:
                     self.april_tag = 0 # turn left
-                elif tag.center[0] > 320 + threshold:
+                elif tag.center[0] > 320 + self.threshold:
                     self.april_tag = 1 # turn right
                 else:
                     self.april_tag = 2 # go straight
