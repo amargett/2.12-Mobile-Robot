@@ -9,25 +9,25 @@ from pupil_apriltags import Detector
 
 ### Some utility functions to simplify drawing on the camera feed
 # draw a crosshair
-def plotPoint(image, center, color):
-    center = (int(center[0]), int(center[1]))
-    image = cv2.line(image,
-                     (center[0] - LINE_LENGTH, center[1]),
-                     (center[0] + LINE_LENGTH, center[1]),
-                     color,
-                     3)
-    image = cv2.line(image,
-                     (center[0], center[1] - LINE_LENGTH),
-                     (center[0], center[1] + LINE_LENGTH),
-                     color,
-                     3)
-    return image
+#def plotPoint(image, center, color):
+#    center = (int(center[0]), int(center[1]))
+#    image = cv2.line(image,
+#                     (center[0] - LINE_LENGTH, center[1]),
+#                     (center[0] + LINE_LENGTH, center[1]),
+#                     color,
+#                     3)
+#    image = cv2.line(image,
+#                     (center[0], center[1] - LINE_LENGTH),
+#                     (center[0], center[1] + LINE_LENGTH),
+#                     color,
+#                     3)
+#    return image
 
 # plot a little text
-def plotText(image, center, color, text):
-    center = (int(center[0]) + 4, int(center[1]) - 4)
-    return cv2.putText(image, str(text), center, cv2.FONT_HERSHEY_SIMPLEX,
-                       0.5, color, 3)
+#def plotText(image, center, color, text):
+#    center = (int(center[0]) + 4, int(center[1]) - 4)
+#    return cv2.putText(image, str(text), center, cv2.FONT_HERSHEY_SIMPLEX,
+#                       0.5, color, 3)
 
 
 def detect_apriltag(frame):
@@ -55,7 +55,7 @@ while (looping):
     ret, frame = cap.read()
     frame = cv2.resize(frame, (640,480))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
+    tags = detector.detect(gray, estimate_tag_pose=False, camera_params=intrisic, tag_size=tagsize)
     
     if not tags:
         print("Nothing")
@@ -76,8 +76,8 @@ while (looping):
 	    #thetay = math.atan2(-tag.pose_R[2][0],math.sqrt(a+b))
 	    #print(thetay)
             center = [320,240]
-            frame = plotPoint(frame, tag.center, CENTER_COLOR)
-            frame = plotPoint(frame, center, CENTER_COLOR)
+            #frame = plotPoint(frame, tag.center, CENTER_COLOR)
+            #frame = plotPoint(frame, center, CENTER_COLOR)
             if tag.center[0] < 320 - threshold:
                 print("turn left")
             elif tag. center[0] > 320 + threshold:
@@ -88,10 +88,10 @@ while (looping):
             #print("phi = ", math.asin(-tag.pose_R[2,0])/math.pi*180)
             #print("theta = ", math.atan(tag.pose_R[2,1]/tag.pose_R[2,2])/math.pi*180)
             #print("psi = ", math.atan(tag.pose_R[1,0]/tag.pose_R[0,0])/math.pi*180)
-            for corner in tag.corners:
-                frame = plotPoint(frame, corner, CORNER_COLOR)
+            #for corner in tag.corners:
+            #    frame = plotPoint(frame, corner, CORNER_COLOR)
 
-    cv2.imshow('frame', frame)
+    #cv2.imshow('frame', frame)
 
     key = cv2.waitKey(100) #ms
 	# terminate the loop if the 'Return' key is hit
