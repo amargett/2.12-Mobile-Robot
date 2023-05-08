@@ -68,7 +68,7 @@ while True:
             cv2.circle(frame, cone_position, 5, (0, 255, 0), -1)
 
     # Display the frame with the cone position
-    cv2.imshow("Traffic Cone Detection", frame)
+    #cv2.imshow("Traffic Cone Detection", frame)
 
     # Exit the loop if the 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -76,15 +76,15 @@ while True:
     #go straight
     if not cone_position:
         left_desired_vel = -4
-        right_desired_vel = 4
+        right_desired_vel =-4
     #go left
     elif(cone_position[0] < midpoint):
-        left_desired_vel = -5
-        right_desired_vel = -1
+        left_desired_vel = -1
+        right_desired_vel = -4
     #go right
     else:
-        left_desired_vel = -1
-        right_desired_vel = -5
+        left_desired_vel = -4
+        right_desired_vel = -1
 
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
