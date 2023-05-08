@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 
 # Define the lower and upper bounds of the orange color in HSV color space
-orange_lower = np.array([5, 100, 100])
-orange_upper = np.array([15, 255, 255])
+orange_lower = np.array([5, 100, 150])
+orange_upper = np.array([15, 200, 255])
 
 # Open the video capture
 cap = cv2.VideoCapture(0)
@@ -79,12 +79,12 @@ while True:
         right_desired_vel = -3
     #go left
     elif(cone_position[0] < midpoint):
-        left_desired_vel = -1
-        right_desired_vel = -3
-    #go right
-    else:
         left_desired_vel = -3
         right_desired_vel = -1
+    #go right
+    else:
+        left_desired_vel = -1
+        right_desired_vel = -3
 
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
