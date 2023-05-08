@@ -91,17 +91,11 @@ def main():
                 
 class Car(object): 
     def __init__(self): 
-        # self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(0)
         
-        # self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        # self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        # self.MIDPOINT = self.SCREEN_WIDTH // 2
-
-        self.cap = None
-        
-        self.SCREEN_WIDTH = None
-        self.SCREEN_HEIGHT = None
-        self.MIDPOINT = None
+        self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.MIDPOINT = self.SCREEN_WIDTH // 2
         
         self.target_x = 0
         self.target_y = 0
