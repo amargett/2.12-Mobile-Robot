@@ -1,17 +1,17 @@
 import serial
 import time
+import numpy as np
 
-# arduino = serial.Serial(port='dev/TTYUSB0', baudrate=115200, timeout=.1)
+# arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
 
-STRAIGHT_VEL = 3
+STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
-pickup_angle = 90
-target_x = 1
-target_y = 1.65
-alpha = 0.15
-epsilon_heading = 2
-epsilon_dist = 0.1
+PICKUP_ANGLE = 40
+ALPHA = 0.15
+EPSILON_HEADING = 1
+EPISLON_DIST = 0.1
+K_HEADING = 0.017
 
 def april_tag(): 
     # detects whether there is an april tag in view
@@ -25,49 +25,63 @@ def close():
     # ToF sensor, will decide whether we are close enough to AED
     return True
 
-def turnaround(car):  
-    mini_state = 0
-    while True:
-        if mini_state == 0: 
-            car.back()
-            if abs(car.x - car.x0) >= target_x:
-                mini_state =1
-        if mini_state == 1: 
-            car.left()
-            dheading = abs(car.heading - car.heading0)
-            if 29 < dheading < 31: 
-                car.stop()
-                return car
-        car.prev_time = time.time()
-        car.printCurr()
-        car.filter()
-        car.send()
-
-
+# def turnaround(car):  
+#     mini_state = 0
+#     while True:
+#         if mini_state == 0: 
+#             car.back()
+#             if abs(car.x - car.x0) >= target_x:
+#                 mini_state =1
+#         if mini_state == 1: 
+#             car.left()
+#             dheading = abs(car.heading - car.heading0)
+#             if 29 < dheading < 31: 
+#                 car.stop()
+#                 return car
+#         car.prev_time = time.time()
+#         car.printCurr()
+#         car.filter()
+#         car.send()
 def main():
     car = Car()
-    while car.getArduino() == [None, None, None]: # wait until readArduino receives usable data
-        car.x0, car.y0, _ = car.readArduino()
+    while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
+        car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
+        # if obstacle():
+        #     car.go()
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 5e-3: 
             car.setXYH()
-        if car.state == 0: ## go to AED
-            # go to a point (x, y)
-            car = go(target_x, target_y, car)
+            if car.state == 0: ## go to AED waypoint
+                car.target_x = 1
+                car.target_y = 1.65
+                car.mini_state = car.go(car.mini_state)
+                if car.mini_state == 2:
+                    car.mini_state = 0
+                    car.state = 1
+            if car.state == 1: # go to AED
+                car.target_x = 0
+                car.target_y = 1.65
+                car.mini_state = car.go(car.mini_state)
+                if car.mini_state == 2:
+                    car.success = True
+    
+            car.prev_time = time.time()
+            car.printCurr()
             if car.success:
-                car.pickupAED()
-                car.send()
                 print('Success! AED picked up')
-                car.state = 1
-                return
-            pass
-        elif car.state == 1: ## turning around
-            car.back()
+                car.stop()
+                car.pickupAED()
+            car.filter()
+            car.sendArduino()
                 
 class Car(object): 
     def __init__(self): 
+        self.target_x = 1
+        self.target_y = 1.65
+        self.target_heading = 0
+        
         self.leftVel = 0
         self.rightVel = 0
         self.servoAngle = 90
@@ -95,6 +109,8 @@ class Car(object):
         self.pickup_counter = 0
         self.dropoff_counter = 0
 
+        self.mini_state = 0
+
     def readArduino(self):
         '''
         Read output from Arduino: x, y, heading.
@@ -114,11 +130,11 @@ class Car(object):
     def straight(self): 
         self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
 
-    def left(self): 
-        self.leftVel, self.rightVel = -TURN_VEL, TURN_VEL
+    def left(self, error): 
+        self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
 
-    def left(self): 
-        self.leftVel, self.rightVel = TURN_VEL, -TURN_VEL
+    def right(self, error): 
+        self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
 
     def stop(self):
         self.leftVel, self.rightVel = 0, 0
@@ -127,7 +143,7 @@ class Car(object):
         self.leftVel, self.rightVel = STRAIGHT_VEL, STRAIGHT_VEL
 
     def pickupAED(self):
-        self.servoAngle = 40
+        self.servoAngle = PICKUP_ANGLE
 
     def setVelAngle(self): 
         self.leftVel, self.rightVel, self.servoAngle = go()
@@ -137,19 +153,19 @@ class Car(object):
         self.y = self.y_raw - self.y0
         self.heading = self.heading_raw
 
-    def printCurr(self): 
-        print(self.state, self.x, self.y, self.heading)
+    def printCurr(self):
+        print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.servoAngle))
 
     def filter(self): 
-        self.filtLeftVel = alpha*self.leftVel + (1 - alpha)*self.filtLeftVel
-        self.filtRightVel = alpha*self.rightVel + (1 - alpha)*self.filtRightVel
-        self.filtServoAngle = alpha*self.servoAngle + (1 - alpha)*self.filtServoAngle
+        self.filtLeftVel = ALPHA*self.leftVel + (1 - ALPHA)*self.filtLeftVel
+        self.filtRightVel = ALPHA*self.rightVel + (1 - ALPHA)*self.filtRightVel
+        self.filtServoAngle = ALPHA*self.servoAngle + (1 - ALPHA)*self.filtServoAngle
 
-    def send(self): 
+    def sendArduino(self): 
         msg = f"{self.filtLeftVel},{self.filtRightVel},{self.filtServoAngle}\n".encode() # encode message as bytes
         arduino.write(msg)
     
-    def go(self, target_x, target_y, mini_state): 
+    def go(self, mini_state): 
         '''
         Args:
             target_x(float)
@@ -162,35 +178,23 @@ class Car(object):
         # mini_state == 0: rotate
         # mini_state == 1: go forward
         # mini_state = 2: success!
-        # target_heading 
+        self.target_heading = np.arctan2(self.target_y/self.target_x)
+
         while True:
             if mini_state == 0: # rotate
-                self.left()
+                dheading = abs(self.heading-self.target_heading)
+                if self.target_x>0: 
+                    self.left(dheading)
+                else: 
+                    self.right(dheading)
+                if abs(self.heading - self.target_heading) < EPSILON_HEADING:
+                    mini_state = 1
+            if mini_state == 1: # go straight
+                self.straight()
+                if abs(self.x - self.target_x) < EPISLON_DIST and abs(self.y - self.target_y) < EPISLON_DIST:
+                    mini_state = 2
+            return mini_state
                 
-            elif mini_state == 1: # go straight
-                if mini_state == 0: # go straight
-                    self.straight()
-                    if abs(self.y-self.y0) >= target_y: # reached target y
-                        mini_state = 1
-                elif mini_state == 1: # turn left
-                    self.left()
-                    dheading = abs(self.heading - self.heading0)
-                    if 180 <= dheading and dheading <= 270: # turned 90 degrees
-                        mini_state = 2
-                elif mini_state == 2: # go straight
-                    self.straight()
-                    if abs(self.x - self.x0) <= target_x: # reached target x
-                        mini_state = 3
-                elif mini_state == 3: # turn left
-                    self.left()
-                    dheading = abs(self.heading - self.heading0)
-                    if 90 <= dheading and dheading <= 180: # turned 90 degrees
-                        self.stop()
-                        return self
-                self.prev_time = time.time()
-                self.printCurr()
-                self.filter()
-                self.send()
 
 if __name__ == "__main__":
     main()
