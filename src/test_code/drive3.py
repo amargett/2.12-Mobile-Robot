@@ -162,6 +162,7 @@ class Car(object):
         self.filtServoAngle = ALPHA*self.servoAngle + (1 - ALPHA)*self.filtServoAngle
 
     def sendArduino(self): 
+        print(self.filtLeftVel, self.filtRightVel, self.filtServoAngle)
         msg = f"{self.filtLeftVel},{self.filtRightVel},{self.filtServoAngle}\n".encode() # encode message as bytes
         arduino.write(msg)
     
