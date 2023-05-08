@@ -61,15 +61,17 @@ void setup()
 }
 void loop()
 {
-
+    myservo.write(servo_angle);
+    
     if (micros() - prevLoopTimeMicros > loopDelayMicros)
     {
+
         prevLoopTimeMicros = micros();
 
         readIMU();
         sendIMU();
         readDesiredVel();
-        myservo.write(servo_angle);
+        
 
         updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
 
@@ -150,7 +152,7 @@ void updateRobotPose(float dPhiL, float dPhiR)
 {
     float dtheta = r / (2 * b) * (dPhiR - dPhiL);
     // TODO update theta value
-    theta += dtheta;
+    theta = heading*0.01745;
     // TODO use the equations from the handout to calculate the change in x and y
     float dx = r / 2 * (cos(theta) * dPhiR + cos(theta) * dPhiL);
     float dy = r / 2 * (sin(theta) * dPhiR + sin(theta) * dPhiL);

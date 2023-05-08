@@ -54,7 +54,7 @@ void driveVoltsLR(float leftVolts, float rightVolts)
 // Positive values always drive the robot forward
 void driveVolts(float frontLeftVolts, float backLeftVolts, float frontRightVolts, float backRightVolts)
 {
-  drive(frontLeftVolts / DRIVE_VOLTAGE, backLeftVolts / DRIVE_VOLTAGE, frontRightVolts / DRIVE_VOLTAGE, backRightVolts / DRIVE_VOLTAGE);
+  drive(0, backLeftVolts / DRIVE_VOLTAGE, 0, backRightVolts / DRIVE_VOLTAGE);
 }
 // Drives left side motors at the voltage and right side motors at the same voltage
 void driveLR(float leftPower, float rightPower)

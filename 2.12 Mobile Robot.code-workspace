@@ -2,6 +2,10 @@
 	"folders": [
 		{
 			"path": "../.."
+		},
+		{
+			"name": "mobile_robot_2023",
+			"path": "."
 		}
 	],
 	"settings": {}

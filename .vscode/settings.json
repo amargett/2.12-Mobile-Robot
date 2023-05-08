@@ -49,5 +49,6 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/brady/Documents/2.12_Proj_Other/mobile_robot_2023/.pio/libdeps/robot/Adafruit BusIO"
 }
