@@ -7,6 +7,8 @@ import numpy as np
 # Define the lower and upper bounds of the orange color in HSV color space
 orange_lower = np.array([1, 100, 150])
 orange_upper = np.array([15, 200, 255])
+#0 straight -1 left 1 right
+last_pos = 0
 
 # Open the video capture
 cap = cv2.VideoCapture(0)
