@@ -76,13 +76,13 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
-                if (time.time() - car.april_time) > 10e-3:
+                if (time.time() - car.april_time) > 20e-3:
                     car.detect_april_tag()
                     car.april_time = time.time()
                 if car.april_tag == 0: 
-                    car.left(5)
+                    car.left(10)
                 elif car.april_tag == 1: 
-                    car.right(5)
+                    car.right(10)
                 elif car.april_tag == 2: 
                     car.state = 3
             elif car.state == 3:
