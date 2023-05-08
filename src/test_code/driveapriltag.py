@@ -54,39 +54,8 @@ def main():
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            # print(car.x, car.y, car.heading)
-            # car.look_for_cone()
-            # print('cone position:', car.cone_position)
-            # if car.cone_position: 
-            #     print('i see a cone!')
-            #     car.avoid_cone()
-                # pass
-            if car.state == 0: ## go to AED waypoint
-                car.target_x = 1.5
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 1
-            elif car.state == 1:
-                car.target_x = 1
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 2
-            elif car.state == 2: # go to AED and pick it up
-                if (time.time() - car.april_time) > 100e-3:
-                    car.detect_april_tag()
-                    car.april_time = time.time()
-                if car.april_tag == 0: 
-                    car.left(5)
-                elif car.april_tag == 1: 
-                    car.right(5)
-                elif car.april_tag == 2: 
-                    car.state = 3
-            elif car.state == 3:
-                car.target_x = -0.1
+            if car.state == 3: 
+                car.target_x  = -0.1
                 car.target_y = 1.65
                 car.straight()
                 if abs(car.x - car.target_x) < 5*EPSILON_DIST and abs(car.y - car.target_y) < 5*EPSILON_DIST:
@@ -121,11 +90,17 @@ def main():
                 
 class Car(object): 
     def __init__(self): 
-        self.cap = cv2.VideoCapture(0)
+        # self.cap = cv2.VideoCapture(0)
         
-        self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.MIDPOINT = self.SCREEN_WIDTH // 2
+        # self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # self.MIDPOINT = self.SCREEN_WIDTH // 2
+
+        self.cap = None
+        
+        self.SCREEN_WIDTH = None
+        self.SCREEN_HEIGHT = None
+        self.MIDPOINT = None
         
         self.target_x = 1
         self.target_y = 1.65
@@ -151,7 +126,7 @@ class Car(object):
         self.filtRightVel = 0
         self.filtServoAngle = 90
 
-        self.state = 0
+        self.state = 3
         self.prev_time = time.time()
         self.april_time = time.time()
 
@@ -297,7 +272,13 @@ class Car(object):
             self.leftVel = -STRAIGHT_VEL/3
             self.rightVel = -STRAIGHT_VEL
 
-    def detect_april_tag(self):         
+    def detect_april_tag(self): 
+        self.cap = cv2.VideoCapture(0)
+        
+        self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.MIDPOINT = self.SCREEN_WIDTH // 2
+        
         # detects whether there is an april tag in view
         detector = Detector(families='tag36h11', 
                         nthreads=1,
