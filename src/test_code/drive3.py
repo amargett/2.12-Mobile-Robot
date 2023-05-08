@@ -2,16 +2,17 @@ import serial
 import time
 import numpy as np
 
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
-# arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
+# arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
 
 STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
+DROPOFF_ANGLE = 120
 ALPHA = 0.15
 EPSILON_HEADING = 1
 EPISLON_DIST = 0.1
-K_HEADING = 0.017
+K_HEADING = 0.05
 
 def april_tag(): 
     # detects whether there is an april tag in view
@@ -51,31 +52,48 @@ def main():
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         # if obstacle():
         #     car.go()
-        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 5e-3: 
-            print('in loop')
+        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
+            # print(car.x, car.y, car.heading)
             if car.state == 0: ## go to AED waypoint
                 car.target_x = 1
                 car.target_y = 1.65
-                car.mini_state = car.go(car.mini_state)
+                print('car should go')
+                car.go()
                 if car.mini_state == 2:
                     car.mini_state = 0
                     car.state = 1
-            if car.state == 1: # go to AED
+            if car.state == 1: # go to AED and pick it up
                 car.target_x = 0
                 car.target_y = 1.65
-                car.mini_state = car.go(car.mini_state)
+                car.go()
                 if car.mini_state == 2:
-                    car.success = True
-    
-            car.prev_time = time.time()
-            if car.success:
-                print('Success! AED picked up')
+                    car.stop()
+                    car.pickupAED()
+                    print('Success! AED picked up')
+                    car.pickup_counter += 1 
+                    if car.pickup_counter > 200:
+                        car.mini_state = 0
+                        car.state = 2
+            if car.state == 2: # turn around
+                car.target_x = 3
+                car.target_y = 1
+                car.go()
+                if car.mini_state == 2:
+                    car.stop()
+                    car.dropoffAED()
+                    print('Success! AED dropped up')
+                    car.dropoff_counter += 1 
+                    if car.dropoff_counter > 200:
+                        car.mini_state = 0
+                        car.state = 3
+            if car.state == 3:
                 car.stop()
-                car.pickupAED()
+            car.prev_time = time.time()
             car.filter()
             car.printCurr()
             car.sendArduino()
+
                 
 class Car(object): 
     def __init__(self): 
@@ -105,7 +123,6 @@ class Car(object):
 
         self.state = 0
         self.prev_time = time.time()
-        self.success = False
 
         self.pickup_counter = 0
         self.dropoff_counter = 0
@@ -117,6 +134,7 @@ class Car(object):
         Read output from Arduino: x, y, heading.
         Returns [None, None, None] if response is not in the right format
         '''
+        self.x_raw, self.y_raw, self.heading_raw = [None, None, None]
         if arduino.in_waiting > 0:
             try:
                 response = arduino.readline().decode().strip().split(',')
@@ -125,7 +143,6 @@ class Car(object):
                     self.x_raw, self.y_raw, self.heading_raw = response
             except:
                 pass
-        self.x_raw, self.y_raw, self.heading_raw = [None, None, None]
         return self.x_raw, self.y_raw, self.heading_raw
     
     def straight(self): 
@@ -133,9 +150,13 @@ class Car(object):
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
+        if self.rightVel > 1.5: 
+            self.leftVel, self.rightVel = 1.5, 1.5
 
     def right(self, error): 
         self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
+        if self.leftVel > 1.5: 
+            self.leftVel, self.rightVel = 1.5, 1.5
 
     def stop(self):
         self.leftVel, self.rightVel = 0, 0
@@ -145,6 +166,9 @@ class Car(object):
 
     def pickupAED(self):
         self.servoAngle = PICKUP_ANGLE
+
+    def dropoffAED(self):
+        self.servoAngle = DROPOFF_ANGLE
 
     def setVelAngle(self): 
         self.leftVel, self.rightVel, self.servoAngle = go()
@@ -163,11 +187,10 @@ class Car(object):
         self.filtServoAngle = ALPHA*self.servoAngle + (1 - ALPHA)*self.filtServoAngle
 
     def sendArduino(self): 
-        print(self.filtLeftVel, self.filtRightVel, self.filtServoAngle)
         msg = f"{self.filtLeftVel},{self.filtRightVel},{self.filtServoAngle}\n".encode() # encode message as bytes
         arduino.write(msg)
     
-    def go(self, mini_state): 
+    def go(self): 
         '''
         Args:
             target_x(float)
@@ -180,23 +203,22 @@ class Car(object):
         # mini_state == 0: rotate
         # mini_state == 1: go forward
         # mini_state = 2: success!
-        self.target_heading = np.arctan2(self.target_y/self.target_x)
-
-        while True:
-            if mini_state == 0: # rotate
-                dheading = abs(self.heading-self.target_heading)
-                if self.target_x>0: 
-                    self.left(dheading)
-                else: 
-                    self.right(dheading)
-                if abs(self.heading - self.target_heading) < EPSILON_HEADING:
-                    mini_state = 1
-            if mini_state == 1: # go straight
-                self.straight()
-                if abs(self.x - self.target_x) < EPISLON_DIST and abs(self.y - self.target_y) < EPISLON_DIST:
-                    mini_state = 2
-            return mini_state
-                
+        if self.mini_state == 0: # rotate
+            target_dx = self.target_x - self.x
+            target_dy = self.target_y - self.y
+            self.target_dheading = 360 - (np.degrees(np.arctan2(target_dy, target_dx)) + 360) % 360
+            print(self.heading, self.target_dheading)
+            if abs(self.heading - self.target_dheading) < EPSILON_HEADING:
+                self.mini_state = 1
+            elif target_dy > 0: 
+                self.left(abs(self.heading - self.target_dheading))
+            else: 
+                self.right(self.heading)
+        if self.mini_state == 1: # go straight
+            self.straight()
+            if abs(self.x - self.target_x) < EPISLON_DIST and abs(self.y - self.target_y) < EPISLON_DIST:
+                self.mini_state = 2
+        return self.mini_state
 
 if __name__ == "__main__":
     main()
