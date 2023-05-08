@@ -5,8 +5,8 @@ import cv2
 import math
 from pupil_apriltags import Detector
 
-# arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
-arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+# arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
 
 orange_lower = np.array([1, 100, 150])
 orange_upper = np.array([15, 200, 255])
@@ -78,16 +78,16 @@ def main():
             elif car.state == 2: # go to AED and pick it up
                 car.detect_april_tag()
                 if car.april_tag == 0: 
-                    car.left(10)
+                    car.left(5)
                 elif car.april_tag == 1: 
-                    car.right(10)
+                    car.right(5)
                 elif car.april_tag == 2: 
-                    car.target_x = -0.1
-                    car.target_y = 1.65
-                    car.straight()
-                    if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
-                        car.mini_state = 2
-                if car.mini_state == 2:
+                    car.state = 3
+            elif car.state == 3:
+                car.target_x = -0.1
+                car.target_y = 1.65
+                car.straight()
+                if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
                     car.stop()
                     car.pickupAED()
                     print('Success! AED picked up')
@@ -95,12 +95,12 @@ def main():
                     if car.pickup_counter > 200:
                         car.mini_state = 0
                         car.state = 3
-            elif car.state == 3: # back up
+            elif car.state == 4: # back up
                 car.back()
                 car.backup_counter += 1
                 if car.backup_counter > 200:
-                    car.state = 4
-            elif car.state == 4: # turn around
+                    car.state = 5
+            elif car.state == 5: # turn around
                 car.target_x = 3
                 car.target_y = 1
                 car.go()
