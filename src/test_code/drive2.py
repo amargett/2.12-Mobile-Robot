@@ -172,8 +172,7 @@ def main():
 
     # #####
 ## obstacle detection	
-global obstacle
-
+    global obstacle
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
     parser.add_argument('--weights', type=str, default='weights/best.pt', help='path to weights file')
