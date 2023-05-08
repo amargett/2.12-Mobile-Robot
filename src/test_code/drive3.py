@@ -309,7 +309,7 @@ class Car(object):
                         ) #physical size of the apriltag
         intrisic = [640,640,960,540]
         tagsize = 0.100  #physical size of printed tag, unit = meter
-        threshold = 5  # tolerable yaw
+        threshold = 10  # tolerable yaw
         ret, self.frame = self.cap.read()
         self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
