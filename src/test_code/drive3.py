@@ -310,7 +310,7 @@ class Car(object):
         ret, self.frame = self.cap.read()
         self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
+        tags = detector.detect(gray, estimate_tag_pose=False, camera_params=intrisic, tag_size=tagsize)
         if tags:
             for tag in tags:
                 if tag.center[0] < 320 - threshold:
