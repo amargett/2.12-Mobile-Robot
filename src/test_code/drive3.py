@@ -80,9 +80,9 @@ def main():
                     car.detect_april_tag()
                     car.april_time = time.time()
                 if car.april_tag == 0: 
-                    car.left(5)
+                    car.left(10)
                 elif car.april_tag == 1: 
-                    car.right(5)
+                    car.right(10)
                 elif car.april_tag == 2: 
                     car.state = 3
             elif car.state == 3:
