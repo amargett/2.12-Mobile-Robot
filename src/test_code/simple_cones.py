@@ -56,8 +56,11 @@ def find_orange_cone():
                     cv2.circle(frame, (cx, cy), 10, (0, 255, 0), -1)
 
                     # Print the position of the cone
-                    print("Cone position: ({}, {})".format(cx, cy))
-                    if cx < 
+                    #print("Cone position: ({}, {})".format(cx, cy))
+                    if cx < midpoint:
+                        print("cone on left")
+                    else:
+                        print("cone on right")
             else:
                 print("no cone")
         # Display the frame with the largest contour position
