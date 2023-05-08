@@ -33,7 +33,7 @@ def main():
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            if (time.time() - car.prev_time) > 100e-3: # look for cones every 100 loops
+            if (time.time() - car.obstacle_time) > 100e-3: # look for cones every 100 loops
                 car.ob = car.look_for_cone()
                 if car.ob: # if object has been detected
                     if car.state != car.prev_state:
@@ -42,6 +42,7 @@ def main():
                     car.obstacle = car.ob
                 if not car.ob and car.state == 6: # if object goes out of view
                     car.state = car.prev_state
+                car.obstacle_time = time.time()
             if car.state == 0: # go to 1st waypoint, far from AED
                 car.target_x = 1.5
                 car.target_y = 1.65

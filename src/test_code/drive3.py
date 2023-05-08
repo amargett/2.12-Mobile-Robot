@@ -52,7 +52,7 @@ def main():
     while True:
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 5e-3: 
+        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             # print(car.x, car.y, car.heading)
             # car.look_for_cone()
@@ -76,18 +76,20 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
-                car.detect_april_tag()
+                if (time.time() - car.april_time) > 10e-3:
+                    car.detect_april_tag()
+                    car.april_time = time.time()
                 if car.april_tag == 0: 
-                    car.left(10)
+                    car.left(5)
                 elif car.april_tag == 1: 
-                    car.right(10)
+                    car.right(5)
                 elif car.april_tag == 2: 
                     car.state = 3
             elif car.state == 3:
                 car.target_x = -0.1
                 car.target_y = 1.65
                 car.straight()
-                if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
+                if abs(car.x - car.target_x) < 5*EPSILON_DIST and abs(car.y - car.target_y) < 5*EPSILON_DIST:
                     car.stop()
                     car.pickupAED()
                     print('Success! AED picked up')
@@ -151,6 +153,7 @@ class Car(object):
 
         self.state = 0
         self.prev_time = time.time()
+        self.april_time = time.time()
 
         self.pickup_counter = 0
         self.backup_counter = 0
