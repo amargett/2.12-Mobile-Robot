@@ -49,9 +49,7 @@ def main():
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
-        print('waiting!')
     while True:
-        print('running!')
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
@@ -82,9 +80,9 @@ def main():
                     car.detect_april_tag()
                     car.april_time = time.time()
                 if car.april_tag == 0: 
-                    car.left(10)
+                    car.left(5)
                 elif car.april_tag == 1: 
-                    car.right(10)
+                    car.right(5)
                 elif car.april_tag == 2: 
                     car.state = 3
             elif car.state == 3:
