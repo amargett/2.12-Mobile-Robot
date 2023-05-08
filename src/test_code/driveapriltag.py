@@ -114,9 +114,9 @@ class Car(object):
         self.y0 = None
         self.heading0 = None
 
-        self.x = 0
-        self.y = 0
-        self.heading = 0
+        self.x = 1
+        self.y = 1.65
+        self.heading = 180
 
         self.x_raw = 0
         self.y_raw = 0
@@ -292,7 +292,7 @@ class Car(object):
         tagsize = 0.100  #physical size of printed tag, unit = meter
         threshold = 5  # tolerable yaw
         ret, self.frame = self.cap.read()
-        # self.frame = cv2.resize(self.frame, (640,480))
+        self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=False, camera_params=intrisic, tag_size=tagsize)
         if tags:
