@@ -134,3 +134,40 @@ def detectobstacle(
 # Define a global variable
 #detected_object = 0
 
+def main():
+    global obstacle
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
+    parser.add_argument('--weights', type=str, default='weights/best.pt', help='path to weights file')
+    parser.add_argument('--images', type=str, default='data/samples', help='path to images')
+    parser.add_argument('--img-size', type=int, default=32 * 13, help='size of each image dimension')
+    parser.add_argument('--conf-thres', type=float, default=0.50, help='object confidence threshold')
+    parser.add_argument('--nms-thres', type=float, default=0.45, help='iou threshold for non-maximum suppression')
+    opt = parser.parse_args()
+    print(opt)
+    def callback():
+        global obstacle_detected
+        #print("Obstacle detected: ", obstacle_detected)
+    obstacle_detection_thread = threading.Thread(target=detectobstacle, args=(opt.cfg, opt.weights, opt.images), kwargs={"img_size":opt.img_size, "conf_thres":opt.conf_thres, "nms_thres":opt.nms_thres, "callback":callback})
+    obstacle_detection_thread.start()
+    
+    print("reach here")
+
+    
+    
+    
+
+    # Check if an object is detected
+    #if detected_object == 1:
+        # Do something
+    #    print("Object detected!")
+    #else:
+        # Do something else
+    #    print("No object detected.")
+
+
+if __name__ == '__main__':
+    main()
+    
+
