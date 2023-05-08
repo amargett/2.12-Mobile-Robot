@@ -73,7 +73,8 @@ while True:
         break
     #go straight
     if not cone_position:
-        continue
+        left_desired_vel = -3
+        right_desired_vel = 3
     if(abs(cone_position[0] - midpoint)< midpoint/6):
         left_desired_vel = -3
         right_desired_vel = -3
