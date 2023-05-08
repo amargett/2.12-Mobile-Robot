@@ -17,38 +17,9 @@ PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
 ALPHA = 0.15
 EPSILON_HEADING = 1
-EPISLON_DIST = 0.1
+EPSILON_DIST = 0.1
 K_HEADING = 0.05
 
-def april_tag(): 
-    # detects whether there is an april tag in view
-    cap=cv2.VideoCapture(0)  #camera used
-    detector = Detector(families='tag36h11', 
-                    nthreads=1,
-                    quad_decimate=1.0,
-                    quad_sigma=0.0,
-                    refine_edges=1,
-                    decode_sharpening=0.25,
-                    debug=0,
-                    ) #physical size of the apriltag
-    intrisic = [640,640,960,540]
-    tagsize = 0.100  #physical size of printed tag, unit = meter
-    threshold = 5  # tolerable yaw
-    ret, frame = cap.read()
-    frame = cv2.resize(frame, (640,480))
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
-    if not tags:
-        return None
-    else:
-        for tag in tags:
-            if tag.center[0] < 320 - threshold:
-                return 0 # turn left
-            elif tag. center[0] > 320 + threshold:
-                return 1 # turn right
-            else:
-                return 2 # go straight
-            
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
     return False
@@ -81,16 +52,15 @@ def main():
     while True:
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            print(car.x, car.y, car.heading)
-            car.look_for_cone()
+            # print(car.x, car.y, car.heading)
+            # car.look_for_cone()
             # print('cone position:', car.cone_position)
-            if car.cone_position: 
+            # if car.cone_position: 
             #     print('i see a cone!')
             #     car.avoid_cone()
-                pass
+                # pass
             if car.state == 0: ## go to AED waypoint
                 car.target_x = 1
                 car.target_y = 1.65
@@ -100,9 +70,17 @@ def main():
                     car.mini_state = 0
                     car.state = 1
             elif car.state == 1: # go to AED and pick it up
-                car.target_x = -0.1
-                car.target_y = 1.65
-                car.go()
+                car.detect_april_tag()
+                if car.april_tag == 0: 
+                    car.left(10)
+                elif car.april_tag == 1: 
+                    car.right(10)
+                elif car.april_tag == 2: 
+                    car.target_x = -0.1
+                    car.target_y = 1.65
+                    car.straight()
+                    if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
+                        car.mini_state = 2
                 if car.mini_state == 2:
                     car.stop()
                     car.pickupAED()
@@ -130,7 +108,6 @@ def main():
             car.filter()
             car.printCurr()
             car.sendArduino()
-
                 
 class Car(object): 
     def __init__(self): 
@@ -173,6 +150,7 @@ class Car(object):
 
         self.mini_state = 0
         self.cone_position = None
+        self.april_tag = None
 
     def readArduino(self):
         '''
@@ -258,7 +236,7 @@ class Car(object):
                 self.right(abs(self.heading - self.target_dheading))
         elif self.mini_state == 1: # go straight
             self.straight()
-            if abs(self.x - self.target_x) < EPISLON_DIST and abs(self.y - self.target_y) < EPISLON_DIST:
+            if abs(self.x - self.target_x) < EPSILON_DIST and abs(self.y - self.target_y) < EPSILON_DIST:
                 self.mini_state = 2
         return self.mini_state
     
@@ -305,6 +283,32 @@ class Car(object):
         else:
             self.leftVel = -STRAIGHT_VEL/3
             self.rightVel = -STRAIGHT_VEL
+
+    def detect_april_tag(self): 
+        # detects whether there is an april tag in view
+        detector = Detector(families='tag36h11', 
+                        nthreads=1,
+                        quad_decimate=1.0,
+                        quad_sigma=0.0,
+                        refine_edges=1,
+                        decode_sharpening=0.25,
+                        debug=0,
+                        ) #physical size of the apriltag
+        intrisic = [640,640,960,540]
+        tagsize = 0.100  #physical size of printed tag, unit = meter
+        threshold = 5  # tolerable yaw
+        ret, frame = self.cap.read()
+        frame = cv2.resize(frame, (640,480))
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
+        if tags:
+            for tag in tags:
+                if tag.center[0] < 320 - threshold:
+                    self.april_tag = 0 # turn left
+                elif tag.center[0] > 320 + threshold:
+                    self.april_tag = 1 # turn right
+                else:
+                    self.april_tag = 2 # go straight
 
 if __name__ == "__main__":
     main()
