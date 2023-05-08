@@ -16,7 +16,7 @@ TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
 ALPHA = 0.2
-EPSILON_HEADING = 1
+EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
 
@@ -89,7 +89,7 @@ def main():
                 car.target_x = -0.1
                 car.target_y = 1.65
                 car.straight()
-                if abs(car.x - car.target_x) < 5*EPSILON_DIST and abs(car.y - car.target_y) < 5*EPSILON_DIST:
+                if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
                     car.stop()
                     car.pickupAED()
                     print('Success! AED picked up')
