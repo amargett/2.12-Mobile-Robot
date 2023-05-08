@@ -2,6 +2,8 @@ import serial
 import time
 import numpy as np
 import cv2
+import math
+from pupil_apriltags import Detector
 
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 # arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
@@ -17,16 +19,36 @@ ALPHA = 0.15
 EPSILON_HEADING = 1
 EPISLON_DIST = 0.1
 K_HEADING = 0.05
-cap = cv2.VideoCapture(0)
-SCREEN_WIDTH = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-SCREEN_HEIGHT = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-MIDPOINT = SCREEN_WIDTH // 2
-
 
 def april_tag(): 
     # detects whether there is an april tag in view
-    return False
-
+    cap=cv2.VideoCapture(0)  #camera used
+    detector = Detector(families='tag36h11', 
+                    nthreads=1,
+                    quad_decimate=1.0,
+                    quad_sigma=0.0,
+                    refine_edges=1,
+                    decode_sharpening=0.25,
+                    debug=0,
+                    ) #physical size of the apriltag
+    intrisic = [640,640,960,540]
+    tagsize = 0.100  #physical size of printed tag, unit = meter
+    threshold = 5  # tolerable yaw
+    ret, frame = cap.read()
+    frame = cv2.resize(frame, (640,480))
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
+    if not tags:
+        return None
+    else:
+        for tag in tags:
+            if tag.center[0] < 320 - threshold:
+                return 0 # turn left
+            elif tag. center[0] > 320 + threshold:
+                return 1 # turn right
+            else:
+                return 2 # go straight
+            
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
     return False
@@ -112,6 +134,12 @@ def main():
                 
 class Car(object): 
     def __init__(self): 
+        self.cap = cv2.VideoCapture(0)
+        
+        self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        self.MIDPOINT = self.SCREEN_WIDTH // 2
+        
         self.target_x = 1
         self.target_y = 1.65
         self.target_heading = 0
@@ -236,7 +264,7 @@ class Car(object):
     
     def look_for_cone(self): 
         # Read the frame from the video capture
-        ret, frame = cap.read()
+        ret, frame = self.cap.read()
         if not ret:
             print("Failed to capture frame from camera")
             return
@@ -262,16 +290,16 @@ class Car(object):
                 cy = int(M["m01"] / M["m00"])
                 self.cone_position = (cx, cy)
                 # Draw a circle at the center of the contour
-                cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
+                # cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
         # Display the frame with the cone position
-        cv2.imshow("Traffic Cone Detection", frame)
-        return
+        # cv2.imshow("Traffic Cone Detection", frame)
+        # return
     
     def avoid_cone(self):
         print('avoiding cone')
-        if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
+        if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
             self.straight()
-        elif(self.cone_position[0] < MIDPOINT):
+        elif(self.cone_position[0] < self.MIDPOINT):
             self.leftVel = -STRAIGHT_VEL
             self.rightVel = -STRAIGHT_VEL/3
         else:
