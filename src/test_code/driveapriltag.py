@@ -134,7 +134,7 @@ class Car(object):
         self.april_tag = None
 
         self.frame = None
-        self.intrisic = [640,640,960,540]
+        self.intrinsic = [640,640,960,540]
         self.tagsize = 0.100  #physical size of printed tag, unit = meter
         self.threshold = 10  # tolerable yaw
 
