@@ -77,12 +77,12 @@ while True:
         right_desired_vel = -3
     #go left
     elif(cone_position[0] < midpoint):
-        left_desired_vel = -3
-        right_desired_vel = -1
-    #go right
-    else:
         left_desired_vel = -1
         right_desired_vel = -3
+    #go right
+    else:
+        left_desired_vel = -3
+        right_desired_vel = -1
 
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
