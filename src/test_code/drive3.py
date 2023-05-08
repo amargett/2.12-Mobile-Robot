@@ -59,14 +59,13 @@ def main():
     while True:
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-        # if obstacle():
-        #     car.go()
+
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             # print(car.x, car.y, car.heading)
             car.look_for_cone()
+            print('cone position:', car.cone_position)
             if car.cone_position: 
-                print('I see a cone')
                 car.avoid_cone()
                 pass
             if car.state == 0: ## go to AED waypoint
@@ -77,7 +76,7 @@ def main():
                 if car.mini_state == 2:
                     car.mini_state = 0
                     car.state = 1
-            if car.state == 1: # go to AED and pick it up
+            elif car.state == 1: # go to AED and pick it up
                 car.target_x = -0.1
                 car.target_y = 1.65
                 car.go()
@@ -89,12 +88,12 @@ def main():
                     if car.pickup_counter > 200:
                         car.mini_state = 0
                         car.state = 2
-            if car.state == 2: # back up
+            elif car.state == 2: # back up
                 car.back()
                 car.backup_counter += 1
                 if car.backup_counter > 200:
                     car.state = 3
-            if car.state == 3: # turn around
+            elif car.state == 3: # turn around
                 car.target_x = 3
                 car.target_y = 1
                 car.go()
@@ -102,7 +101,7 @@ def main():
                     car.stop()
                     car.dropoffAED()
                     print('Success! AED dropped up')
-            if car.state == 4:
+            elif car.state == 4:
                 car.stop()
             car.prev_time = time.time()
             car.filter()
@@ -268,6 +267,7 @@ class Car(object):
         return
     
     def avoid_cone(self):
+        print('avoiding cone')
         if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
             self.straight()
         elif(self.cone_position[0] < MIDPOINT):
