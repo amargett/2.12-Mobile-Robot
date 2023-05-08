@@ -5,6 +5,7 @@ import numpy as np
 from pupil_apriltags import Detector
 import argparse
 import shutil
+import threading
 from detect import detectobstacle
 from detect import motor_control
 from pathlib import Path
@@ -171,7 +172,7 @@ def main():
 
     # #####
 ## obstacle detection	
-    global obstacle
+global obstacle
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
@@ -185,16 +186,10 @@ def main():
     def callback():
         global obstacle_detected
         #print("Obstacle detected: ", obstacle_detected)
-    with torch.no_grad():
-        result = detectobstacle(
-            opt.cfg,
-            opt.weights,
-            opt.images,
-            img_size=opt.img_size,
-            conf_thres=opt.conf_thres,
-            nms_thres=opt.nms_thres,
-            callback=callback
-        )
+    obstacle_detection_thread = threading.Thread(target=detectobstacle, args=(opt.cfg, opt.weights, opt.images), kwargs={"img_size":opt.img_size, "conf_thres":opt.conf_thres, "nms_thres":opt.nms_thres, "callback":callback})
+    obstacle_detection_thread.start()
+    
+
 ##obstacle detection
 
     while True:
