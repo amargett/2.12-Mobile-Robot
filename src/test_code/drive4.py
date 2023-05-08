@@ -11,6 +11,7 @@ arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 orange_lower = np.array([1, 100, 150])
 orange_upper = np.array([15, 200, 255])
 
+## global variables/ constants
 STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
@@ -20,32 +21,10 @@ EPSILON_HEADING = 1
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
 
-def obstacle(): 
-    # CV, determine whether or not there is an obstacle there
-    return False
-
-def close(): 
-    # ToF sensor, will decide whether we are close enough to AED
-    return True
-
-# def turnaround(car):  
-#     mini_state = 0
-#     while True:
-#         if mini_state == 0: 
-#             car.back()
-#             if abs(car.x - car.x0) >= target_x:
-#                 mini_state =1
-#         if mini_state == 1: 
-#             car.left()
-#             dheading = abs(car.heading - car.heading0)
-#             if 29 < dheading < 31: 
-#                 car.stop()
-#                 return car
-#         car.prev_time = time.time()
-#         car.printCurr()
-#         car.filter()
-#         car.send()
 def main():
+    '''
+    main loop
+    '''
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
@@ -54,21 +33,14 @@ def main():
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            # print(car.x, car.y, car.heading)
-            # car.look_for_cone()
-            # print('cone position:', car.cone_position)
-            # if car.cone_position: 
-            #     print('i see a cone!')
-            #     car.avoid_cone()
-                # pass
-            if (time.time() - car.prev_time) > 100e-3:
+            if (time.time() - car.prev_time) > 100e-3: # look for cones every 100 loops
                 car.ob = car.look_for_cone()
-                if car.ob:
+                if car.ob: # if object has been detected
                     if car.state != car.prev_state:
                         car.prev_state = car.state
                     car.state = 6
                     car.obstacle = car.ob
-                if not car.ob and car.state == 6:
+                if not car.ob and car.state == 6: # if object goes out of view
                     car.state = car.prev_state
             if car.state == 0: # go to 1st waypoint, far from AED
                 car.target_x = 1.5
@@ -116,24 +88,16 @@ def main():
                 if car.mini_state == 2:
                     car.stop()
                     car.dropoffAED()
-                    print('Success! AED dropped up')
-                    car.state = 5
-                    car.mini_state = 0
-            elif car.state == 5:
-                car.stop()   
+                    print('Success! AED dropped off')
+                    car.mini_state = 0  
             elif car.state == 6: # avoid obstacle
-                if car.ob == 0: # go left
-                    car.leftVel = -STRAIGHT_VEL/3
-                    car.rightVel = -STRAIGHT_VEL
-                elif car.ob == 1: # go right
-                    car.leftVel = -STRAIGHT_VEL
-                    car.rightVel = -STRAIGHT_VEL/3
+                car.avoid_cone()
             car.prev_time = time.time()
             car.filter()
             car.printCurr()
             car.sendArduino()
-                
-class Car(object): 
+                          
+class Car(object):  
     def __init__(self): 
         self.cap = cv2.VideoCapture(0)
         
@@ -201,11 +165,19 @@ class Car(object):
         self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
 
     def left(self, error): 
+        '''
+        input: float error, the difference between desired angle and current angle
+        runs P control on the turn velocity to slow down as it gets closer
+        '''
         self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
         if self.rightVel > 2.5: 
             self.leftVel, self.rightVel = -2.5, 2.5
 
     def right(self, error): 
+        '''
+        input: float error, the difference between desired angle and current angle
+        runs P control on the turn velocity to slow down as it gets closer
+        '''
         self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
         if self.leftVel > 2.5: 
             self.leftVel, self.rightVel = 2.5, -2.5
@@ -223,6 +195,9 @@ class Car(object):
         self.servoAngle = DROPOFF_ANGLE
 
     def setXYH(self): 
+        '''
+        sets x, y, and heading based on raw IMU data and initial values
+        '''
         self.x = self.x0 - self.x_raw
         self.y = self.y_raw - self.y0
         self.heading = self.heading_raw
@@ -231,27 +206,27 @@ class Car(object):
         print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.servoAngle))
 
     def filter(self): 
+        '''
+        applies low pass filter to velocity values
+        '''
         self.filtLeftVel = ALPHA*self.leftVel + (1 - ALPHA)*self.filtLeftVel
         self.filtRightVel = ALPHA*self.rightVel + (1 - ALPHA)*self.filtRightVel
         self.filtServoAngle = ALPHA*self.servoAngle + (1 - ALPHA)*self.filtServoAngle
 
     def sendArduino(self): 
+        '''
+        sends filtered left & right velocity and desired servo angle
+        '''
         msg = f"{self.filtLeftVel},{self.filtRightVel},{self.filtServoAngle}\n".encode() # encode message as bytes
         arduino.write(msg)
     
     def go(self): 
         '''
-        Args:
-            target_x(float)
-            target_y(float)
-            car(Car object)
-
-        Returns:
-            mini_state
+        Goes to target x,y pos based on current mini-state
+        mini_state == 0: rotate
+        mini_state == 1: go forward
+        mini_state = 2: success!
         '''
-        # mini_state == 0: rotate
-        # mini_state == 1: go forward
-        # mini_state = 2: success!
         if self.mini_state == 0: # rotate
             target_dx = self.target_x - self.x
             target_dy = self.target_y - self.y
@@ -267,54 +242,43 @@ class Car(object):
             self.straight()
             if abs(self.x - self.target_x) < EPSILON_DIST and abs(self.y - self.target_y) < EPSILON_DIST:
                 self.mini_state = 2
-        return self.mini_state
     
     def look_for_cone(self): 
+        '''
+        uses OpenCV to look for a cone
+        updates self.ob
+        ob = 0: obstacle on the right
+        ob = 1: obstacle on the left
+        '''
         # Read the frame from the video capture
         ret, self.frame = self.cap.read()
         if not ret:
             print("Failed to capture frame from camera")
             return
-        # Convert the frame to the HSV color space
-        hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
-        # Create a mask based on the orange color range
-        mask = cv2.inRange(hsv, orange_lower, orange_upper)
-        # Perform morphological operations to remove noise
-        mask = cv2.erode(mask, None, iterations=2)
-        mask = cv2.dilate(mask, None, iterations=2)
-        # Find contours in the mask
-        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # Initialize the position of the cone
-        self.cone_position = None
-        # Process the contours
-        if len(contours) > 0:
-            # Find the largest contour
-            largest_contour = max(contours, key=cv2.contourArea)
-            # Calculate the center of the contour
-            M = cv2.moments(largest_contour)
-            if M["m00"] > 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                self.cone_position = (cx, cy)
-                # Draw a circle at the center of the contour
-                # cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
-        # Display the frame with the cone position
-        # cv2.imshow("Traffic Cone Detection", frame)
-        # return
+        ## IMPLEMENT: look for cone and update self.ob
+        
     
     def avoid_cone(self):
-        print('avoiding cone')
-        if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
-            self.straight()
-        elif(self.cone_position[0] < self.MIDPOINT):
-            self.leftVel = -STRAIGHT_VEL
-            self.rightVel = -STRAIGHT_VEL/3
-        else:
+        '''
+        curves left if object on right
+        curves right if object on left
+        '''
+        if self.ob == 0: # go left
             self.leftVel = -STRAIGHT_VEL/3
             self.rightVel = -STRAIGHT_VEL
+        elif self.ob == 1: # go right
+            self.leftVel = -STRAIGHT_VEL
+            self.rightVel = -STRAIGHT_VEL/3
+        print('avoiding cone')
 
     def detect_april_tag(self): 
-        # detects whether there is an april tag in view
+        '''
+        detects whether there is an april tag in view
+        updates self.april_tag
+        april_tag = 0 : turn left
+        april_tag = 1: turn right
+        april_tag = 2: go straight
+        '''
         detector = Detector(families='tag36h11', 
                         nthreads=1,
                         quad_decimate=1.0,
@@ -339,7 +303,6 @@ class Car(object):
                 else:
                     self.april_tag = 2 # go straight
 
-        
 
 if __name__ == "__main__":
     main()
