@@ -151,12 +151,12 @@ class Car(object):
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
         if self.rightVel > 1.5: 
-            self.leftVel, self.rightVel = 1.5, 1.5
+            self.leftVel, self.rightVel = -1.5, 1.5
 
     def right(self, error): 
         self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
         if self.leftVel > 1.5: 
-            self.leftVel, self.rightVel = 1.5, 1.5
+            self.leftVel, self.rightVel = 1.5, -1.5
 
     def stop(self):
         self.leftVel, self.rightVel = 0, 0
