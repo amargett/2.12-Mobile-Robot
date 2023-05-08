@@ -15,7 +15,8 @@ screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 screen_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 midpoint = screen_width // 2
 
-arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
+#arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 left_desired_vel = 0
 right_desired_vel = 0
 servo_desired_angle = 90
