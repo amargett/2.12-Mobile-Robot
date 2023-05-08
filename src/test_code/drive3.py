@@ -71,7 +71,7 @@ def main():
             #     pass
             if car.state == 0: ## go to AED waypoint
                 car.target_x = 1
-                car.target_y = 1.7
+                car.target_y = 1.65
                 print('car should go')
                 car.go()
                 if car.mini_state == 2:
@@ -224,10 +224,10 @@ class Car(object):
             print(self.mini_state, self.heading, self.target_dheading)
             if abs(self.heading - self.target_dheading) < EPSILON_HEADING:
                 self.mini_state = 1
-            elif target_dy > 0: 
+            elif self.target_dheading > 180: 
                 self.left(abs(self.heading - self.target_dheading))
             else: 
-                self.right(self.heading)
+                self.right(abs(self.heading - self.target_dheading))
         elif self.mini_state == 1: # go straight
             self.straight()
             if abs(self.x - self.target_x) < EPISLON_DIST and abs(self.y - self.target_y) < EPISLON_DIST:
