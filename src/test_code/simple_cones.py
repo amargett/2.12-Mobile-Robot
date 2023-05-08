@@ -3,7 +3,7 @@ import numpy as np
 
 def find_orange_cone():
     # Open the webcam
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
 
     # Get the screen resolution
     screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -21,7 +21,7 @@ def find_orange_cone():
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Define the lower and upper bounds of the orange color in HSV color space
-        orange_lower = np.array([5, 100, 100])
+        orange_lower = np.array([1, 100, 150])
         orange_upper = np.array([15, 255, 255])
 
         # Create a mask based on the orange color range
@@ -33,7 +33,7 @@ def find_orange_cone():
 
         # Find contours in the mask
         contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
+        cv2.imshow("Orange Cone Detection", mask)
         # Initialize the position of the largest contour
         largest_contour_position = None
 
@@ -46,7 +46,7 @@ def find_orange_cone():
             largest_contour_area = cv2.contourArea(largest_contour)
 
             # Check if the largest contour has a large enough magnitude (area)
-            if largest_contour_area > 10000:
+            if largest_contour_area > 5000:
                 # Calculate the center of the contour
                 M = cv2.moments(largest_contour)
                 if M["m00"] > 0:
@@ -57,14 +57,17 @@ def find_orange_cone():
 
                     # Print the position of the cone
                     #print("Cone position: ({}, {})".format(cx, cy))
+                    """
                     if cx < midpoint:
                         print("cone on left")
                     else:
                         print("cone on right")
+                    """
+                    print(hsv[cy, cx])
             else:
                 print("no cone")
         # Display the frame with the largest contour position
-        cv2.imshow("Orange Cone Detection", frame)
+        #cv2.imshow("Orange Cone Detection", frame)
 
         # Exit the loop if the 'q' key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
