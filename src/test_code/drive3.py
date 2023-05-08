@@ -66,6 +66,7 @@ def main():
             # print(car.x, car.y, car.heading)
             car.look_for_cone()
             if car.cone_position: 
+                print('I see a cone')
                 car.avoid_cone()
                 pass
             if car.state == 0: ## go to AED waypoint
