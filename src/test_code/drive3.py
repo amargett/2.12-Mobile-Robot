@@ -57,7 +57,7 @@ def main():
             # print(car.x, car.y, car.heading)
             if car.state == 0: ## go to AED waypoint
                 car.target_x = 1
-                car.target_y = 1.65
+                car.target_y = 1.7
                 print('car should go')
                 car.go()
                 if car.mini_state == 2:
@@ -75,7 +75,12 @@ def main():
                     if car.pickup_counter > 200:
                         car.mini_state = 0
                         car.state = 2
-            if car.state == 2: # turn around
+            if car.state == 2: # back up
+                car.back()
+                car.backup_counter += 1
+                if car.backup_counter > 200:
+                    car.state = 3
+            if car.state == 3: # turn around
                 car.target_x = 3
                 car.target_y = 1
                 car.go()
@@ -83,11 +88,7 @@ def main():
                     car.stop()
                     car.dropoffAED()
                     print('Success! AED dropped up')
-                    car.dropoff_counter += 1 
-                    if car.dropoff_counter > 200:
-                        car.mini_state = 0
-                        car.state = 3
-            if car.state == 3:
+            if car.state == 4:
                 car.stop()
             car.prev_time = time.time()
             car.filter()
@@ -125,6 +126,7 @@ class Car(object):
         self.prev_time = time.time()
 
         self.pickup_counter = 0
+        self.backup_counter = 0
         self.dropoff_counter = 0
 
         self.mini_state = 0
@@ -150,13 +152,13 @@ class Car(object):
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
-        if self.rightVel > 1.5: 
-            self.leftVel, self.rightVel = -1.5, 1.5
+        if self.rightVel > 2.5: 
+            self.leftVel, self.rightVel = -2.5, 2.5
 
     def right(self, error): 
         self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
-        if self.leftVel > 1.5: 
-            self.leftVel, self.rightVel = 1.5, -1.5
+        if self.leftVel > 2.5: 
+            self.leftVel, self.rightVel = 2.5, -2.5
 
     def stop(self):
         self.leftVel, self.rightVel = 0, 0
@@ -169,9 +171,6 @@ class Car(object):
 
     def dropoffAED(self):
         self.servoAngle = DROPOFF_ANGLE
-
-    def setVelAngle(self): 
-        self.leftVel, self.rightVel, self.servoAngle = go()
 
     def setXYH(self): 
         self.x = self.x0 - self.x_raw
