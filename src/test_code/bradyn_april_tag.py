@@ -53,6 +53,7 @@ def plotPoint(image, center, color):
 
 
 while True:
+    
     # Read the frame from the video capture
     result, image = cam.read()
     grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -74,10 +75,11 @@ while True:
         cone_position = detections[0].center
         # Get the corners of the AprilTag
         corners = detections[0].corners
-
         # Calculate the distance using triangulation
         pixel_width = abs(corners[0][0] - corners[1][0])
-        print("Pixel width: " + str(pixel_width))
+        dist_to_tag = 60.0/pixel_width
+        #pixel size 200: roughly 30 cm
+        print("Dist to tag " + str(dist_to_tag))
 	# refresh the camera image
     #cv2.imshow('Result', image)
 	# let the system event loop do its thing
