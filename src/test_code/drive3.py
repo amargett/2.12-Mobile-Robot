@@ -67,7 +67,10 @@ def main():
                     car.mini_state = 0
             elif car.state == 3:
                 print(car.x)
-                car.go()
+                target_dx = car.target_x - car.x
+                car.straight(abs(target_dx))
+                if abs(target_dx) < EPSILON_DIST:
+                    car.mini_state = 2
                 if car.mini_state == 2 : ## goes until gets to aed pickup point
                     car.stop()
                     car.pickupAED()
