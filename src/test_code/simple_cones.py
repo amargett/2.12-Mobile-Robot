@@ -63,7 +63,6 @@ def find_orange_cone():
                     else:
                         print("cone on right")
                     """
-                    print(hsv[cy, cx])
             else:
                 print("no cone")
         # Display the frame with the largest contour position

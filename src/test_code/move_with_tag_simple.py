@@ -72,7 +72,7 @@ while True:
     cv2.imshow('Result', image)
 	# let the system event loop do its thing
     key = cv2.waitKey(100)
-    
+
     # Exit the loop if the 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
@@ -102,5 +102,5 @@ while True:
         sendArduino(left_desired_vel,right_desired_vel,servo_desired_angle)
 
 # Release the video capture and close all windows
-cap.release()
+cam.release()
 cv2.destroyAllWindows()
