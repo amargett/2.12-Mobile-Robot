@@ -30,6 +30,7 @@ ALPHA = 0.15
 EPSILON_HEADING = 1
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
+obstacle_detected = False
 
 def main():
     '''
@@ -324,6 +325,8 @@ def motor_control(result):
     if result == 1:
         #obstacle_detected = True
         #return 1
+        self.leftVel = -STRAIGHT_VEL/3
+        self.rightVel = -STRAIGHT_VEL
         print("Far")
         # send command to rotate car
     elif result == 2:
@@ -378,6 +381,7 @@ def detectobstacle(
         if webcam:
             save_images = False
             dataloader = LoadWebcam(img_size=img_size)
+            print("image loaded")
         
         else:
             dataloader = LoadImages(images, img_size=img_size)
