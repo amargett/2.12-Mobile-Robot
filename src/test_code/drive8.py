@@ -31,6 +31,7 @@ def close():
     return True
 
 def main():
+    vote_array = []
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
@@ -40,11 +41,12 @@ def main():
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             # print(car.x, car.y, car.heading)
-            # car.look_for_cone()
+            car.look_for_cone()
             # print('cone position:', car.cone_position)
-            # if car.cone_position: 
-            #     print('i see a cone!')
-            #     car.avoid_cone()
+            if car.cone_position: 
+                print('i see a cone!')
+                car.avoid_cone()
+                
                 # pass
             if car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
@@ -258,11 +260,13 @@ class Car(object):
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
         # Find contours in the mask
-        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # Initialize the position of the cone
         self.cone_position = None
+        cone_detected = 0
+        state = 0
         # Process the contours
-        if len(contours) > 0:
+        if len(contours) > 2000:
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the center of the contour
@@ -270,16 +274,24 @@ class Car(object):
             if M["m00"] > 0:
                 cx = int(M["m10"] / M["m00"])
                 cy = int(M["m01"] / M["m00"])
-                self.cone_position = (cx, cy)
+                cone_detected = 1
                 # Draw a circle at the center of the contour
                 # cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
         # Display the frame with the cone position
         # cv2.imshow("Traffic Cone Detection", frame)
         # return
-    
+        #Voting to make it more robust
+        vote_array.append(cone_detected)
+        if len(vote_array) > 15:
+            vote_array.pop(0)
+        if sum(vote_array) > len(vote_array) / 2:
+            self.cone_position = (cx, cy)
+            print("find cone")
+            
     def avoid_cone(self):
         print('avoiding cone')
-        if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
+        #if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
+        if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
             self.straight()
         elif(self.cone_position[0] < self.MIDPOINT):
             self.leftVel = -STRAIGHT_VEL
