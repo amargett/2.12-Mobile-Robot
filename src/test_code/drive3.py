@@ -79,17 +79,17 @@ def main():
                 if (time.time() - car.april_time) > 50e-3:
                     car.detect_april_tag()
                     car.april_time = time.time()  
-                    car.target_x = -0.1
-                    dx = car.target_x - car.x
-                    dy = dx/math.tan(math.radians(car.tagangle))
-                    car.target_y = car.y + dy
-                    car.go()
-                # if car.april_tag == 0: 
-                #     car.left(5)
-                # elif car.april_tag == 1: 
-                #     car.right(5)
-                # elif car.april_tag == 2: 
-                #     car.state = 3
+                    # car.target_x = -0.1
+                    # dx = car.target_x - car.x
+                    # dy = dx/math.tan(math.radians(car.tagangle))
+                    # car.target_y = car.y + dy
+                    # car.go()
+                    if car.april_tag == 0: 
+                        car.left(5)
+                    elif car.april_tag == 1: 
+                        car.right(5)
+                    elif car.april_tag == 2: 
+                        car.state = 3
             elif car.state == 3:
                 car.target_x = -0.1
                 car.target_y = 1.65
@@ -317,12 +317,18 @@ class Car(object):
                         debug=0,
                         ) #physical size of the apriltag
         _, self.frame = self.cap.read()
-        # self.frame = cv2.resize(self.frame, (640,480))
+        #self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrisic, tag_size=self.tagsize)
+        tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
         if tags:
+            print("APRIL TAG")
             tag = tags[0]
-            self.tagangle = math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
+            if tag.center[0] < 960 - 15:
+                return 1   #turn left
+            elif tag.center[0] > 960 + 15:
+                return 2   #turn right
+            else:
+                return 3   # go straight
 
 if __name__ == "__main__":
     main()
