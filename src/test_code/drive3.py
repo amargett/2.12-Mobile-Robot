@@ -122,7 +122,7 @@ def main():
                 car.stop()
             car.prev_time = time.time()
             car.filter()
-            car.printCurr()
+            #car.printCurr()
             car.sendArduino()
                 
 class Car(object): 
