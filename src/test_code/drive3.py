@@ -71,16 +71,15 @@ def main():
                 # car.straight(abs(target_dx))
                 # if abs(target_dx) < 0.02:
                 #     car.mini_state = 2
-                if car.mini_state == 2 : ## goes until gets to aed pickup point
-                    car.stop()
-                    car.pickupAED()
-                    print('Success! AED picked up')
-                    car.pickup_counter += 1 
-                    if car.pickup_counter > 200:
-                        car.mini_state = 0
-                        car.state = 4
-                else: 
-                    print('bad threshold')
+                # if car.mini_state == 2 : ## goes until gets to aed pickup point
+                car.stop()
+                car.pickupAED()
+                print('Success! AED picked up')
+                car.pickup_counter += 1 
+                if car.pickup_counter > 200:
+                    car.mini_state = 0
+                    car.state = 4
+
             elif car.state == 4: # back up
                 car.back()
                 car.backup_counter += 1
