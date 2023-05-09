@@ -341,6 +341,7 @@ class Car(object):
             for cnt in contours:
                 boundingRect = cv2.boundingRect(cnt)
                 approx = cv2.approxPolyDP(cnt, 0.06 * cv2.arcLength(cnt, True), True)
+                print(len(approx))
                 # if the contour is a triangle, draw a bounding box around it and tag a traffic_cone label to it
                 if len(approx) == 3:
                     print("cone_detected")
