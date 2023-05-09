@@ -73,8 +73,9 @@ while True:
 	# refresh the camera image
     #cv2.imshow('Result', image)
 	# let the system event loop do its thing
-
+    print(cone_position)
     #go straight
+    """
     if len(cone_position) == 0:
         left_desired_vel = -3
         right_desired_vel = 3
@@ -93,6 +94,7 @@ while True:
         left_desired_vel = -1
         right_desired_vel = -3
         print("tag in right")
+    """
 
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
