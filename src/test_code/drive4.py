@@ -266,7 +266,7 @@ class Car(object):
 
             # Calculate the area of the largest contour
             largest_contour_area = cv2.contourArea(largest_contour)
-            if largest_contour_area > 5000:
+            if largest_contour_area > 10000:
                 print("CONE??!?!?!?!")
                 M = cv2.moments(largest_contour)
                 if M["m00"] > 0:
