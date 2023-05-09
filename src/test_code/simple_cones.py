@@ -32,7 +32,8 @@ def find_orange_cone():
         mask = cv2.dilate(mask, None, iterations=2)
 
         # Find contours in the mask
-        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
         cv2.imshow("Orange Cone Detection", mask)
         # Initialize the position of the largest contour
         largest_contour_position = None
