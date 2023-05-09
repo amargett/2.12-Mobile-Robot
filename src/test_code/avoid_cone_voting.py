@@ -138,6 +138,8 @@ while True:
     """
     if sum(vote_array) < len(vote_array) / 2:
         print("no cone detected, or not enough votes")
+        left_desired_vel = -des_vel
+        right_desired_vel = des_vel
     else:
         if(cone_position[0] < midpoint):
             fraction_diff = cone_position[0]/midpoint
