@@ -62,15 +62,15 @@ def main():
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
                 car.detect_april_tag()
-                if car.mini_state == 3: 
+                if car.mini_state == 1: 
                     car.state = 3
                     car.mini_state = 0
             elif car.state == 3:
-                print(car.x)
-                target_dx = car.target_x - car.x
-                car.straight(abs(target_dx))
-                if abs(target_dx) < 0.02:
-                    car.mini_state = 2
+                # print(car.x)
+                # target_dx = car.target_x - car.x
+                # car.straight(abs(target_dx))
+                # if abs(target_dx) < 0.02:
+                #     car.mini_state = 2
                 if car.mini_state == 2 : ## goes until gets to aed pickup point
                     car.stop()
                     car.pickupAED()
@@ -328,10 +328,10 @@ class Car(object):
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
                     self.rightVel = -vel + 3* fraction_diff
-            elif self.mini_state ==1: 
-                self.target_x = self.x - 0.05 ## set target to aed point
-                self.target_y = self.y
-                self.mini_state = 3
+            # elif self.mini_state ==1: 
+            #     self.target_x = self.x - 0.05 ## set target to aed point
+            #     self.target_y = self.y
+            #     self.mini_state = 3
 
         # # detects whether there is an april tag in view
         # detector = Detector(families='tag36h11', 
