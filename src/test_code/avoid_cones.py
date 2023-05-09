@@ -17,6 +17,7 @@ arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 left_desired_vel = 0
 right_desired_vel = 0
 servo_desired_angle = 90
+cone_position = 0
 
 
 #############################################################
