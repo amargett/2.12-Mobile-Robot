@@ -81,11 +81,12 @@ def main():
                 if car.backup_counter > 200:
                     car.state = 5
             elif car.state == 5: # turn around
+                print(car.heading)
                 if car.heading > 180: 
                     dtheta = 360 - car.heading
                 else: 
                     dtheta = car.heading
-                car.left(dtheta)
+                car.right(dtheta)
                 if abs(dtheta) < EPSILON_HEADING:
                     car.state =6
                     car.stop()
