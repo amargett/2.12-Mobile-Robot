@@ -21,10 +21,11 @@ midpoint = screen_width // 2
 vote_array = []
 
 #arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
-arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+#arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 left_desired_vel = 0
 right_desired_vel = 0
 servo_desired_angle = 90
+
 
 def sendArduino(left_velocity, right_velocity, servo_angle):
     # if arduino.in_waiting > 0:
@@ -137,7 +138,7 @@ while True:
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-
+    
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
         #left_desired_vel = input("Left vel: ")
@@ -146,7 +147,7 @@ while True:
         response = arduino.readline().decode().strip()
         print("Received from Arduino:", response)
         sendArduino(left_desired_vel,right_desired_vel,servo_desired_angle)
-
+    
 # Release the video capture and close all windows
 cap.release()
 cv2.destroyAllWindows()

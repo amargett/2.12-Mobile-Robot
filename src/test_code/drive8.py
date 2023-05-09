@@ -249,7 +249,7 @@ class Car(object):
         return self.mini_state
     
     def look_for_cone(self): 
-        '''
+        
         # Read the frame from the video capture
         ret, frame = self.cap.read()
         if not ret:
@@ -268,22 +268,24 @@ class Car(object):
         self.cone_position = None
         cone_detected = 0
         state = 0
-        print("len contours =", len(contours))
-        print("x")
-        cv2.imshow("Masked Image", frame)
+        #print("len contours =", len(contours))
+        #print("x")
+        #cv2.imshow("Masked Image", frame)
         # Process the contours
-        if len(contours) > 20:
+        if len(contours) > 0:
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
-            # Calculate the center of the contour
-            M = cv2.moments(largest_contour)
-            if M["m00"] > 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                cone_detected = 1
-                print("cone detected")
-                # Draw a circle at the center of the contour
-                # cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
+            # Calculate the area of the largest contour
+            largest_contour_area = cv2.contourArea(largest_contour)
+            if largest_contour_area > 2500:
+                # Calculate the center of the contour
+                M = cv2.moments(largest_contour)
+                if M["m00"] > 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    cone_detected = 1
+                    print("cone detected")
+
         # Display the frame with the cone position
         #cv2.imshow("Traffic Cone Detection", frame)
         # return
@@ -294,7 +296,8 @@ class Car(object):
         if sum(vote_array) > len(vote_array) / 2:
             #self.cone_position = (cx, cy)
             print("find cone")
-         '''  
+          
+        ''' 
         ret, frame = self.cap.read()
         if ret == True:
     # convert the image to HSV because easier to represent color in
@@ -358,21 +361,21 @@ class Car(object):
 
             # display the resulting frame
             cv2.imshow('Frame',frame)
-        
+        '''
         
     def avoid_cone(self):
         print('avoiding cone')
         #if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
-#         if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
-#             self.straight()
-#         elif(self.cone_position[0] < self.MIDPOINT):
-#             self.leftVel = -STRAIGHT_VEL
-#             self.rightVel = -STRAIGHT_VEL/3
-#         else:
-#             self.leftVel = -STRAIGHT_VEL/3
-#             self.rightVel = -STRAIGHT_VEL
-        self.leftVel = -STRAIGHT_VEL/3
-        self.rightVel = -STRAIGHT_VEL 
+        if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
+            self.straight()
+        elif(self.cone_position[0] < self.MIDPOINT):
+            self.leftVel = -STRAIGHT_VEL
+            self.rightVel = -STRAIGHT_VEL/3
+        else:
+            self.leftVel = -STRAIGHT_VEL/3
+            self.rightVel = -STRAIGHT_VEL
+        #self.leftVel = -STRAIGHT_VEL/3
+        #self.rightVel = -STRAIGHT_VEL 
 
     def detect_april_tag(self):    
         result, image = self.cap.read()
