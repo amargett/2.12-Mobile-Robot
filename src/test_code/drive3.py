@@ -327,12 +327,15 @@ class Car(object):
         self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
+        
         if tags:
-            print("APRIL TAG")
+            print("tag_0 center :",tags[0].center[0])
             tag = tags[0]
             if tag.center[0] < 320 - 10:
+                #print("turn left")
                 return 1   #turn left
             elif tag.center[0] > 320 + 10:
+                #print("turn right")
                 return 2   #turn right
             else:
                 return 3   # go straight
