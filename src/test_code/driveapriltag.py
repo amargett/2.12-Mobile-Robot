@@ -377,68 +377,25 @@ def detectobstacle(
             dataloader = LoadWebcam(img_size=img_size)
             
         else:
-            dataloader = LoadImages(images, img_size=img_size)
+            self.leftVel = -STRAIGHT_VEL/3
+            self.rightVel = -STRAIGHT_VEL
 
-        # Get classes and colors
-        classes = load_classes(parse_data_cfg('cfg/coco.data')['names'])
-
-        for i, (path, img, im0) in enumerate(dataloader):
-            t = time.time()
-            #if webcam:
-            #    print('webcam frame %g: ' % (i + 1), end='')
-            #else:
-            #    print('image %g/%g %s: ' % (i + 1, len(dataloader), path), end='')
-            save_path = str(Path(output) / Path(path).name)
-
-            # Get detections
-            img = torch.from_numpy(img).unsqueeze(0).to(device)
-            if ONNX_EXPORT:
-                torch.onnx.export(model, img, 'weights/model.onnx', verbose=True)
-                return
-            pred = model(img)
-            pred = pred[pred[:, :, 4] > conf_thres]  # remove boxes < threshold
-
-            if len(pred) > 0:
-                
-                
-                # Run NMS on predictions
-                detections = non_max_suppression(pred.unsqueeze(0), conf_thres, nms_thres)[0]
-
-                # Rescale boxes from 416 to true image size
-                scale_coords(img_size, detections[:, :4], im0.shape).round()
-
-                # Draw bounding boxes and labels of detections
-                for x1, y1, x2, y2, conf, cls_conf, cls in detections:
-                    #if save_txt:  # Write to file
-                    #    with open(save_path + '.txt', 'a') as file:
-                    #        file.write('%g %g %g %g %g %g\n' %
-                    #                   (x1, y1, x2, y2, cls, cls_conf * conf))
-
-                    # Add bbox to the image
-                    #label = plot_one_box([x1, y1, x2, y2], im0)
-                    #print(label,end=', ')
-                    if (x2-x1)*(y2-y1) < 30000:
-                        motor_control(1)
-                        callback()
-                    else:
-                        motor_control(2)
-                        callback()
-                #obstacle = 1
-            else:
-                motor_control(0)        
-
-            dt = time.time() - t
-            #print('Done. (%.3fs)' % dt)
-
-            #if save_images:  # Save generated image with detections
-            #    cv2.imwrite(save_path, im0)
-
-            if webcam:  # Show live webcam
-                cv2.imshow(weights, im0)
-
-    #if save_images and (platform == 'darwin'):  # linux/macos
-    #    os.system('open ' + output + ' ' + 
-
+    def detect_april_tag(self):         
+        # detects whether there is an april tag in view
+        detector = Detector(families='tag36h11', 
+                        nthreads=1,
+                        quad_decimate=1.0,
+                        quad_sigma=0.0,
+                        refine_edges=1,
+                        decode_sharpening=0.25,
+                        debug=0,
+                        ) #physical size of the apriltag
+        _, self.frame = self.cap.read()
+        #self.frame = cv2.resize(self.frame, (640,480))
+        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrinsic, tag_size=self.tagsize)
+        if tags:
+            return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
 
 if __name__ == "__main__":
     main()
