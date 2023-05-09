@@ -26,6 +26,8 @@ left_desired_vel = 0
 right_desired_vel = 0
 servo_desired_angle = 90
 
+des_vel = 2
+
 
 def sendArduino(left_velocity, right_velocity, servo_angle):
     # if arduino.in_waiting > 0:
@@ -92,6 +94,8 @@ while True:
                     state = 2
                     #left_desired_vel = -3
                     #right_desired_vel = -1
+                
+                cone_position = (cx, cy)
 
                 
                 
@@ -111,6 +115,7 @@ while True:
 
 
     # Determine the state of the current frame based on the vote array
+    """
     if sum(vote_array) > len(vote_array) / 2 and state == 1:
         print ("cone detected on left_determined")
         left_desired_vel = -1
@@ -130,6 +135,16 @@ while True:
         print ("no cone determined")
         left_desired_vel = -3
         right_desired_vel = -3
+    """
+    if sum(vote_array) < len(vote_array) / 2:
+        print("no cone detected, or not enough votes")
+    else:
+        if(cone_position[0] < midpoint):
+            fraction_diff = cone_position[0]/midpoint
+        else:
+            fraction_diff = cone_position[0]/midpoint - 2
+        left_desired_vel = -des_vel - 4* fraction_diff
+        right_desired_vel = -des_vel + 4* fraction_diff
             
     # Display the frame with the largest contour position
     cv2.imshow("Orange Cone Detection", mask)
