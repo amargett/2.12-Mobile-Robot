@@ -6,8 +6,9 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
-#include "Adafruit_VL53L0X.h"
 #include "ESP32Servo.h"
+#include <vl53l4cx_class.h>
+#define DEV_I2C Wire
 
 // wheel radius in meters
 #define r 0.06
@@ -20,6 +21,7 @@ float heading = 0;
 float theta = 0;
 float servo_angle = 90;
 float distance = 0;
+float prev_time = 0;
 
 unsigned long prevLoopTimeMicros = 0; // in microseconds
 // how long to wait before updating PID parameters
@@ -35,7 +37,9 @@ void readDesiredVel();
 void updateRobotPose(float dPhiL, float dPhiR);
 void setWheelVel();
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
-Adafruit_VL53L0X lox = Adafruit_VL53L0X();
+VL53L4CX sensor_vl53l4cx_sat(&DEV_I2C, A1);
+
+uint8_t NewDataReady = 0;
 
 int servoPin = 13;
 Servo myservo;
@@ -59,12 +63,16 @@ void setup()
             ;
     }
 
-    if (!lox.begin())
-    {
-        Serial.println(F("Failed to boot VL53L0X"));
-        while (1)
-            ;
-    }
+    DEV_I2C.begin();
+
+    // Configure VL53L4CX satellite component.
+    sensor_vl53l4cx_sat.begin();
+    // Switch off VL53L4CX satellite component.
+    sensor_vl53l4cx_sat.VL53L4CX_Off();
+    //Initialize VL53L4CX satellite component.
+    sensor_vl53l4cx_sat.InitSensor(0x12);
+    // Start Measurements
+    sensor_vl53l4cx_sat.VL53L4CX_StartMeasurement();
 
     delay(1000);
 
@@ -114,16 +122,38 @@ void readIMU()
 
 void readTOF()
 {
-    VL53L0X_RangingMeasurementData_t measure;
-    lox.rangingTest(&measure, false);
-    if (measure.RangeStatus != 4)
-    { // phase failures have incorrect data
-        distance = measure.RangeMilliMeter;
+    VL53L4CX_MultiRangingData_t MultiRangingData;
+    VL53L4CX_MultiRangingData_t *pMultiRangingData = &MultiRangingData;
+    int no_of_object_found = 0, j;
+    char report[64];
+    int status;
+    
+    if (!NewDataReady) {
+        status = sensor_vl53l4cx_sat.VL53L4CX_GetMeasurementDataReady(&NewDataReady);
     }
-    else
-    {
-        distance = 1e6;
+
+    if ((!status) && (NewDataReady != 0)) {
+    status = sensor_vl53l4cx_sat.VL53L4CX_GetMultiRangingData(pMultiRangingData);
+    no_of_object_found = pMultiRangingData->NumberOfObjectsFound;
+    // snprintf(report, sizeof(report), "VL53L4CX Satellite: Count=%d, #Objs=%1d ", pMultiRangingData->StreamCount, no_of_object_found);
+    // SerialPort.print(report);
+    for (j = 0; j < no_of_object_found; j++) {
+    //   if (j != 0) {
+    //     SerialPort.print("\r\n                               ");
+    //   }
+      distance = pMultiRangingData->RangeData[j].RangeMilliMeter;
+    //   SerialPort.print("mm");
+    //   SerialPort.print(", Signal=");
+    //   SerialPort.print((float)pMultiRangingData->RangeData[j].SignalRateRtnMegaCps / 65536.0);
+    //   SerialPort.print(" Mcps, Ambient=");
+    //   SerialPort.print((float)pMultiRangingData->RangeData[j].AmbientRateRtnMegaCps / 65536.0);
+    //   SerialPort.print(" Mcps");
     }
+    // SerialPort.println("");
+    if (status == 0) {
+      status = sensor_vl53l4cx_sat.VL53L4CX_ClearInterruptAndStartMeasurement();
+    }
+  }
 }
 
 void sendIMU()
@@ -141,6 +171,8 @@ void readDesiredVel()
      */
     if (Serial.available() > 0)
     {
+        prev_time = micros();
+
         String data = Serial.readStringUntil('\n');
         int firstCommaIndex = data.indexOf(',');
         int secondCommaIndex = data.indexOf(',', firstCommaIndex + 1);
@@ -148,6 +180,12 @@ void readDesiredVel()
         desiredVelBL = data.substring(0, firstCommaIndex).toFloat();
         desiredVelBR = data.substring(firstCommaIndex + 1, secondCommaIndex).toFloat();
         servo_angle = data.substring(secondCommaIndex + 1).toFloat();
+    }
+    if (micros() - prev_time > 1e6)
+    {
+        desiredVelBL = 0;
+        desiredVelBR = 0;
+        servo_angle = 90;
     }
 }
 

@@ -29,23 +29,6 @@ def close():
     # ToF sensor, will decide whether we are close enough to AED
     return True
 
-# def turnaround(car):  
-#     mini_state = 0
-#     while True:
-#         if mini_state == 0: 
-#             car.back()
-#             if abs(car.x - car.x0) >= target_x:
-#                 mini_state =1
-#         if mini_state == 1: 
-#             car.left()
-#             dheading = abs(car.heading - car.heading0)
-#             if 29 < dheading < 31: 
-#                 car.stop()
-#                 return car
-#         car.prev_time = time.time()
-#         car.printCurr()
-#         car.filter()
-#         car.send()
 def main():
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
