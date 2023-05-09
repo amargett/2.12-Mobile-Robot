@@ -3,7 +3,8 @@ import time
 import numpy as np
 import cv2
 import math
-from pupil_apriltags import Detector
+import apriltag
+# from pupil_apriltags import Detector
 
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 # arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
@@ -60,20 +61,22 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
-                if (time.time() - car.april_time) > 50e-3:
-                    car.detect_april_tag()
-                    car.april_time = time.time()  
+                # if (time.time() - car.april_time) > 50e-3:
+                car.detect_april_tag()
+                if car.mini_state == 2: 
+                    car.state = 3
+                    # car.april_time = time.time()  
                     # car.target_x = -0.1
                     # dx = car.target_x - car.x
                     # dy = dx/math.tan(math.radians(car.tagangle))
                     # car.target_y = car.y + dy
                     # car.go()
-                    if car.april_tag == 0: 
-                        car.left(5)
-                    elif car.april_tag == 1: 
-                        car.right(5)
-                    elif car.april_tag == 2: 
-                        car.state = 3
+                    # if car.april_tag == 0: 
+                    #     car.left(5)
+                    # elif car.april_tag == 1: 
+                    #     car.right(5)
+                    # elif car.april_tag == 2: 
+                    #     car.state = 3
             elif car.state == 3:
                 car.target_x = -0.1
                 car.target_y = 1.65
@@ -105,12 +108,12 @@ def main():
                 car.stop()
             car.prev_time = time.time()
             car.filter()
-            #car.printCurr()
             car.sendArduino()
                 
 class Car(object): 
     def __init__(self): 
         self.cap = cv2.VideoCapture(0)
+        self.detector = apriltag.Detector()
         
         self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -296,32 +299,58 @@ class Car(object):
             self.leftVel = -STRAIGHT_VEL/3
             self.rightVel = -STRAIGHT_VEL
 
-    def detect_april_tag(self):         
-        # detects whether there is an april tag in view
-        detector = Detector(families='tag36h11', 
-                        nthreads=1,
-                        quad_decimate=2,
-                        quad_sigma=0.0,
-                        refine_edges=1,
-                        decode_sharpening=0.25,
-                        debug=0,
-                        ) #physical size of the apriltag
-        _, self.frame = self.cap.read()
-        self.frame = cv2.resize(self.frame, (640,480))
-        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
+    def detect_april_tag(self):    
+        result, image = self.cap.read()
+        grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # look for tags
+        detections = self.detector.detect(grayimg)
+        target_dx = -0.1 - self.x
+        target_dy = 1.65 - self.y
+        vel = math.sqrt(target_dx**2 + target_dy**2)* K_VEl # P control velocity
+        if vel> STRAIGHT_VEL: 
+            vel = STRAIGHT_VEL
+        if not detections:
+            print("Nothing ")
+            cone_position = None
+            code_present = False
+        else:
+            code_present = True
+            tag_position = detections[0].center
+        print(cone_position)
+        if code_present == False:
+            print('no april tag')
+        else:
+            fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
+            self.leftVel= -vel - 5* fraction_diff
+            self.rightVel = -vel + 5 * fraction_diff
+        if abs(target_dx) < EPSILON_DIST and abs(target_dy) < EPSILON_DIST:
+            self.mini_state = 2
+
+        # # detects whether there is an april tag in view
+        # detector = Detector(families='tag36h11', 
+        #                 nthreads=1,
+        #                 quad_decimate=2,
+        #                 quad_sigma=0.0,
+        #                 refine_edges=1,
+        #                 decode_sharpening=0.25,
+        #                 debug=0,
+        #                 ) #physical size of the apriltag
+        # _, self.frame = self.cap.read()
+        # self.frame = cv2.resize(self.frame, (640,480))
+        # gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+        # tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
         
-        if tags:
-            tag = tags[0]
-            print("TAG: " + str(tag))
-            if tag.center[0] < 320 - 7:
-                print("turn left")
-                return 1   #turn left
-            elif tag.center[0] > 320 + 7:
-                print("turn right")
-                return 2   #turn right
-            else:
-                return 3   # go straight
+        # if tags:
+        #     tag = tags[0]
+        #     print("TAG: " + str(tag))
+        #     if tag.center[0] < 320 - 7:
+        #         print("turn left")
+        #         return 1   #turn left
+        #     elif tag.center[0] > 320 + 7:
+        #         print("turn right")
+        #         return 2   #turn right
+        #     else:
+        #         return 3   # go straight
 
 if __name__ == "__main__":
     main()
