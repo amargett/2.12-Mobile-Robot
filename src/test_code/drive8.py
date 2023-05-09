@@ -388,6 +388,7 @@ class Car(object):
             print("straight")
             self.leftVel = -3
             self.rightVel = -3
+            
         elif(self.cone_position[0] < self.MIDPOINT):
             print("turning right")
             self.leftVel = -1
@@ -396,6 +397,8 @@ class Car(object):
             print("turning left")
             self.leftVel = -3
             self.rightVel = -1
+        print("left vel", self.leftVel)
+        print("right vel", self.rightVel)
         #self.leftVel = -STRAIGHT_VEL/3
         #self.rightVel = -STRAIGHT_VEL 
 
