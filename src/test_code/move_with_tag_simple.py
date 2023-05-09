@@ -31,6 +31,8 @@ CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
 cone_position = None
 
+code_present = False
+
 ### Some utility functions to simplify drawing on the camera feed
 # draw a crosshair
 def plotPoint(image, center, color):
@@ -62,7 +64,9 @@ while True:
     if not detections:
         print("Nothing ")
         cone_position = None
+        code_present = False
     else:
+        code_present = True
 	    # found some tags, report them and update the camera image
         #for detect in detections:
             #print("tag_id: %s, center: %s" % (detect.tag_id, detect.center))
@@ -77,7 +81,7 @@ while True:
     print(cone_position)
     #go straight
     
-    if cone_position == None:
+    if code_present:
         left_desired_vel = -3
         right_desired_vel = 3
         print("No tag")
