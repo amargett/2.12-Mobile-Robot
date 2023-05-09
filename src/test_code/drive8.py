@@ -288,6 +288,18 @@ class Car(object):
                     cone_detected = 1
                     print("cone detected")
                     
+#                     if cx < midpoint and cx !=-1:
+#                     print("cone on left")
+#                     state = 1
+#                     #left_desired_vel = -1
+#                     #right_desired_vel = -3
+                    
+#                     elseif cx >= midpoint and cx != -1:
+#                     print("cone on right")
+#                     state = 2
+#                     #left_desired_vel = -3
+#                     #right_desired_vel = -1
+                    
 
         # Display the frame with the cone position
         #cv2.imshow("Traffic Cone Detection", frame)
@@ -373,14 +385,16 @@ class Car(object):
         print('avoiding cone')
         #if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
         if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
-            self.leftVel = -STRAIGHT_VEL
-            self.rightVel = -STRAIGHT_VEL
+            self.leftVel = -3
+            self.rightVel = -3
         elif(self.cone_position[0] < self.MIDPOINT):
-            self.leftVel = -STRAIGHT_VEL
-            self.rightVel = -STRAIGHT_VEL/3
+            print("turning right")
+            self.leftVel = -1
+            self.rightVel = -3
         else:
-            self.leftVel = -STRAIGHT_VEL/3
-            self.rightVel = -STRAIGHT_VEL
+            print("turning left")
+            self.leftVel = -3
+            self.rightVel = -1
         #self.leftVel = -STRAIGHT_VEL/3
         #self.rightVel = -STRAIGHT_VEL 
 
