@@ -268,6 +268,8 @@ class Car(object):
         self.cone_position = None
         cone_detected = 0
         state = 0
+        cx = -1
+        cy = -1
         #print("len contours =", len(contours))
         #print("x")
         #cv2.imshow("Masked Image", frame)
@@ -291,10 +293,12 @@ class Car(object):
         #cv2.imshow("Traffic Cone Detection", frame)
         # return
         #Voting to make it more robust
+        
         vote_array.append(cone_detected)
+        
         if len(vote_array) > 15:
             vote_array.pop(0)
-        if sum(vote_array) > len(vote_array) / 2:
+        if sum(vote_array) > len(vote_array) / 2 and cx != -1 and cy != -1:
             #self.cone_position = (cx, cy)
             print("find cone")
             self.cone_position = (cx,cy)
