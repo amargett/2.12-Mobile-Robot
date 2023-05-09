@@ -1,27 +1,36 @@
-# Copyright 2022 Mark T. Tomczak
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of
-# this software and associated documentation files (the "Software"), to deal in
-# the Software without restriction, including without limitation the rights to
-# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-# the Software, and to permit persons to whom the Software is furnished to do so,
-# subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import cv2
+import serial
+import time
+
 import apriltag
+import numpy as np
+import cv2
+
+
+# plot a little text
+def plotText(image, center, color, text):
+    center = (int(center[0]) + 4, int(center[1]) - 4)
+    return cv2.putText(image, str(text), center, cv2.FONT_HERSHEY_SIMPLEX,
+                       1, color, 3)
+
+# setup and the main loop
+detector = apriltag.Detector()
+cam = cv2.VideoCapture(0)
+
+screen_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+screen_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
+midpoint = screen_width // 2
+
+#arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
+left_desired_vel = 0
+right_desired_vel = 0
+servo_desired_angle = 90
 
 LINE_LENGTH = 5
 CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
+cone_position = None
+
+code_present = False
 
 ### Some utility functions to simplify drawing on the camera feed
 # draw a crosshair
@@ -39,43 +48,61 @@ def plotPoint(image, center, color):
                      3)
     return image
 
-# plot a little text
-def plotText(image, center, color, text):
-    center = (int(center[0]) + 4, int(center[1]) - 4)
-    return cv2.putText(image, str(text), center, cv2.FONT_HERSHEY_SIMPLEX,
-                       1, color, 3)
 
-# setup and the main loop
-detector = apriltag.Detector()
-cam = cv2.VideoCapture(0)
-
-looping = True
-
-while looping:
+while True:
+    # Read the frame from the video capture
     result, image = cam.read()
     grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 	# look for tags
     detections = detector.detect(grayimg)
     if not detections:
-        print("Nothing")
+        print("Nothing ")
+        cone_position = None
+        code_present = False
     else:
+        code_present = True
 	    # found some tags, report them and update the camera image
-        for detect in detections:
-            print("tag_id: %s, center: %s" % (detect.tag_id, detect.center))
-            image = plotPoint(image, detect.center, CENTER_COLOR)
-            image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
-            for corner in detect.corners:
-                image = plotPoint(image, corner, CORNER_COLOR)
+        #for detect in detections:
+            #print("tag_id: %s, center: %s" % (detect.tag_id, detect.center))
+            #image = plotPoint(image, detect.center, CENTER_COLOR)
+            #image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
+            #for corner in detect.corners:
+                #image = plotPoint(image, corner, CORNER_COLOR)
+        cone_position = detections[0].center
 	# refresh the camera image
-    cv2.imshow('Result', image)
+    #cv2.imshow('Result', image)
 	# let the system event loop do its thing
-    key = cv2.waitKey(100)
-	# terminate the loop if the 'Return' key his hit
-    if key == 13:
-        looping = False
-
+    print(cone_position)
+    #go straight
+    
+    if code_present == False:
+        left_desired_vel = -3
+        right_desired_vel = 3
+        print("No tag")
+    else:
+        if(abs(float(cone_position[0]) - midpoint)< midpoint/6):
+            left_desired_vel = -3
+            right_desired_vel = -3
+            print("tag in front")
+        #go left
+        elif(float(cone_position[0]) < midpoint):
+            left_desired_vel = -3
+            right_desired_vel = -1
+            print("tag in left")
+        #go right
+        else:
+            left_desired_vel = -1
+            right_desired_vel = -3
+            print("tag in right")
     
 
-# loop over; clean up and dump the last updated frame for convenience of debugging
+    key = cv2.waitKey(100)
+
+    # Exit the loop if the 'q' key is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    
+
+# Release the video capture and close all windows
+cam.release()
 cv2.destroyAllWindows()
-cv2.imwrite("final.png", image)
