@@ -60,7 +60,7 @@ while True:
 	# look for tags
     detections = detector.detect(grayimg)
     if not detections:
-        print("Nothing")
+        print("Nothing ")
         cone_position = None
     else:
 	    # found some tags, report them and update the camera image
@@ -77,7 +77,7 @@ while True:
     print(cone_position)
     #go straight
     
-    if len(cone_position) == None:
+    if cone_position == None:
         left_desired_vel = -3
         right_desired_vel = 3
         print("No tag")
