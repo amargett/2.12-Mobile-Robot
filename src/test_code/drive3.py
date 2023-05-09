@@ -313,7 +313,7 @@ class Car(object):
             corners = detections[0].corners
             # Calculate the distance using triangulation
             pixel_width = abs(corners[0][0] - corners[1][0])
-            dist_to_tag = 40.0/pixel_width
+            dist_to_tag = 100.0/pixel_width
             #pixel size 200: roughly 30 cm
             print(tag_position)
             print("distance" + str(dist_to_tag))
