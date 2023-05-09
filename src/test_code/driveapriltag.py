@@ -387,8 +387,8 @@ def detectobstacle(
 
         for i, (path, img, im0) in enumerate(dataloader):
             t = time.time()
-            #if webcam:
-            #    print('webcam frame %g: ' % (i + 1), end='')
+            if webcam:
+                print('webcam frame %g: ' % (i + 1), end='')
             #else:
             #    print('image %g/%g %s: ' % (i + 1, len(dataloader), path), end='')
             save_path = str(Path(output) / Path(path).name)
