@@ -53,7 +53,7 @@ def main():
         #print("Obstacle detected: ", obstacle_detected)
     obstacle_detection_thread = threading.Thread(target=detectobstacle, args=(opt.cfg, opt.weights, opt.images), kwargs={"img_size":opt.img_size, "conf_thres":opt.conf_thres, "nms_thres":opt.nms_thres, "callback":callback})
     obstacle_detection_thread.start()
-    obstacle_detection_thread.join()
+    
     
     
     car = Car()
