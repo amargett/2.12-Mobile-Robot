@@ -87,8 +87,8 @@ while True:
         print("No tag")
     else:
         fraction_diff = (midpoint - cone_position[0])/midpoint
-        left_desired_vel = 1 + 3*fraction_diff
-        right_desired_vel = 1 - 3*fraction_diff
+        left_desired_vel = -1 - 3*fraction_diff
+        right_desired_vel = -1 + 3*fraction_diff
     
 
     #main loop to constantly run through: updates arduino with motor commands when ready
