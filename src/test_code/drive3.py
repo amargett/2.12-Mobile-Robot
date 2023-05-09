@@ -63,12 +63,10 @@ def main():
             elif car.state == 2: # go to AED and pick it up
                 car.detect_april_tag()
                 if car.mini_state == 2: 
+                    car.go()
                     car.state = 3
             elif car.state == 3:
-                car.target_x = -0.1
-                car.target_y = 1.65
-                car.straight()
-                if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
+                if car.mini_state == 2: ## goes until gets to aed pickup point
                     car.stop()
                     car.pickupAED()
                     print('Success! AED picked up')
@@ -304,15 +302,27 @@ class Car(object):
         else:
             code_present = True
             tag_position = detections[0].center
+            # Get the corners of the AprilTag
+            corners = detections[0].corners
+            # Calculate the distance using triangulation
+            pixel_width = abs(corners[0][0] - corners[1][0])
+            dist_to_tag = 60.0/pixel_width
+            #pixel size 200: roughly 30 cm
             print(tag_position)
         if code_present == False:
             print('no april tag')
         else:
-            fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
-            self.leftVel= -vel - 5* fraction_diff
-            self.rightVel = -vel + 5 * fraction_diff
-        if abs(target_dx) < EPSILON_DIST:
-            self.mini_state = 2
+            if self.mini_state == 0: 
+                if dist_to_tag < 0.3: 
+                    self.mini_state = 1
+                else: 
+                    fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
+                    self.leftVel= -vel - 5* fraction_diff
+                    self.rightVel = -vel + 5 * fraction_diff
+            elif self.mini_state ==1: 
+                self.target_x = self.x - 0.3 ## set target to aed point
+                self.target_y = self.y
+                self.mini_state = 2
 
         # # detects whether there is an april tag in view
         # detector = Detector(families='tag36h11', 
