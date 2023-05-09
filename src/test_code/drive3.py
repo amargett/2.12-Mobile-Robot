@@ -328,9 +328,9 @@ class Car(object):
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
         
-        if tags:
-            print("TAG: " + str(tag))
+        if tag:
             tag = tags[0]
+            print("TAG: " + str(tag))
             if tag.center[0] < 320 - 7:
                 print("turn left")
                 return 1   #turn left
