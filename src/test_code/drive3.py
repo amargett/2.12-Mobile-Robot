@@ -19,6 +19,7 @@ ALPHA = 0.15
 EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
+K_VEl = 2
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -135,6 +136,9 @@ class Car(object):
         self.target_x = 1
         self.target_y = 1.65
         self.target_heading = 0
+
+        self.target_dx = 0
+        self.target_dy = 0
         
         self.leftVel = 0
         self.rightVel = 0
@@ -190,8 +194,9 @@ class Car(object):
                 pass
         return self.x_raw, self.y_raw, self.heading_raw
     
-    def straight(self): 
-        self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
+    def straight(self, error): 
+        val = STRAIGHT_VEL * K_VEl
+        self.leftVel, self.rightVel = -val, -val
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
@@ -257,8 +262,8 @@ class Car(object):
             else: 
                 self.right(abs(self.heading - self.target_dheading))
         elif self.mini_state == 1: # go straight
-            self.straight()
-            if abs(self.x - self.target_x) < EPSILON_DIST and abs(self.y - self.target_y) < EPSILON_DIST:
+            self.straight(math.sqrt(target_dx**2 + target_dy**2))
+            if abs(target_dx) < EPSILON_DIST and abs(target_dy) < EPSILON_DIST:
                 self.mini_state = 2
         return self.mini_state
     
