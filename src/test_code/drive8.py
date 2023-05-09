@@ -269,7 +269,7 @@ class Car(object):
         print("len contours =", len(contours))
         cv2.imshow("Masked Image", frame)
         # Process the contours
-        if len(contours) > 2000:
+        if len(contours) > 5:
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the center of the contour
@@ -295,14 +295,16 @@ class Car(object):
     def avoid_cone(self):
         print('avoiding cone')
         #if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
-        if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
-            self.straight()
-        elif(self.cone_position[0] < self.MIDPOINT):
-            self.leftVel = -STRAIGHT_VEL
-            self.rightVel = -STRAIGHT_VEL/3
-        else:
-            self.leftVel = -STRAIGHT_VEL/3
-            self.rightVel = -STRAIGHT_VEL
+#         if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
+#             self.straight()
+#         elif(self.cone_position[0] < self.MIDPOINT):
+#             self.leftVel = -STRAIGHT_VEL
+#             self.rightVel = -STRAIGHT_VEL/3
+#         else:
+#             self.leftVel = -STRAIGHT_VEL/3
+#             self.rightVel = -STRAIGHT_VEL
+       self.leftVel = -STRAIGHT_VEL/3
+       self.rightVel = -STRAIGHT_VEL 
 
     def detect_april_tag(self):    
         result, image = self.cap.read()
