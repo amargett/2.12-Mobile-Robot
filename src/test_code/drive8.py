@@ -267,6 +267,7 @@ class Car(object):
         cone_detected = 0
         state = 0
         print("len contours =", len(contours))
+        cv2.imshow("Masked Image",mask)
         # Process the contours
         if len(contours) > 2000:
             # Find the largest contour
@@ -281,7 +282,7 @@ class Car(object):
                 # Draw a circle at the center of the contour
                 # cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
         # Display the frame with the cone position
-        cv2.imshow("Traffic Cone Detection", frame)
+        #cv2.imshow("Traffic Cone Detection", frame)
         # return
         #Voting to make it more robust
         vote_array.append(cone_detected)
