@@ -36,11 +36,12 @@ def main():
             if (time.time() - car.obstacle_time) > 100e-3: # look for cones every 100 loops
                 car.look_for_cone()
                 if car.ob: # if object has been detected
-                    if car.state != car.prev_state: # 1st time detecting obstacle
+                    if not car.prev_state: # 1st time detecting obstacle
                         car.prev_state = car.state
                     car.state = 6
                 if not car.ob and car.state == 6: # if object goes out of view
                     car.state = car.prev_state
+                    car.prev_state = None
                 car.obstacle_time = time.time()
             if car.state == 0: # go to 1st waypoint, far from AED
                 car.target_x = 1.5
@@ -83,6 +84,7 @@ def main():
                     print('Success! AED dropped off')
                     car.mini_state = 0  
             elif car.state == 6: # avoid obstacle
+
                 car.avoid_cone()
             car.prev_time = time.time()
             car.filter()
@@ -263,17 +265,24 @@ class Car(object):
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the center of the contour
-            M = cv2.moments(largest_contour)
-            if M["m00"] > 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                self.cone_position = (cx, cy)
+
+            # Calculate the area of the largest contour
+            largest_contour_area = cv2.contourArea(largest_contour)
+            if largest_contour_area > 50000 :
+                print("CONE??!?!?!?!")
+                M = cv2.moments(largest_contour)
+                if M["m00"] > 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    self.cone_position = (cx, cy)
         if not self.cone_position:
             self.ob = None
+            print("NO CONE!!!")
         elif(self.cone_position[0] < self.MIDPOINT): #go right
             self.ob = 2
         else: #go left
             self.ob = 1
+        self.ob = None
         
     def avoid_cone(self):
         '''

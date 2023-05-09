@@ -3,7 +3,7 @@ import numpy as np
 
 def find_orange_cone():
     # Open the webcam
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     # Get the screen resolution
     screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -32,7 +32,8 @@ def find_orange_cone():
         mask = cv2.dilate(mask, None, iterations=2)
 
         # Find contours in the mask
-        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
         cv2.imshow("Orange Cone Detection", mask)
         # Initialize the position of the largest contour
         largest_contour_position = None
@@ -62,7 +63,6 @@ def find_orange_cone():
                     else:
                         print("cone on right")
                     """
-                    print(hsv[cy, cx])
             else:
                 print("no cone")
         # Display the frame with the largest contour position

@@ -13,6 +13,8 @@ last_pos = 0
 # Open the video capture
 cap = cv2.VideoCapture(0)
 
+is_cone = 0
+
 screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 screen_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 midpoint = screen_width // 2
@@ -47,7 +49,8 @@ while True:
     mask = cv2.dilate(mask, None, iterations=2)
 
     # Find contours in the mask
-    contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
 
     # Initialize the position of the cone
     cone_position = None
@@ -57,34 +60,46 @@ while True:
         # Find the largest contour
         largest_contour = max(contours, key=cv2.contourArea)
 
-        # Calculate the center of the contour
-        M = cv2.moments(largest_contour)
-        if M["m00"] > 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-            cone_position = (cx, cy)
+        # Calculate the area of the largest contour
+        largest_contour_area = cv2.contourArea(largest_contour)
 
-            # Draw a circle at the center of the contour
-            cv2.circle(frame, cone_position, 5, (0, 255, 0), -1)
+        # Check if the largest contour has a large enough magnitude (area)
+        if largest_contour_area > 5000:
+            # Calculate the center of the contour
+            M = cv2.moments(largest_contour)
+            if M["m00"] > 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                cv2.circle(frame, (cx, cy), 10, (0, 255, 0), -1)
 
-    # Display the frame with the cone position
-    #cv2.imshow("Traffic Cone Detection", frame)
+                # Print the position of the cone
+                #print("Cone position: ({}, {})".format(cx, cy))
+                
+                if cx < midpoint:
+                    print("cone on left")
+                    left_desired_vel = -1
+                    right_desired_vel = -3
+                    
+                else:
+                    print("cone on right")
+                    left_desired_vel = -3
+                    right_desired_vel = -1
+
+                
+                
+        else:
+            print("no cone")
+            left_desired_vel = -3
+            right_desired_vel = -3
+
+            
+    # Display the frame with the largest contour position
+    #cv2.imshow("Orange Cone Detection", frame)
 
     # Exit the loop if the 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-    #go straight
-    if not cone_position:
-        left_desired_vel = -4
-        right_desired_vel =-4
-    #go left
-    elif(cone_position[0] < midpoint):
-        left_desired_vel = -1
-        right_desired_vel = -4
-    #go right
-    else:
-        left_desired_vel = -4
-        right_desired_vel = -1
+
 
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
