@@ -195,7 +195,7 @@ class Car(object):
         return self.x_raw, self.y_raw, self.heading_raw
     
     def straight(self, error): 
-        val = STRAIGHT_VEL * K_VEl
+        val = error * K_VEl
         self.leftVel, self.rightVel = -val, -val
 
     def left(self, error): 
