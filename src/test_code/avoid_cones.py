@@ -11,9 +11,6 @@ orange_upper = np.array([15, 200, 255])
 last_pos = 0
 
 
-screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-screen_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-midpoint = screen_width // 2
 
 #arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
