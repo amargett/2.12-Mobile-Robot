@@ -105,7 +105,7 @@ def main():
                 car.stop()
             car.prev_time = time.time()
             car.filter()
-            car.printCurr()
+            #car.printCurr()
             car.sendArduino()
                 
 class Car(object): 
@@ -307,15 +307,18 @@ class Car(object):
                         debug=0,
                         ) #physical size of the apriltag
         _, self.frame = self.cap.read()
-        #self.frame = cv2.resize(self.frame, (640,480))
+        self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
-        if tags:
-            print("APRIL TAG")
+        
+        if tag:
             tag = tags[0]
-            if tag.center[0] < 960 - 15:
+            print("TAG: " + str(tag))
+            if tag.center[0] < 320 - 7:
+                print("turn left")
                 return 1   #turn left
-            elif tag.center[0] > 960 + 15:
+            elif tag.center[0] > 320 + 7:
+                print("turn right")
                 return 2   #turn right
             else:
                 return 3   # go straight

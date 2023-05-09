@@ -30,9 +30,9 @@ def find_orange_cone():
         # Perform morphological operations to remove noise
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
-
+        cv2.imshow("Orange Cone Detection", mask)
         # Find contours in the mask
-        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         cv2.imshow("Orange Cone Detection", mask)
         # Initialize the position of the largest contour
