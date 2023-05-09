@@ -26,9 +26,9 @@ left_desired_vel = 0
 right_desired_vel = 0
 servo_desired_angle = 90
 
-des_vel = 2
-
 cone_position = (0,0)
+
+des_vel = 2
 
 
 def sendArduino(left_velocity, right_velocity, servo_angle):
@@ -59,7 +59,6 @@ while True:
 
 
     # Initialize the position of the cone
-    cone_position = None
     cone_detected = 0
     state = 0
     # Process the contours
