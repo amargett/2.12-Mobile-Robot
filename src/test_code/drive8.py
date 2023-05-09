@@ -269,7 +269,7 @@ class Car(object):
         print("len contours =", len(contours))
         cv2.imshow("Masked Image", frame)
         # Process the contours
-        if len(contours) > 5:
+        if len(contours) > 20:
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the center of the contour
@@ -289,7 +289,7 @@ class Car(object):
         if len(vote_array) > 15:
             vote_array.pop(0)
         if sum(vote_array) > len(vote_array) / 2:
-            self.cone_position = (cx, cy)
+            #self.cone_position = (cx, cy)
             print("find cone")
             
     def avoid_cone(self):
