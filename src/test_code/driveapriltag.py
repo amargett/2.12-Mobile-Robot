@@ -333,8 +333,7 @@ def motor_control(result):
     else:
         #obstacle_detected = False
         #return 0
-        self.leftVel = -STRAIGHT_VEL
-        self.rightVel = -STRAIGHT_VEL
+        
         print("straight")
 
 #def stop_detection():
@@ -443,22 +442,26 @@ def detectobstacle(
         if save_images and (platform == 'darwin'):  # linux/macos
             os.system('open ' + output + ' ' + save_path)
 
-    def detect_april_tag(self):         
-        # detects whether there is an april tag in view
-        detector = Detector(families='tag36h11', 
-                        nthreads=1,
-                        quad_decimate=1.0,
-                        quad_sigma=0.0,
-                        refine_edges=1,
-                        decode_sharpening=0.25,
-                        debug=0,
-                        ) #physical size of the apriltag
-        _, self.frame = self.cap.read()
-        #self.frame = cv2.resize(self.frame, (640,480))
-        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrinsic, tag_size=self.tagsize)
-        if tags:
-            return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
+
+
+            
+
+def detect_april_tag(self):         
+    # detects whether there is an april tag in view
+    detector = Detector(families='tag36h11', 
+                    nthreads=1,
+                    quad_decimate=1.0,
+                    quad_sigma=0.0,
+                    refine_edges=1,
+                    decode_sharpening=0.25,
+                    debug=0,
+                    ) #physical size of the apriltag
+    _, self.frame = self.cap.read()
+    #self.frame = cv2.resize(self.frame, (640,480))
+    gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+    tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrinsic, tag_size=self.tagsize)
+    if tags:
+        return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
 
 if __name__ == "__main__":
     main()
