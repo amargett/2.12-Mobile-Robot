@@ -131,7 +131,7 @@ while True:
         right_desired_vel = -3
             
     # Display the frame with the largest contour position
-    cv2.imshow("Orange Cone Detection", frame)
+    cv2.imshow("Orange Cone Detection", mask)
 
     # Exit the loop if the 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
