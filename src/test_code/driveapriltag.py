@@ -324,28 +324,29 @@ class Car(object):
         print('avoiding cone')
 
 
-obstacle_detected = False
 
-def motor_control(result):
-    # code to control the motor based on the result
-    global obstacle_detected
-    if result == 1:
-        #obstacle_detected = True
-        #return 1
-        self.leftVelchange = STRAIGHT_VEL/3*2
-        self.rightVelchange = 0
-        print("Far")
-        # send command to rotate car
-    elif result == 2:
-        self.leftVelchange = STRAIGHT_VEL/3*2
-        self.rightVelchange = 0
-        print("Close")
-    else:
-        #obstacle_detected = False
-        #return 0
-        self.leftVelchange = 0
-        self.rightVelchange = 0
-        print("straight")
+
+    def motor_control(self):
+        # code to control the motor based on the result
+        
+        global obstacle_detected
+        if result == 1:
+            #obstacle_detected = True
+            #return 1
+            self.leftVelchange = STRAIGHT_VEL/3*2
+            self.rightVelchange = 0
+            print("Far")
+            # send command to rotate car
+        elif result == 2:
+            self.leftVelchange = STRAIGHT_VEL/3*2
+            self.rightVelchange = 0
+            print("Close")
+        else:
+            #obstacle_detected = False
+            #return 0
+            self.leftVelchange = 0
+            self.rightVelchange = 0
+            print("straight")
 
 #def stop_detection():
 #    global stop_thread
