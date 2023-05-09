@@ -306,6 +306,7 @@ class Car(object):
         detections = self.detector.detect(grayimg)
         target_dx = -0.1 - self.x
         target_dy = 1.65 - self.y
+        print(target_dx, target_dy)
         vel = math.sqrt(target_dx**2 + target_dy**2)* K_VEl # P control velocity
         if vel> STRAIGHT_VEL: 
             vel = STRAIGHT_VEL
@@ -316,7 +317,7 @@ class Car(object):
         else:
             code_present = True
             tag_position = detections[0].center
-        print(tag_position)
+            print(tag_position)
         if code_present == False:
             print('no april tag')
         else:
