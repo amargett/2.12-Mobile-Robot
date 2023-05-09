@@ -77,6 +77,13 @@ while True:
             #for corner in detect.corners:
                 #image = plotPoint(image, corner, CORNER_COLOR)
         cone_position = detections[0].center
+        # Get the corners of the AprilTag
+        corners = detections[0].corners
+        # Calculate the distance using triangulation
+        pixel_width = abs(corners[0][0] - corners[1][0])
+        dist_to_tag = 60.0/pixel_width
+        #pixel size 200: roughly 30 cm
+        print("Dist to tag " + str(dist_to_tag))
 	# refresh the camera image
     #cv2.imshow('Result', image)
 	# let the system event loop do its thing
@@ -87,6 +94,9 @@ while True:
         left_desired_vel = -1
         right_desired_vel = 1
         print("No tag")
+    elif dist_to_tag < 0.3:
+        left_desired_vel = 0
+        right_desired_vel = 0
     else:
         fraction_diff = (midpoint - cone_position[0])/midpoint
         left_desired_vel = -des_vel - 3*fraction_diff
