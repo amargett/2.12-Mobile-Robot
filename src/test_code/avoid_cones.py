@@ -47,7 +47,8 @@ while True:
     mask = cv2.dilate(mask, None, iterations=2)
 
     # Find contours in the mask
-    contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
 
     # Initialize the position of the cone
     cone_position = None
