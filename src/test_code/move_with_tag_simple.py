@@ -81,24 +81,25 @@ while True:
     print(cone_position)
     #go straight
     
-    if code_present:
+    if code_present == True:
         left_desired_vel = -3
         right_desired_vel = 3
         print("No tag")
-    elif(abs(float(cone_position[0]) - midpoint)< midpoint/6):
-        left_desired_vel = -3
-        right_desired_vel = -3
-        print("tag in front")
-    #go left
-    elif(float(cone_position[0]) < midpoint):
-        left_desired_vel = -3
-        right_desired_vel = -1
-        print("tag in left")
-    #go right
     else:
-        left_desired_vel = -1
-        right_desired_vel = -3
-        print("tag in right")
+        if(abs(float(cone_position[0]) - midpoint)< midpoint/6):
+            left_desired_vel = -3
+            right_desired_vel = -3
+            print("tag in front")
+        #go left
+        elif(float(cone_position[0]) < midpoint):
+            left_desired_vel = -3
+            right_desired_vel = -1
+            print("tag in left")
+        #go right
+        else:
+            left_desired_vel = -1
+            right_desired_vel = -3
+            print("tag in right")
     
 
     #main loop to constantly run through: updates arduino with motor commands when ready
