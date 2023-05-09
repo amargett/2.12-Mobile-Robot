@@ -102,7 +102,7 @@ def find_orange_cone():
             break
 
         #go straight
-        if not cone_position:
+        if cone_position == 0:
             left_desired_vel = -4
             right_desired_vel =-4
         #go left
