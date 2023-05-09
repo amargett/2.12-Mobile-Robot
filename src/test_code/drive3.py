@@ -19,7 +19,7 @@ ALPHA = 0.15
 EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
-K_VEl = 4
+K_VEl = 5
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
