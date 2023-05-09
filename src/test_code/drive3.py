@@ -316,7 +316,7 @@ class Car(object):
         else:
             code_present = True
             tag_position = detections[0].center
-        print(cone_position)
+        print(tag_position)
         if code_present == False:
             print('no april tag')
         else:
