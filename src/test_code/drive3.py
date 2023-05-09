@@ -77,10 +77,10 @@ def main():
                 car.back()
                 car.backup_counter += 1
                 if car.backup_counter > 200:
+                    car.target_x = car.x + 0.5
+                    car.target_y = car.y -0.5
                     car.state = 5
             elif car.state == 5: # turn around
-                car.target_x = car.x + 0.5
-                car.target_y = car.y -0.5
                 car.go()
                 if car.mini_state == 2:
                     car.state =6
