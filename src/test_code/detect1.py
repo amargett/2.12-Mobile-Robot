@@ -11,8 +11,6 @@ from utils.datasets import *
 from utils.utils import *
 
 
-
-
 obstacle_detected = False
 
 def motor_control(result):
@@ -31,8 +29,8 @@ def motor_control(result):
         print("straight")
 
 #def stop_detection():
-    global stop_thread
-    stop_thread = True
+#    global stop_thread
+#    stop_thread = True
 
 def detectobstacle(
         cfg,
@@ -49,9 +47,6 @@ def detectobstacle(
 ):
     with torch.no_grad():
         global stop_thread
-
-        
-        
         device = torch_utils.select_device()
         if os.path.exists(output):
             shutil.rmtree(output)  # delete output folder
@@ -146,7 +141,6 @@ def detectobstacle(
 
 def main():
     global obstacle
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
     parser.add_argument('--weights', type=str, default='weights/best.pt', help='path to weights file')
@@ -161,13 +155,9 @@ def main():
         #print("Obstacle detected: ", obstacle_detected)
     obstacle_detection_thread = threading.Thread(target=detectobstacle, args=(opt.cfg, opt.weights, opt.images), kwargs={"img_size":opt.img_size, "conf_thres":opt.conf_thres, "nms_thres":opt.nms_thres, "callback":callback})
     obstacle_detection_thread.start()
-    
     print("reach here")
 
     
-    
-    
-
     # Check if an object is detected
     #if detected_object == 1:
         # Do something
