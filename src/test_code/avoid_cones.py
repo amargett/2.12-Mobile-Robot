@@ -53,23 +53,34 @@ while True:
     # Initialize the position of the cone
     cone_position = None
 
-    # Process the contours
+        # Process the contours
     if len(contours) > 0:
         # Find the largest contour
         largest_contour = max(contours, key=cv2.contourArea)
 
-        # Calculate the center of the contour
-        M = cv2.moments(largest_contour)
-        if M["m00"] > 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-            cone_position = (cx, cy)
+        # Calculate the area of the largest contour
+        largest_contour_area = cv2.contourArea(largest_contour)
 
-            # Draw a circle at the center of the contour
-            cv2.circle(frame, cone_position, 5, (0, 255, 0), -1)
+        # Check if the largest contour has a large enough magnitude (area)
+        if largest_contour_area > 5000:
+            # Calculate the center of the contour
+            M = cv2.moments(largest_contour)
+            if M["m00"] > 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                cv2.circle(frame, (cx, cy), 10, (0, 255, 0), -1)
 
-    # Display the frame with the cone position
-    #cv2.imshow("Traffic Cone Detection", frame)
+                # Print the position of the cone
+                #print("Cone position: ({}, {})".format(cx, cy))
+                """
+                if cx < midpoint:
+                    print("cone on left")
+                else:
+                    print("cone on right")
+                """
+                print(hsv[cy, cx])
+        else:
+            print("no cone")
 
     # Exit the loop if the 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -95,6 +106,8 @@ while True:
         response = arduino.readline().decode().strip()
         print("Received from Arduino:", response)
         sendArduino(left_desired_vel,right_desired_vel,servo_desired_angle)
+
+
 
 # Release the video capture and close all windows
 cap.release()
