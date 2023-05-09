@@ -65,13 +65,13 @@ while True:
 	    # found some tags, report them and update the camera image
         for detect in detections:
             print("tag_id: %s, center: %s" % (detect.tag_id, detect.center))
-            image = plotPoint(image, detect.center, CENTER_COLOR)
-            image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
-            for corner in detect.corners:
-                image = plotPoint(image, corner, CORNER_COLOR)
-        cone_position = detections[0]
+            #image = plotPoint(image, detect.center, CENTER_COLOR)
+            #image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
+            #for corner in detect.corners:
+                #image = plotPoint(image, corner, CORNER_COLOR)
+        cone_position = detections[0].center
 	# refresh the camera image
-    cv2.imshow('Result', image)
+    #cv2.imshow('Result', image)
 	# let the system event loop do its thing
     key = cv2.waitKey(100)
 
@@ -82,17 +82,21 @@ while True:
     if not cone_position:
         left_desired_vel = -3
         right_desired_vel = 3
+        print("No tag")
     elif(abs(float(cone_position[0]) - midpoint)< midpoint/6):
         left_desired_vel = -3
         right_desired_vel = -3
+        print("tag in front")
     #go left
     elif(float(cone_position[0]) < midpoint):
         left_desired_vel = -3
         right_desired_vel = -1
+        print("tag in left")
     #go right
     else:
         left_desired_vel = -1
         right_desired_vel = -3
+        print("tag in right")
 
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
