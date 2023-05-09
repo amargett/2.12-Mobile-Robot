@@ -22,6 +22,8 @@ EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
 
+P_CONTROL_BIAS = 1
+
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
     return False
@@ -169,19 +171,19 @@ class Car(object):
         return self.x_raw, self.y_raw, self.heading_raw
     
     def straight(self, error): 
-        val = error * K_VEl
+        val = error * K_VEl + P_CONTROL_BIAS
         if val > STRAIGHT_VEL:
             self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
         else: 
             self.leftVel, self.rightVel = -val, -val
 
     def left(self, error): 
-        self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
+        self.leftVel, self.rightVel = -K_HEADING*error - P_CONTROL_BIAS, K_HEADING*error + P_CONTROL_BIAS
         if self.rightVel > 2.5: 
             self.leftVel, self.rightVel = -2.5, 2.5
 
     def right(self, error): 
-        self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
+        self.leftVel, self.rightVel = K_HEADING*error + P_CONTROL_BIAS, -K_HEADING*error - P_CONTROL_BIAS
         if self.leftVel > 2.5: 
             self.leftVel, self.rightVel = 2.5, -2.5
 
