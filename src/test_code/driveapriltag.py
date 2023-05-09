@@ -166,6 +166,9 @@ class Car(object):
 
         self.ob = None
         self.frame = None
+        
+        self.leftVelchange = 0
+        self.rightVelchange = 0
 
     def readArduino(self):
         '''
@@ -184,14 +187,15 @@ class Car(object):
         return self.x_raw, self.y_raw, self.heading_raw
     
     def straight(self): 
-        self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
+        self.leftVel = -STRAIGHT_VEL + self.leftVelchange
+        self.rightVel = -STRAIGHT_VEL + self.rightVelchange
 
     def left(self, error): 
         '''
         input: float error, the difference between desired angle and current angle
         runs P control on the turn velocity to slow down as it gets closer
         '''
-        self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
+        self.leftVel, self.rightVel = -K_HEADING*error + self.leftVelchange, K_HEADING*error + self.rightVelchange
         if self.rightVel > 2.5: 
             self.leftVel, self.rightVel = -2.5, 2.5
 
@@ -200,7 +204,7 @@ class Car(object):
         input: float error, the difference between desired angle and current angle
         runs P control on the turn velocity to slow down as it gets closer
         '''
-        self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
+        self.leftVel, self.rightVel = K_HEADING*error + self.leftVelchange, -K_HEADING*error + self.rightVelchange
         if self.leftVel > 2.5: 
             self.leftVel, self.rightVel = 2.5, -2.5
 
@@ -208,7 +212,8 @@ class Car(object):
         self.leftVel, self.rightVel = 0, 0
     
     def back(self): 
-        self.leftVel, self.rightVel = STRAIGHT_VEL, STRAIGHT_VEL
+        self.leftVel = STRAIGHT_VEL + self.leftVelchange
+        self.rightVel = STRAIGHT_VEL + self.rightVelchange
 
     def pickupAED(self):
         self.servoAngle = PICKUP_ANGLE
@@ -327,18 +332,19 @@ def motor_control(result):
     if result == 1:
         #obstacle_detected = True
         #return 1
-        self.leftVel = -STRAIGHT_VEL/3
-        self.rightVel = -STRAIGHT_VEL
+        self.leftVelchange = STRAIGHT_VEL/3*2
+        self.rightVelchange = 0
         print("Far")
         # send command to rotate car
     elif result == 2:
-        self.leftVel = -STRAIGHT_VEL/3
-        self.rightVel = -STRAIGHT_VEL
+        self.leftVelchange = STRAIGHT_VEL/3*2
+        self.rightVelchange = 0
         print("Close")
     else:
         #obstacle_detected = False
         #return 0
-        
+        self.leftVelchange = 0
+        self.rightVelchange = 0
         print("straight")
 
 #def stop_detection():
