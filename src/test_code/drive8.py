@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 import math
 import apriltag
+import random as rng
 # from pupil_apriltags import Detector
 
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
@@ -21,6 +22,7 @@ EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
+vote_array = []
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -31,6 +33,7 @@ def close():
     return True
 
 def main():
+    
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
@@ -40,11 +43,12 @@ def main():
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             # print(car.x, car.y, car.heading)
-            # car.look_for_cone()
+            car.look_for_cone()
             # print('cone position:', car.cone_position)
-            # if car.cone_position: 
-            #     print('i see a cone!')
-            #     car.avoid_cone()
+            if car.cone_position: 
+                print('i see a cone!')
+                car.avoid_cone()
+                
                 # pass
             if car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
@@ -97,7 +101,7 @@ def main():
             car.prev_time = time.time()
             car.filter()
             car.sendArduino()
-            print('state' + str(car.state))
+            #print('state' + str(car.state))
                 
 class Car(object): 
     def __init__(self): 
@@ -245,6 +249,7 @@ class Car(object):
         return self.mini_state
     
     def look_for_cone(self): 
+        '''
         # Read the frame from the video capture
         ret, frame = self.cap.read()
         if not ret:
@@ -258,11 +263,16 @@ class Car(object):
         mask = cv2.erode(mask, None, iterations=2)
         mask = cv2.dilate(mask, None, iterations=2)
         # Find contours in the mask
-        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         # Initialize the position of the cone
         self.cone_position = None
+        cone_detected = 0
+        state = 0
+        print("len contours =", len(contours))
+        print("x")
+        cv2.imshow("Masked Image", frame)
         # Process the contours
-        if len(contours) > 0:
+        if len(contours) > 20:
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the center of the contour
@@ -270,23 +280,99 @@ class Car(object):
             if M["m00"] > 0:
                 cx = int(M["m10"] / M["m00"])
                 cy = int(M["m01"] / M["m00"])
-                self.cone_position = (cx, cy)
+                cone_detected = 1
+                print("cone detected")
                 # Draw a circle at the center of the contour
                 # cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
         # Display the frame with the cone position
-        # cv2.imshow("Traffic Cone Detection", frame)
+        #cv2.imshow("Traffic Cone Detection", frame)
         # return
-    
+        #Voting to make it more robust
+        vote_array.append(cone_detected)
+        if len(vote_array) > 15:
+            vote_array.pop(0)
+        if sum(vote_array) > len(vote_array) / 2:
+            #self.cone_position = (cx, cy)
+            print("find cone")
+         '''  
+        ret, frame = self.cap.read()
+        if ret == True:
+    # convert the image to HSV because easier to represent color in
+    # HSV as opposed to in BGR 
+            hsv_img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+            # define range of orange traffic cone color in HSV
+            lower_orange1 = np.array([0, 135, 135])
+            lower_orange2 = np.array([15, 255, 255])
+            upper_orange1 = np.array([159, 135, 80])
+            upper_orange2 = np.array([179, 255, 255])
+
+            # threshold the HSV image to get only bright orange colors
+            imgThreshLow = cv2.inRange(hsv_img, lower_orange1, lower_orange2)
+            imgThreshHigh = cv2.inRange(hsv_img, upper_orange1, upper_orange2)
+
+            # Bitwise-OR low and high threshes
+            threshed_img = cv2.bitwise_or(imgThreshLow, imgThreshHigh)
+
+            # smooth the image with erosion, dialation, and smooth gaussian
+            # first create a kernel with standard size of 5x5 pixels
+            kernel = np.ones((5,5),np.uint8)
+
+            # get rid of small artifacts by eroding first and then dialating 
+            threshed_img_smooth = cv2.erode(threshed_img, kernel, iterations = 3)
+            threshed_img_smooth = cv2.dilate(threshed_img_smooth, kernel, iterations = 2)
+
+            # account for cones with reflective tape by dialating first to bridge the gap between one orange edge
+            # and another and then erode to bring the traffic cone back to standard size
+            smoothed_img = cv2.dilate(threshed_img_smooth, kernel, iterations = 11)
+            smoothed_img = cv2.erode(smoothed_img, kernel, iterations = 7)
+
+            # detect all edges witin the image
+            edges_img = cv2.Canny(smoothed_img, 100, 200)
+            _,contours, hierarchy = cv2.findContours(edges_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+            # set parameters for writing text and drawing lines
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            fontScale = 2
+            fontColor = (0, 0, 255)
+            lineType = 2
+
+            # analyze each contour and deterime if it is a triangle
+            for cnt in contours:
+                boundingRect = cv2.boundingRect(cnt)
+                approx = cv2.approxPolyDP(cnt, 0.06 * cv2.arcLength(cnt, True), True)
+                print(len(approx))
+                # if the contour is a triangle, draw a bounding box around it and tag a traffic_cone label to it
+                if len(approx) == 3:
+                    print("cone_detected")
+#                     x, y, w, h = cv2.boundingRect(approx)
+#                     rect = (x, y, w, h)
+#                     cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)
+#                     bottomLeftCornerOfText = (x, y)
+#                     cv2.putText(frame,'traffic_cone', 
+#                         bottomLeftCornerOfText, 
+#                         font, 
+#                         fontScale,
+#                         fontColor,
+#                         lineType)
+
+            # display the resulting frame
+            cv2.imshow('Frame',frame)
+        
+        
     def avoid_cone(self):
         print('avoiding cone')
-        if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
-            self.straight()
-        elif(self.cone_position[0] < self.MIDPOINT):
-            self.leftVel = -STRAIGHT_VEL
-            self.rightVel = -STRAIGHT_VEL/3
-        else:
-            self.leftVel = -STRAIGHT_VEL/3
-            self.rightVel = -STRAIGHT_VEL
+        #if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
+#         if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
+#             self.straight()
+#         elif(self.cone_position[0] < self.MIDPOINT):
+#             self.leftVel = -STRAIGHT_VEL
+#             self.rightVel = -STRAIGHT_VEL/3
+#         else:
+#             self.leftVel = -STRAIGHT_VEL/3
+#             self.rightVel = -STRAIGHT_VEL
+        self.leftVel = -STRAIGHT_VEL/3
+        self.rightVel = -STRAIGHT_VEL 
 
     def detect_april_tag(self):    
         result, image = self.cap.read()
