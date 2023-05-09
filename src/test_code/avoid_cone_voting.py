@@ -64,6 +64,7 @@ while True:
 
         # Calculate the area of the largest contour
         largest_contour_area = cv2.contourArea(largest_contour)
+        print("largest_contour", largest_contour_area)
 
         # Check if the largest contour has a large enough magnitude (area)
         if largest_contour_area > 5000:
