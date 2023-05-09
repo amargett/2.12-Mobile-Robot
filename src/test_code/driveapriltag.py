@@ -31,6 +31,8 @@ EPSILON_HEADING = 1
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
 obstacle_detected = False
+leftVelchange = 0
+rightVelchange = 0
 
 def main():
     '''
@@ -332,7 +334,8 @@ class Car(object):
 
 def motor_control(result):
     # code to control the motor based on the result
-
+    global leftVelchange
+    global rightVelchange
     global obstacle_detected
     if result == 1:
         #obstacle_detected = True
