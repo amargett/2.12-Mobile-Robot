@@ -65,7 +65,7 @@ def main():
 
         while True:
             car.readArduino()
-            print("here")
+            #print("here")
             # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
             if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
                 car.setXYH()
@@ -122,7 +122,7 @@ def main():
                     car.avoid_cone()
                 car.prev_time = time.time()
                 car.filter()
-                car.printCurr()
+                #car.printCurr()
                 car.sendArduino()
                           
 class Car(object):  
@@ -264,7 +264,7 @@ class Car(object):
             target_dx = self.target_x - self.x
             target_dy = self.target_y - self.y
             self.target_dheading = 360 - (np.degrees(np.arctan2(target_dy, target_dx)) + 360) % 360
-            print(self.mini_state, self.heading, self.target_dheading)
+            #print(self.mini_state, self.heading, self.target_dheading)
             if abs(self.heading - self.target_dheading) < EPSILON_HEADING:
                 self.mini_state = 1
             elif self.target_dheading > 180: 
