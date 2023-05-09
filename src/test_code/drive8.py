@@ -21,6 +21,7 @@ EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
+vote_array = []
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -31,7 +32,7 @@ def close():
     return True
 
 def main():
-    vote_array = []
+    
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
