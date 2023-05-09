@@ -29,6 +29,7 @@ servo_desired_angle = 90
 LINE_LENGTH = 5
 CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
+cone_position = 0
 
 ### Some utility functions to simplify drawing on the camera feed
 # draw a crosshair
