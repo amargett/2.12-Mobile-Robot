@@ -156,7 +156,7 @@ class Car(object):
         self.frame = None
         self.intrisic = [640,640,960,540]
         self.tagsize = 0.100  #physical size of printed tag, unit = meter
-        self.threshold = 10  # tolerable yaw
+        self.threshold = 14  # tolerable yaw
 
     def readArduino(self):
         '''
