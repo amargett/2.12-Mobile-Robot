@@ -82,11 +82,11 @@ while True:
     if not cone_position:
         left_desired_vel = -3
         right_desired_vel = 3
-    elif(abs(cone_position[0] - midpoint)< midpoint/6):
+    elif(abs(float(cone_position[0]) - midpoint)< midpoint/6):
         left_desired_vel = -3
         right_desired_vel = -3
     #go left
-    elif(cone_position[0] < midpoint):
+    elif(float(cone_position[0]) < midpoint):
         left_desired_vel = -3
         right_desired_vel = -1
     #go right
