@@ -69,7 +69,7 @@ while True:
             image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
             for corner in detect.corners:
                 image = plotPoint(image, corner, CORNER_COLOR)
-        cone_position = detections[1]
+        cone_position = detections[0]
 	# refresh the camera image
     cv2.imshow('Result', image)
 	# let the system event loop do its thing
