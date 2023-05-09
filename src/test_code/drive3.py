@@ -63,11 +63,11 @@ def main():
             elif car.state == 2: # go to AED and pick it up
                 car.detect_april_tag()
                 if car.mini_state == 3: 
-                    car.go()
                     car.state = 3
                     car.mini_state = 0
             elif car.state == 3:
                 print(car.x)
+                car.go()
                 if car.mini_state == 2 : ## goes until gets to aed pickup point
                     car.stop()
                     car.pickupAED()
