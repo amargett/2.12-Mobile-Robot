@@ -34,12 +34,11 @@ def main():
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             if (time.time() - car.obstacle_time) > 100e-3: # look for cones every 100 loops
-                car.ob = car.look_for_cone()
+                car.look_for_cone()
                 if car.ob: # if object has been detected
-                    if car.state != car.prev_state:
+                    if car.state != car.prev_state: # 1st time detecting obstacle
                         car.prev_state = car.state
                     car.state = 6
-                    car.obstacle = car.ob
                 if not car.ob and car.state == 6: # if object goes out of view
                     car.state = car.prev_state
                 car.obstacle_time = time.time()
@@ -57,19 +56,11 @@ def main():
                 if car.mini_state == 2:
                     car.mini_state = 0
                     car.state = 2
-            elif car.state == 2: # center with AED
-                car.detect_april_tag()
-                if car.april_tag == 0: 
-                    car.left(5)
-                elif car.april_tag == 1: 
-                    car.right(5)
-                elif car.april_tag == 2: 
-                    car.state = 3
             elif car.state == 3: # go straight and pick up AED
                 car.target_x = -0.1
                 car.target_y = 1.65
-                car.straight()
-                if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
+                car.go()
+                if car.mini_state == 2: 
                     car.stop()
                     car.pickupAED()
                     print('Success! AED picked up')
@@ -256,54 +247,46 @@ class Car(object):
         if not ret:
             print("Failed to capture frame from camera")
             return
-        ## IMPLEMENT: look for cone and update self.ob
+        # Convert the frame to the HSV color space
+        hsv = cv2.cvtColor(self.frame, cv2.COLOR_BGR2HSV)
+        # Create a mask based on the orange color range
+        mask = cv2.inRange(hsv, orange_lower, orange_upper)
+        # Perform morphological operations to remove noise
+        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.dilate(mask, None, iterations=2)
+        # Find contours in the mask
+        contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Initialize the position of the cone
+        self.cone_position = None
+        # Process the contours
+        if len(contours) > 0:
+            # Find the largest contour
+            largest_contour = max(contours, key=cv2.contourArea)
+            # Calculate the center of the contour
+            M = cv2.moments(largest_contour)
+            if M["m00"] > 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+                self.cone_position = (cx, cy)
+        if not self.cone_position:
+            self.ob = None
+        elif(self.cone_position[0] < self.MIDPOINT): #go right
+            self.ob = 2
+        else: #go left
+            self.ob = 1
         
-    
     def avoid_cone(self):
         '''
         curves left if object on right
         curves right if object on left
         '''
-        if self.ob == 0: # go left
+        if self.ob == 1: # go left
             self.leftVel = -STRAIGHT_VEL/3
             self.rightVel = -STRAIGHT_VEL
-        elif self.ob == 1: # go right
+        elif self.ob == 2: # go right
             self.leftVel = -STRAIGHT_VEL
             self.rightVel = -STRAIGHT_VEL/3
         print('avoiding cone')
-
-    def detect_april_tag(self): 
-        '''
-        detects whether there is an april tag in view
-        updates self.april_tag
-        april_tag = 0 : turn left
-        april_tag = 1: turn right
-        april_tag = 2: go straight
-        '''
-        detector = Detector(families='tag36h11', 
-                        nthreads=1,
-                        quad_decimate=1.0,
-                        quad_sigma=0.0,
-                        refine_edges=1,
-                        decode_sharpening=0.25,
-                        debug=0,
-                        ) #physical size of the apriltag
-        intrisic = [640,640,960,540]
-        tagsize = 0.100  #physical size of printed tag, unit = meter
-        threshold = 5  # tolerable yaw
-        ret, self.frame = self.cap.read()
-        self.frame = cv2.resize(self.frame, (640,480))
-        gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
-        if tags:
-            for tag in tags:
-                if tag.center[0] < 320 - threshold:
-                    self.april_tag = 0 # turn left
-                elif tag.center[0] > 320 + threshold:
-                    self.april_tag = 1 # turn right
-                else:
-                    self.april_tag = 2 # go straight
-
 
 if __name__ == "__main__":
     main()
