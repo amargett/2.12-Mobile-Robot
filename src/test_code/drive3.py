@@ -29,23 +29,6 @@ def close():
     # ToF sensor, will decide whether we are close enough to AED
     return True
 
-# def turnaround(car):  
-#     mini_state = 0
-#     while True:
-#         if mini_state == 0: 
-#             car.back()
-#             if abs(car.x - car.x0) >= target_x:
-#                 mini_state =1
-#         if mini_state == 1: 
-#             car.left()
-#             dheading = abs(car.heading - car.heading0)
-#             if 29 < dheading < 31: 
-#                 car.stop()
-#                 return car
-#         car.prev_time = time.time()
-#         car.printCurr()
-#         car.filter()
-#         car.send()
 def main():
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
@@ -122,7 +105,7 @@ def main():
                 car.stop()
             car.prev_time = time.time()
             car.filter()
-            car.printCurr()
+            #car.printCurr()
             car.sendArduino()
                 
 class Car(object): 
@@ -328,9 +311,9 @@ class Car(object):
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
         
-        if tags:
-            print("TAG: " + str(tag))
+        if tag:
             tag = tags[0]
+            print("TAG: " + str(tag))
             if tag.center[0] < 320 - 7:
                 print("turn left")
                 return 1   #turn left
