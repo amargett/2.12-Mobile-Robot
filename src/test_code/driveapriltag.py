@@ -36,9 +36,6 @@ def main():
     '''
     main loop
     '''
-    car = Car()
-    while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
-        car.x0, car.y0, car.heading0 = car.readArduino()
     global obstacle
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', type=str, default='cfg/yolov3.cfg', help='cfg file path')
@@ -55,6 +52,11 @@ def main():
     obstacle_detection_thread = threading.Thread(target=detectobstacle, args=(opt.cfg, opt.weights, opt.images), kwargs={"img_size":opt.img_size, "conf_thres":opt.conf_thres, "nms_thres":opt.nms_thres, "callback":callback})
     obstacle_detection_thread.start()
     obstacle_detection_thread.join()
+    
+    car = Car()
+    while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
+        car.x0, car.y0, car.heading0 = car.readArduino()
+    
 
     while False:
         car.readArduino()
