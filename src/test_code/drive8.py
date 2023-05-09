@@ -267,6 +267,7 @@ class Car(object):
         cone_detected = 0
         state = 0
         print("len contours =", len(contours))
+        print("x")
         cv2.imshow("Masked Image", frame)
         # Process the contours
         if len(contours) > 20:
