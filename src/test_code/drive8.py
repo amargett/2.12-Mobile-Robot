@@ -385,6 +385,7 @@ class Car(object):
         print('avoiding cone')
         #if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
         if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
+            print("straight")
             self.leftVel = -3
             self.rightVel = -3
         elif(self.cone_position[0] < self.MIDPOINT):
