@@ -1,51 +1,79 @@
+# Copyright 2022 Mark T. Tomczak
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import cv2
-from apriltag import apriltag
+import apriltag
 
-def detect_apriltag(frame):
-    # Convert the frame to grayscale
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+LINE_LENGTH = 5
+CENTER_COLOR = (0, 255, 0)
+CORNER_COLOR = (255, 0, 255)
 
-    # Create the detector
-    detector = apriltag("tag36h11")
+### Some utility functions to simplify drawing on the camera feed
+# draw a crosshair
+def plotPoint(image, center, color):
+    center = (int(center[0]), int(center[1]))
+    image = cv2.line(image,
+                     (center[0] - LINE_LENGTH, center[1]),
+                     (center[0] + LINE_LENGTH, center[1]),
+                     color,
+                     3)
+    image = cv2.line(image,
+                     (center[0], center[1] - LINE_LENGTH),
+                     (center[0], center[1] + LINE_LENGTH),
+                     color,
+                     3)
+    return image
 
-    # Detect AprilTags in the frame
-    results = detector.detect(gray)
+# plot a little text
+def plotText(image, center, color, text):
+    center = (int(center[0]) + 4, int(center[1]) - 4)
+    return cv2.putText(image, str(text), center, cv2.FONT_HERSHEY_SIMPLEX,
+                       1, color, 3)
 
-    if len(results) > 0:
-        # Assuming there is only one AprilTag in the frame
-        april_tag = results[0]
+# setup and the main loop
+detector = apriltag.Detector()
+cam = cv2.VideoCapture(0)
 
-        # Get the center coordinates of the AprilTag
-        center_x = april_tag.center[0]
-        frame_width = frame.shape[1]
-        
-        if center_x < frame_width / 2:
-            return "Left side"
-        else:
-            return "Right side"
+looping = True
+
+while looping:
+    result, image = cam.read()
+    grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+	# look for tags
+    detections = detector.detect(grayimg)
+    if not detections:
+        print("Nothing")
     else:
-        return "No AprilTag found"
+	    # found some tags, report them and update the camera image
+        for detect in detections:
+            print("tag_id: %s, center: %s" % (detect.tag_id, detect.center))
+            image = plotPoint(image, detect.center, CENTER_COLOR)
+            image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
+            for corner in detect.corners:
+                image = plotPoint(image, corner, CORNER_COLOR)
+	# refresh the camera image
+    cv2.imshow('Result', image)
+	# let the system event loop do its thing
+    key = cv2.waitKey(100)
+	# terminate the loop if the 'Return' key his hit
+    if key == 13:
+        looping = False
 
-# Open the webcam
-video_capture = cv2.VideoCapture(0)
-
-while True:
-    # Capture frame-by-frame
-    ret, frame = video_capture.read()
-
-    # Detect the AprilTag and determine its location
-    location = detect_apriltag(frame)
-
-    # Display the result on the frame
-    cv2.putText(frame, f"AprilTag location: {location}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-    
-    # Display the frame
-    cv2.imshow("AprilTag Detection", frame)
-
-    # Check for the 'q' key to exit
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Release the video capture object and close any open windows
-video_capture.release()
+# loop over; clean up and dump the last updated frame for convenience of debugging
 cv2.destroyAllWindows()
+cv2.imwrite("final.png", image)
