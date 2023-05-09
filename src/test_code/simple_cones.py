@@ -3,7 +3,7 @@ import numpy as np
 
 def find_orange_cone():
     # Open the webcam
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     # Get the screen resolution
     screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
