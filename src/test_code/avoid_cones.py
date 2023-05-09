@@ -89,14 +89,17 @@ def find_orange_cone():
                     else:
                         print("cone on right")
                     """
+                    cone_position = (cx,cy)
             else:
                 print("no cone")
+                cone_position = 0
         # Display the frame with the largest contour position
         #cv2.imshow("Orange Cone Detection", frame)
 
         # Exit the loop if the 'q' key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
         #go straight
         if not cone_position:
             left_desired_vel = -4
