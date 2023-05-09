@@ -29,7 +29,7 @@ servo_desired_angle = 90
 LINE_LENGTH = 5
 CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
-cone_position = 0
+cone_position = None
 
 ### Some utility functions to simplify drawing on the camera feed
 # draw a crosshair
@@ -61,6 +61,7 @@ while True:
     detections = detector.detect(grayimg)
     if not detections:
         print("Nothing")
+        cone_position = None
     else:
 	    # found some tags, report them and update the camera image
         #for detect in detections:
@@ -75,8 +76,8 @@ while True:
 	# let the system event loop do its thing
     print(cone_position)
     #go straight
-    """
-    if len(cone_position) == 0:
+    
+    if len(cone_position) == None:
         left_desired_vel = -3
         right_desired_vel = 3
         print("No tag")
@@ -94,7 +95,7 @@ while True:
         left_desired_vel = -1
         right_desired_vel = -3
         print("tag in right")
-    """
+    
 
     #main loop to constantly run through: updates arduino with motor commands when ready
     if arduino.in_waiting > 0:
@@ -102,7 +103,7 @@ while True:
         #right_desired_vel = input("Right vel: ")
         #servo_desired_angle = input("Servo angle: ")
         response = arduino.readline().decode().strip()
-        print("Received from Arduino:", response)
+        #print("Received from Arduino:", response)
         sendArduino(left_desired_vel,right_desired_vel,servo_desired_angle)
 
     key = cv2.waitKey(100)
