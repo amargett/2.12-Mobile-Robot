@@ -61,7 +61,7 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED 
-                car.detect_april_tag()
+                car.detect_april_tag(-0.1 - car.x)
                 if car.mini_state == 1: 
                     car.state = 3
                     car.mini_state = 0
@@ -79,12 +79,12 @@ def main():
                 if car.backup_counter > 200:
                     car.state = 5
             elif car.state == 5: # turn around
-                dtheta = abs(car.heading -150)
+                dtheta = abs(car.heading -210)
                 car.left(dtheta)
                 if abs(dtheta) < EPSILON_HEADING:
                     car.state =6
             elif car.state ==6: # go to april tag
-                car.detect_april_tag()
+                car.detect_april_tag(3 - car.x)
                 if car.mini_state == 1: 
                     car.state = 7
                     car.mini_state = 0
@@ -286,20 +286,18 @@ class Car(object):
             self.leftVel = -STRAIGHT_VEL/3
             self.rightVel = -STRAIGHT_VEL
 
-    def detect_april_tag(self):    
+    def detect_april_tag(self, target_dx): 
+        print('detecting tag')   
         result, image = self.cap.read()
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # look for tags
         detections = self.detector.detect(grayimg)
         target_dx = -0.1 - self.x
-        target_dy = 1.65 - self.y
-        print(target_dx, target_dy)
         vel = abs(target_dx) * K_VEl # P control velocity
         if vel> STRAIGHT_VEL/2: 
             vel = STRAIGHT_VEL/2
         if not detections:
             print("Nothing ")
-            cone_position = None
             code_present = False
         else:
             code_present = True
@@ -322,36 +320,7 @@ class Car(object):
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
                     self.rightVel = -vel + 3* fraction_diff
-            # elif self.mini_state ==1: 
-            #     self.target_x = self.x - 0.05 ## set target to aed point
-            #     self.target_y = self.y
-            #     self.mini_state = 3
-
-        # # detects whether there is an april tag in view
-        # detector = Detector(families='tag36h11', 
-        #                 nthreads=1,
-        #                 quad_decimate=2,
-        #                 quad_sigma=0.0,
-        #                 refine_edges=1,
-        #                 decode_sharpening=0.25,
-        #                 debug=0,
-        #                 ) #physical size of the apriltag
-        # _, self.frame = self.cap.read()
-        # self.frame = cv2.resize(self.frame, (640,480))
-        # gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        # tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
         
-        # if tags:
-        #     tag = tags[0]
-        #     print("TAG: " + str(tag))
-        #     if tag.center[0] < 320 - 7:
-        #         print("turn left")
-        #         return 1   #turn left
-        #     elif tag.center[0] > 320 + 7:
-        #         print("turn right")
-        #         return 2   #turn right
-        #     else:
-        #         return 3   # go straight
 
 if __name__ == "__main__":
     main()
