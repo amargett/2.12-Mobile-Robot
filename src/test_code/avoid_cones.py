@@ -77,13 +77,13 @@ while True:
                 
                 if cx < midpoint:
                     print("cone on left")
-                    left_desired_vel = -3
-                    right_desired_vel = -1
+                    left_desired_vel = -1
+                    right_desired_vel = -3
                     
                 else:
                     print("cone on right")
-                    left_desired_vel = -1
-                    right_desired_vel = -3
+                    left_desired_vel = -3
+                    right_desired_vel = -1
 
                 
                 
