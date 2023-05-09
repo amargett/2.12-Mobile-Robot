@@ -296,7 +296,7 @@ class Car(object):
         result, image = self.cap.read()
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # look for tags
-        detections = self.detector.detect(grayimg)
+        detections = self.detector.detect(grayimg, estimate_tag_pose = True, camera_params= [640 640 960 540],tag_size=0.1)
         target_dx = -0.1 - self.x
         target_dy = 1.65 - self.y
         print(target_dx, target_dy)
@@ -314,7 +314,8 @@ class Car(object):
             corners = detections[0].corners
             # Calculate the distance using triangulation
             pixel_width = abs(corners[0][0] - corners[1][0])
-            dist_to_tag = 60.0/pixel_width
+            dist_to_tag = detections[0].
+            #dist_to_tag = 60.0/pixel_width
             #pixel size 200: roughly 30 cm
             print(tag_position)
             print("distance" + str(dist_to_tag))
