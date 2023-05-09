@@ -61,22 +61,9 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
-                # if (time.time() - car.april_time) > 50e-3:
                 car.detect_april_tag()
                 if car.mini_state == 2: 
                     car.state = 3
-                    # car.april_time = time.time()  
-                    # car.target_x = -0.1
-                    # dx = car.target_x - car.x
-                    # dy = dx/math.tan(math.radians(car.tagangle))
-                    # car.target_y = car.y + dy
-                    # car.go()
-                    # if car.april_tag == 0: 
-                    #     car.left(5)
-                    # elif car.april_tag == 1: 
-                    #     car.right(5)
-                    # elif car.april_tag == 2: 
-                    #     car.state = 3
             elif car.state == 3:
                 car.target_x = -0.1
                 car.target_y = 1.65
@@ -307,7 +294,7 @@ class Car(object):
         target_dx = -0.1 - self.x
         target_dy = 1.65 - self.y
         print(target_dx, target_dy)
-        vel = math.sqrt(target_dx**2 + target_dy**2)* K_VEl # P control velocity
+        vel = abs(target_dx) * K_VEl # P control velocity
         if vel> STRAIGHT_VEL: 
             vel = STRAIGHT_VEL
         if not detections:
@@ -324,7 +311,7 @@ class Car(object):
             fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
             self.leftVel= -vel - 5* fraction_diff
             self.rightVel = -vel + 5 * fraction_diff
-        if abs(target_dx) < EPSILON_DIST and abs(target_dy) < EPSILON_DIST:
+        if abs(target_dx) < EPSILON_DIST:
             self.mini_state = 2
 
         # # detects whether there is an april tag in view
