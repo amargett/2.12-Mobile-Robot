@@ -329,13 +329,13 @@ class Car(object):
         tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
         
         if tags:
-            print("tag_0 center :",tags[0].center[0])
+            print("TAG: " + str(tag))
             tag = tags[0]
-            if tag.center[0] < 320 - 10:
-                #print("turn left")
+            if tag.center[0] < 320 - 7:
+                print("turn left")
                 return 1   #turn left
-            elif tag.center[0] > 320 + 10:
-                #print("turn right")
+            elif tag.center[0] > 320 + 7:
+                print("turn right")
                 return 2   #turn right
             else:
                 return 3   # go straight
