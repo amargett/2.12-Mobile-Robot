@@ -38,17 +38,18 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
+        print("cone" + str(car.cone_position))
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            # print(car.x, car.y, car.heading)
+            print("pos" + str(car.x, car.y, car.heading))
+            car.cone_position = None
             car.look_for_cone()
             # print('cone position:', car.cone_position)
             if car.cone_position: 
                 print('i see a cone!')
                 car.avoid_cone()
-                
                 # pass
             elif car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
