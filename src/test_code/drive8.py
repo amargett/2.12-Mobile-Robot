@@ -50,7 +50,7 @@ def main():
                 car.avoid_cone()
                 
                 # pass
-            if car.state == 0: ## go to AED waypoint #1
+            elif car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
                 car.target_y = 1.65
                 car.go()
