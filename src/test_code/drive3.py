@@ -294,8 +294,8 @@ class Car(object):
         target_dy = 1.65 - self.y
         print(target_dx, target_dy)
         vel = abs(target_dx) * K_VEl # P control velocity
-        if vel> STRAIGHT_VEL: 
-            vel = STRAIGHT_VEL
+        if vel> STRAIGHT_VEL/2: 
+            vel = STRAIGHT_VEL/2
         if not detections:
             print("Nothing ")
             cone_position = None
@@ -319,8 +319,8 @@ class Car(object):
                     self.mini_state = 1
                 else: 
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
-                    self.leftVel= -vel - 5* fraction_diff
-                    self.rightVel = -vel + 5 * fraction_diff
+                    self.leftVel= -vel - 3* fraction_diff
+                    self.rightVel = -vel + 3 * fraction_diff
             elif self.mini_state ==1: 
                 self.target_x = self.x - 0.4 ## set target to aed point
                 self.target_y = self.y
