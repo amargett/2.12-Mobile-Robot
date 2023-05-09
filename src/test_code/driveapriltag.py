@@ -46,12 +46,15 @@ def main():
     parser.add_argument('--nms-thres', type=float, default=0.45, help='iou threshold for non-maximum suppression')
     opt = parser.parse_args()
     print(opt)
+    leftVelchange = 0
+    rightVelchange = 0
     def callback():
         global obstacle_detected
         #print("Obstacle detected: ", obstacle_detected)
     obstacle_detection_thread = threading.Thread(target=detectobstacle, args=(opt.cfg, opt.weights, opt.images), kwargs={"img_size":opt.img_size, "conf_thres":opt.conf_thres, "nms_thres":opt.nms_thres, "callback":callback})
     obstacle_detection_thread.start()
     obstacle_detection_thread.join()
+    
     
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
@@ -167,8 +170,8 @@ class Car(object):
         self.ob = None
         self.frame = None
         
-        self.leftVelchange = 0
-        self.rightVelchange = 0
+        #self.leftVelchange = 0
+        #self.rightVelchange = 0
 
     def readArduino(self):
         '''
@@ -187,15 +190,15 @@ class Car(object):
         return self.x_raw, self.y_raw, self.heading_raw
     
     def straight(self): 
-        self.leftVel = -STRAIGHT_VEL + self.leftVelchange
-        self.rightVel = -STRAIGHT_VEL + self.rightVelchange
+        self.leftVel = -STRAIGHT_VEL + leftVelchange
+        self.rightVel = -STRAIGHT_VEL + rightVelchange
 
     def left(self, error): 
         '''
         input: float error, the difference between desired angle and current angle
         runs P control on the turn velocity to slow down as it gets closer
         '''
-        self.leftVel, self.rightVel = -K_HEADING*error + self.leftVelchange, K_HEADING*error + self.rightVelchange
+        self.leftVel, self.rightVel = -K_HEADING*error + leftVelchange, K_HEADING*error + rightVelchange
         if self.rightVel > 2.5: 
             self.leftVel, self.rightVel = -2.5, 2.5
 
@@ -204,7 +207,7 @@ class Car(object):
         input: float error, the difference between desired angle and current angle
         runs P control on the turn velocity to slow down as it gets closer
         '''
-        self.leftVel, self.rightVel = K_HEADING*error + self.leftVelchange, -K_HEADING*error + self.rightVelchange
+        self.leftVel, self.rightVel = K_HEADING*error + leftVelchange, -K_HEADING*error + rightVelchange
         if self.leftVel > 2.5: 
             self.leftVel, self.rightVel = 2.5, -2.5
 
@@ -212,8 +215,8 @@ class Car(object):
         self.leftVel, self.rightVel = 0, 0
     
     def back(self): 
-        self.leftVel = STRAIGHT_VEL + self.leftVelchange
-        self.rightVel = STRAIGHT_VEL + self.rightVelchange
+        self.leftVel = STRAIGHT_VEL + leftVelchange
+        self.rightVel = STRAIGHT_VEL + rightVelchange
 
     def pickupAED(self):
         self.servoAngle = PICKUP_ANGLE
@@ -326,27 +329,27 @@ class Car(object):
 
 
 
-    def motor_control(self):
-        # code to control the motor based on the result
-        
-        global obstacle_detected
-        if result == 1:
-            #obstacle_detected = True
-            #return 1
-            self.leftVelchange = STRAIGHT_VEL/3*2
-            self.rightVelchange = 0
-            print("Far")
-            # send command to rotate car
-        elif result == 2:
-            self.leftVelchange = STRAIGHT_VEL/3*2
-            self.rightVelchange = 0
-            print("Close")
-        else:
-            #obstacle_detected = False
-            #return 0
-            self.leftVelchange = 0
-            self.rightVelchange = 0
-            print("straight")
+def motor_control(result):
+    # code to control the motor based on the result
+
+    global obstacle_detected
+    if result == 1:
+        #obstacle_detected = True
+        #return 1
+        leftVelchange = STRAIGHT_VEL/3*2
+        rightVelchange = 0
+        print("Far")
+        # send command to rotate car
+    elif result == 2:
+        leftVelchange = STRAIGHT_VEL/3*2
+        rightVelchange = 0
+        print("Close")
+    else:
+        #obstacle_detected = False
+        #return 0
+        leftVelchange = 0
+        rightVelchange = 0
+        print("straight")
 
 #def stop_detection():
 #    global stop_thread
