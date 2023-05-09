@@ -345,7 +345,7 @@ def detectobstacle(
         weights,
         images,
         output='output',  # output folder
-        img_size=208,
+        img_size=416,
         conf_thres=0.3,
         nms_thres=0.45,
         save_txt=False,
@@ -387,8 +387,8 @@ def detectobstacle(
 
         for i, (path, img, im0) in enumerate(dataloader):
             t = time.time()
-            #if webcam:
-            #    print('webcam frame %g: ' % (i + 1), end='')
+            if webcam:
+                print('webcam frame %g: ' % (i + 1), end='')
             #else:
             #    print('image %g/%g %s: ' % (i + 1, len(dataloader), path), end='')
             save_path = str(Path(output) / Path(path).name)
