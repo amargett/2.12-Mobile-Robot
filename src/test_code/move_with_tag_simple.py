@@ -16,8 +16,8 @@ def plotText(image, center, color, text):
 detector = apriltag.Detector()
 cam = cv2.VideoCapture(0)
 
-screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-screen_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+screen_width = int(cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+screen_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 midpoint = screen_width // 2
 
 #arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
@@ -68,6 +68,7 @@ while True:
             image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
             for corner in detect.corners:
                 image = plotPoint(image, corner, CORNER_COLOR)
+        cone_position = detections[1]
 	# refresh the camera image
     cv2.imshow('Result', image)
 	# let the system event loop do its thing
