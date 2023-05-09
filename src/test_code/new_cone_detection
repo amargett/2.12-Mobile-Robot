@@ -45,7 +45,7 @@ while(cap.isOpened()):
 
     # detect all edges witin the image
     edges_img = cv2.Canny(smoothed_img, 100, 200)
-    contours, hierarchy = cv2.findContours(edges_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, contours, hierarchy = cv2.findContours(edges_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # set parameters for writing text and drawing lines
     font = cv2.FONT_HERSHEY_SIMPLEX
