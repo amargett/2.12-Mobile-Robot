@@ -94,7 +94,7 @@ while True:
         left_desired_vel = -1
         right_desired_vel = 1
         print("No tag")
-    elif dist_to_tag < 0.3:
+    elif dist_to_tag < 0.4:
         left_desired_vel = 0
         right_desired_vel = 0
     else:
