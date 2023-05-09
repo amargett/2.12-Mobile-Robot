@@ -21,6 +21,7 @@ screen_height = int(cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 midpoint = screen_width // 2
 
 #arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
+#arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 left_desired_vel = 0
 right_desired_vel = 0
 servo_desired_angle = 90
@@ -29,6 +30,8 @@ LINE_LENGTH = 5
 CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
 cone_position = None
+
+des_vel = 3
 
 code_present = False
 
@@ -69,6 +72,12 @@ while True:
             #for corner in detect.corners:
                 #image = plotPoint(image, corner, CORNER_COLOR)
         cone_position = detections[0].center
+        # Get the corners of the AprilTag
+        corners = detections[0].corners
+
+        # Calculate the distance using triangulation
+        pixel_width = abs(corners[0][0] - corners[1][0])
+        print("Pixel width: " + str(pixel_width))
 	# refresh the camera image
     #cv2.imshow('Result', image)
 	# let the system event loop do its thing
@@ -76,25 +85,15 @@ while True:
     #go straight
     
     if code_present == False:
-        left_desired_vel = -3
-        right_desired_vel = 3
+        left_desired_vel = -1
+        right_desired_vel = 1
         print("No tag")
     else:
-        if(abs(float(cone_position[0]) - midpoint)< midpoint/6):
-            left_desired_vel = -3
-            right_desired_vel = -3
-            print("tag in front")
-        #go left
-        elif(float(cone_position[0]) < midpoint):
-            left_desired_vel = -3
-            right_desired_vel = -1
-            print("tag in left")
-        #go right
-        else:
-            left_desired_vel = -1
-            right_desired_vel = -3
-            print("tag in right")
+        fraction_diff = (midpoint - cone_position[0])/midpoint
+        left_desired_vel = -des_vel - 3*fraction_diff
+        right_desired_vel = -des_vel + 3*fraction_diff
     
+
 
     key = cv2.waitKey(100)
 

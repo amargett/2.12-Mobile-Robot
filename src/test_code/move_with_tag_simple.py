@@ -31,7 +31,7 @@ CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
 cone_position = None
 
-des_vel = 5
+des_vel = 3
 
 code_present = False
 
@@ -89,8 +89,8 @@ while True:
         print("No tag")
     else:
         fraction_diff = (midpoint - cone_position[0])/midpoint
-        left_desired_vel = -des_vel - 5*fraction_diff
-        right_desired_vel = -des_vel + 5*fraction_diff
+        left_desired_vel = -des_vel - 3*fraction_diff
+        right_desired_vel = -des_vel + 3*fraction_diff
     
 
     #main loop to constantly run through: updates arduino with motor commands when ready
