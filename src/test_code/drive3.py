@@ -79,10 +79,14 @@ def main():
                 if car.backup_counter > 200:
                     car.state = 5
             elif car.state == 5: # turn around
-                dtheta = abs(car.heading -210)
+                if car.heading > 180: 
+                    dtheta = 360 - car.heading
+                else: 
+                    dtheta = car.heading
                 car.left(dtheta)
                 if abs(dtheta) < EPSILON_HEADING:
                     car.state =6
+                    car.stop()
             elif car.state ==6: # go to april tag
                 car.detect_april_tag(3 - car.x)
                 if car.mini_state == 1: 
