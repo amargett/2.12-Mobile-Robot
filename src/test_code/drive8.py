@@ -100,7 +100,7 @@ def main():
             car.prev_time = time.time()
             car.filter()
             car.sendArduino()
-            print('state' + str(car.state))
+            #print('state' + str(car.state))
                 
 class Car(object): 
     def __init__(self): 
@@ -276,6 +276,7 @@ class Car(object):
                 cx = int(M["m10"] / M["m00"])
                 cy = int(M["m01"] / M["m00"])
                 cone_detected = 1
+                print("cone detected")
                 # Draw a circle at the center of the contour
                 # cv2.circle(frame, self.cone_position, 5, (0, 255, 0), -1)
         # Display the frame with the cone position
