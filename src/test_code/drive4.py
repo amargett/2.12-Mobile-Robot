@@ -263,11 +263,15 @@ class Car(object):
             # Find the largest contour
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the center of the contour
-            M = cv2.moments(largest_contour)
-            if M["m00"] > 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
-                self.cone_position = (cx, cy)
+
+            # Calculate the area of the largest contour
+            largest_contour_area = cv2.contourArea(largest_contour)
+            if largest_contour_area > 5000:
+                M = cv2.moments(largest_contour)
+                if M["m00"] > 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    self.cone_position = (cx, cy)
         if not self.cone_position:
             self.ob = None
         elif(self.cone_position[0] < self.MIDPOINT): #go right
