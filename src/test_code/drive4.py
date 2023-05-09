@@ -275,6 +275,7 @@ class Car(object):
                     self.cone_position = (cx, cy)
         if not self.cone_position:
             self.ob = None
+            print("NO CONE!!!")
         elif(self.cone_position[0] < self.MIDPOINT): #go right
             self.ob = 2
         else: #go left
