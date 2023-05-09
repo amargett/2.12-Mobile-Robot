@@ -18,6 +18,7 @@ is_cone = 0
 screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 screen_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 midpoint = screen_width // 2
+vote_array = []
 
 #arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
@@ -54,7 +55,8 @@ while True:
 
     # Initialize the position of the cone
     cone_position = None
-
+    cone_detected = 0
+    state = 0
     # Process the contours
     if len(contours) > 0:
         # Find the largest contour
@@ -75,23 +77,57 @@ while True:
                 # Print the position of the cone
                 #print("Cone position: ({}, {})".format(cx, cy))
                 
+                cone_detected = 1
+                
                 if cx < midpoint:
                     print("cone on left")
-                    left_desired_vel = -1
-                    right_desired_vel = -3
+                    state = 1
+                    #left_desired_vel = -1
+                    #right_desired_vel = -3
                     
                 else:
                     print("cone on right")
-                    left_desired_vel = -3
-                    right_desired_vel = -1
+                    state = 2
+                    #left_desired_vel = -3
+                    #right_desired_vel = -1
 
                 
                 
         else:
             print("no cone")
-            left_desired_vel = -3
-            right_desired_vel = -3
+            #left_desired_vel = -3
+            #right_desired_vel = -3
+        
+    vote_array.append(cone_detected)
+        
 
+        
+
+    # If the vote array has more than 9 elements, remove the oldest one
+    if len(vote_array) > 15:
+        vote_array.pop(0)
+
+
+    # Determine the state of the current frame based on the vote array
+    if sum(vote_array) > len(vote_array) / 2 and state == 1:
+        print ("cone detected on left_determined")
+        left_desired_vel = -1
+        right_desired_vel = -3
+        
+    elif sum(vote_array) > len(vote_array) / 2 and state == 2:
+        print ("cone detected on right_determined")
+        left_desired_vel = -3
+        right_desired_vel = -1
+        
+    elif sum(vote_array) > len(vote_array) / 2 and state == 0:
+        print ("maybe false negative") # maybe change to sticking with previous state, but take as no cone rn
+        left_desired_vel = -3
+        right_desired_vel = -3
+        
+    else:
+        print ("no cone determined")
+        left_desired_vel = -3
+        right_desired_vel = -3
             
     # Display the frame with the largest contour position
     #cv2.imshow("Orange Cone Detection", frame)
