@@ -67,7 +67,8 @@ def main():
                     car.state = 3
                     car.mini_state = 0
             elif car.state == 3:
-                if car.mini_state == 2: ## goes until gets to aed pickup point
+                print(car.x)
+                if car.mini_state == 2 : ## goes until gets to aed pickup point
                     car.stop()
                     car.pickupAED()
                     print('Success! AED picked up')
@@ -75,6 +76,8 @@ def main():
                     if car.pickup_counter > 200:
                         car.mini_state = 0
                         car.state = 4
+                else: 
+                    print('bad threshold')
             elif car.state == 4: # back up
                 car.back()
                 car.backup_counter += 1
@@ -95,6 +98,7 @@ def main():
             car.prev_time = time.time()
             car.filter()
             car.sendArduino()
+            print('state' + str(car.state))
                 
 class Car(object): 
     def __init__(self): 
@@ -320,7 +324,7 @@ class Car(object):
                 else: 
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
-                    self.rightVel = -vel + 3 * fraction_diff
+                    self.rightVel = -vel + 3* fraction_diff
             elif self.mini_state ==1: 
                 self.target_x = self.x - 0.4 ## set target to aed point
                 self.target_y = self.y
