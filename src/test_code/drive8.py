@@ -295,7 +295,7 @@ class Car(object):
             #self.cone_position = (cx, cy)
             print("find cone")
          '''  
-        ret, frame = cap.read()
+        ret, frame = self.cap.read()
         if ret == True:
     # convert the image to HSV because easier to represent color in
     # HSV as opposed to in BGR 
