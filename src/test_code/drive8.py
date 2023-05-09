@@ -285,6 +285,7 @@ class Car(object):
                     cy = int(M["m01"] / M["m00"])
                     cone_detected = 1
                     print("cone detected")
+                    
 
         # Display the frame with the cone position
         #cv2.imshow("Traffic Cone Detection", frame)
@@ -296,6 +297,7 @@ class Car(object):
         if sum(vote_array) > len(vote_array) / 2:
             #self.cone_position = (cx, cy)
             print("find cone")
+            self.cone_position = (cx,cy)
           
         ''' 
         ret, frame = self.cap.read()
