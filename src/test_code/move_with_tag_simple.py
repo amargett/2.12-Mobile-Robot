@@ -81,7 +81,7 @@ while True:
     print(cone_position)
     #go straight
     
-    if code_present == True:
+    if code_present == False:
         left_desired_vel = -3
         right_desired_vel = 3
         print("No tag")

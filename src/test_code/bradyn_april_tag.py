@@ -74,6 +74,8 @@ while looping:
     if key == 13:
         looping = False
 
+    
+
 # loop over; clean up and dump the last updated frame for convenience of debugging
 cv2.destroyAllWindows()
 cv2.imwrite("final.png", image)
