@@ -345,7 +345,7 @@ def detectobstacle(
         weights,
         images,
         output='output',  # output folder
-        img_size=208,
+        img_size=416,
         conf_thres=0.3,
         nms_thres=0.45,
         save_txt=False,
