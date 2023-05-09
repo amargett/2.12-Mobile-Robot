@@ -303,8 +303,8 @@ class Car(object):
 #         else:
 #             self.leftVel = -STRAIGHT_VEL/3
 #             self.rightVel = -STRAIGHT_VEL
-       self.leftVel = -STRAIGHT_VEL/3
-       self.rightVel = -STRAIGHT_VEL 
+        self.leftVel = -STRAIGHT_VEL/3
+        self.rightVel = -STRAIGHT_VEL 
 
     def detect_april_tag(self):    
         result, image = self.cap.read()
