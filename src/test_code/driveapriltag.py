@@ -55,73 +55,73 @@ def main():
     obstacle_detection_thread.start()
     
     
-    
-    car = Car()
-    while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
-        car.x0, car.y0, car.heading0 = car.readArduino()
-    
-
     while True:
-        car.readArduino()
-        print("here")
-        # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
-            car.setXYH()
-            #if (time.time() - car.obstacle_time) > 100e-3: # look for cones every 100 loops
-            #    car.look_for_cone()
-            #    if car.ob: # if object has been detected
-            #        if car.state != car.prev_state: # 1st time detecting obstacle
-            #            car.prev_state = car.state
-            #        car.state = 6
-            #    if not car.ob and car.state == 6: # if object goes out of view
-            #        car.state = car.prev_state
-            #    car.obstacle_time = time.time()
-            if car.state == 0: # go to 1st waypoint, far from AED
-                car.target_x = 1.5
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 1
-            elif car.state == 1: # go to 2nd waypoint, pointed towards AED
-                car.target_x = 1
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 2
-            elif car.state == 3: # go straight and pick up AED
-                car.target_x = -0.1
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2: 
-                    car.stop()
-                    car.pickupAED()
-                    print('Success! AED picked up')
-                    car.pickup_counter += 1 
-                    if car.pickup_counter > 200:
+        car = Car()
+        while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
+            car.x0, car.y0, car.heading0 = car.readArduino()
+
+
+        while True:
+            car.readArduino()
+            print("here")
+            # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
+            if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
+                car.setXYH()
+                #if (time.time() - car.obstacle_time) > 100e-3: # look for cones every 100 loops
+                #    car.look_for_cone()
+                #    if car.ob: # if object has been detected
+                #        if car.state != car.prev_state: # 1st time detecting obstacle
+                #            car.prev_state = car.state
+                #        car.state = 6
+                #    if not car.ob and car.state == 6: # if object goes out of view
+                #        car.state = car.prev_state
+                #    car.obstacle_time = time.time()
+                if car.state == 0: # go to 1st waypoint, far from AED
+                    car.target_x = 1.5
+                    car.target_y = 1.65
+                    car.go()
+                    if car.mini_state == 2:
                         car.mini_state = 0
-                        car.state = 3
-            elif car.state == 4: # back up
-                car.back()
-                car.backup_counter += 1
-                if car.backup_counter > 200:
-                    car.state = 5
-            elif car.state == 5: # turn around and go to UR5
-                car.target_x = 3
-                car.target_y = 1
-                car.go()
-                if car.mini_state == 2:
-                    car.stop()
-                    car.dropoffAED()
-                    print('Success! AED dropped off')
-                    car.mini_state = 0  
-            elif car.state == 6: # avoid obstacle
-                car.avoid_cone()
-            car.prev_time = time.time()
-            car.filter()
-            car.printCurr()
-            car.sendArduino()
+                        car.state = 1
+                elif car.state == 1: # go to 2nd waypoint, pointed towards AED
+                    car.target_x = 1
+                    car.target_y = 1.65
+                    car.go()
+                    if car.mini_state == 2:
+                        car.mini_state = 0
+                        car.state = 2
+                elif car.state == 3: # go straight and pick up AED
+                    car.target_x = -0.1
+                    car.target_y = 1.65
+                    car.go()
+                    if car.mini_state == 2: 
+                        car.stop()
+                        car.pickupAED()
+                        print('Success! AED picked up')
+                        car.pickup_counter += 1 
+                        if car.pickup_counter > 200:
+                            car.mini_state = 0
+                            car.state = 3
+                elif car.state == 4: # back up
+                    car.back()
+                    car.backup_counter += 1
+                    if car.backup_counter > 200:
+                        car.state = 5
+                elif car.state == 5: # turn around and go to UR5
+                    car.target_x = 3
+                    car.target_y = 1
+                    car.go()
+                    if car.mini_state == 2:
+                        car.stop()
+                        car.dropoffAED()
+                        print('Success! AED dropped off')
+                        car.mini_state = 0  
+                elif car.state == 6: # avoid obstacle
+                    car.avoid_cone()
+                car.prev_time = time.time()
+                car.filter()
+                car.printCurr()
+                car.sendArduino()
                           
 class Car(object):  
     def __init__(self): 
