@@ -137,9 +137,6 @@ class Car(object):
         self.target_y = 1.65
         self.target_heading = 0
 
-        self.target_dx = 0
-        self.target_dy = 0
-        
         self.leftVel = 0
         self.rightVel = 0
         self.servoAngle = 90
@@ -262,6 +259,8 @@ class Car(object):
             else: 
                 self.right(abs(self.heading - self.target_dheading))
         elif self.mini_state == 1: # go straight
+            target_dx = self.target_x - self.x
+            target_dy = self.target_y - self.y
             self.straight(math.sqrt(target_dx**2 + target_dy**2))
             if abs(target_dx) < EPSILON_DIST and abs(target_dy) < EPSILON_DIST:
                 self.mini_state = 2
