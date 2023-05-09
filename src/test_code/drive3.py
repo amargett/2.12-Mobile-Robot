@@ -315,14 +315,14 @@ class Car(object):
             print('no april tag')
         else:
             if self.mini_state == 0: 
-                if dist_to_tag < 0.3: 
+                if dist_to_tag < 0.4: 
                     self.mini_state = 1
                 else: 
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
                     self.leftVel= -vel - 5* fraction_diff
                     self.rightVel = -vel + 5 * fraction_diff
             elif self.mini_state ==1: 
-                self.target_x = self.x - 0.3 ## set target to aed point
+                self.target_x = self.x - 0.4 ## set target to aed point
                 self.target_y = self.y
                 self.mini_state = 3
 
