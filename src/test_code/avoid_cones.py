@@ -10,8 +10,6 @@ orange_upper = np.array([15, 200, 255])
 #0 straight -1 left 1 right
 last_pos = 0
 
-# Open the video capture
-cap = cv2.VideoCapture(0)
 
 screen_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 screen_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
