@@ -62,9 +62,10 @@ def main():
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
                 car.detect_april_tag()
-                if car.mini_state == 2: 
+                if car.mini_state == 3: 
                     car.go()
                     car.state = 3
+                    car.mini_state = 0
             elif car.state == 3:
                 if car.mini_state == 2: ## goes until gets to aed pickup point
                     car.stop()
@@ -73,7 +74,7 @@ def main():
                     car.pickup_counter += 1 
                     if car.pickup_counter > 200:
                         car.mini_state = 0
-                        car.state = 3
+                        car.state = 4
             elif car.state == 4: # back up
                 car.back()
                 car.backup_counter += 1
@@ -309,6 +310,7 @@ class Car(object):
             dist_to_tag = 60.0/pixel_width
             #pixel size 200: roughly 30 cm
             print(tag_position)
+            print("distance" + str(dist_to_tag))
         if code_present == False:
             print('no april tag')
         else:
@@ -322,7 +324,7 @@ class Car(object):
             elif self.mini_state ==1: 
                 self.target_x = self.x - 0.3 ## set target to aed point
                 self.target_y = self.y
-                self.mini_state = 2
+                self.mini_state = 3
 
         # # detects whether there is an april tag in view
         # detector = Detector(families='tag36h11', 
