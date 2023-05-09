@@ -63,8 +63,8 @@ while True:
         print("Nothing")
     else:
 	    # found some tags, report them and update the camera image
-        for detect in detections:
-            print("tag_id: %s, center: %s" % (detect.tag_id, detect.center))
+        #for detect in detections:
+            #print("tag_id: %s, center: %s" % (detect.tag_id, detect.center))
             #image = plotPoint(image, detect.center, CENTER_COLOR)
             #image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
             #for corner in detect.corners:
@@ -73,13 +73,9 @@ while True:
 	# refresh the camera image
     #cv2.imshow('Result', image)
 	# let the system event loop do its thing
-    key = cv2.waitKey(100)
 
-    # Exit the loop if the 'q' key is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
     #go straight
-    if not cone_position:
+    if len(cone_position) == 0:
         left_desired_vel = -3
         right_desired_vel = 3
         print("No tag")
@@ -106,6 +102,13 @@ while True:
         response = arduino.readline().decode().strip()
         print("Received from Arduino:", response)
         sendArduino(left_desired_vel,right_desired_vel,servo_desired_angle)
+
+    key = cv2.waitKey(100)
+
+    # Exit the loop if the 'q' key is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    
 
 # Release the video capture and close all windows
 cam.release()
