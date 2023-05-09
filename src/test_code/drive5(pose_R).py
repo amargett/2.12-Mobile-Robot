@@ -76,27 +76,20 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
-                if (time.time() - car.april_time) > 100e-3:
-                    car.detect_april_tag()
-                    car.april_time = time.time()
-                if car.april_tag == 0: 
-                    car.left(5)
-                elif car.april_tag == 1: 
-                    car.right(5)
-                elif car.april_tag == 2: 
-                    car.state = 3
-            elif car.state == 3:
+                april_heading = car.detect_april_tag()
                 car.target_x = -0.1
-                car.target_y = 1.65
-                car.straight()
-                if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
+                car.target_y = car.target_x/np.tan(april_heading)
+                car.state = 3
+            elif car.state == 3:
+                car.go()
+                if car.mini_state == 2:
                     car.stop()
                     car.pickupAED()
                     print('Success! AED picked up')
                     car.pickup_counter += 1 
                     if car.pickup_counter > 200:
                         car.mini_state = 0
-                        car.state = 3
+                        car.state = 4
             elif car.state == 4: # back up
                 car.back()
                 car.backup_counter += 1
@@ -311,12 +304,10 @@ class Car(object):
                         debug=0,
                         ) #physical size of the apriltag
         _, self.frame = self.cap.read()
-        # self.frame = cv2.resize(self.frame, (640,480))
+        self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrisic, tag_size=self.tagsize)
         if tags:
-            for tag in tags:
-                return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
-
+            return tags[0].pose_R
 if __name__ == "__main__":
     main()

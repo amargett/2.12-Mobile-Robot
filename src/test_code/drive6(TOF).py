@@ -47,12 +47,12 @@ def close():
 #         car.send()
 def main():
     car = Car()
-    while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
-        car.x0, car.y0, car.heading0 = car.readArduino()
+    while [car.x0, car.y0, car.heading0, car.distance0] == [None, None, None, None]: # wait until readArduino receives usable data
+        car.x0, car.y0, car.heading0, car.distance0 = car.readArduino()
     while True:
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
+        if [car.x_raw, car.y_raw, car.heading_raw, car.distance_raw] != [None, None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             # print(car.x, car.y, car.heading)
             # car.look_for_cone()
@@ -138,14 +138,17 @@ class Car(object):
         self.x0 = None
         self.y0 = None
         self.heading0 = None
+        self.distance0 = 0
 
         self.x = 0
         self.y = 0
         self.heading = 0
+        self.distance = 0
 
         self.x_raw = 0
         self.y_raw = 0
         self.heading_raw = 0
+        self.distance_raw = 0
 
         self.filtLeftVel = 0
         self.filtRightVel = 0
@@ -171,18 +174,18 @@ class Car(object):
     def readArduino(self):
         '''
         Read output from Arduino: x, y, heading.
-        Returns [None, None, None] if response is not in the right format
+        Returns [None, None, None, None] if response is not in the right format
         '''
-        self.x_raw, self.y_raw, self.heading_raw = [None, None, None]
+        self.x_raw, self.y_raw, self.heading_raw, self.distance_raw = [None, None, None, None]
         if arduino.in_waiting > 0:
             try:
                 response = arduino.readline().decode().strip().split(',')
-                if len(response) == 3 and all(len(i) > 0 for i in response):
+                if len(response) == 4 and all(len(i) > 0 for i in response):
                     response = [float(i) for i in response]
-                    self.x_raw, self.y_raw, self.heading_raw = response
+                    self.x_raw, self.y_raw, self.heading_raw, self.distance_raw = response
             except:
                 pass
-        return self.x_raw, self.y_raw, self.heading_raw
+        return self.x_raw, self.y_raw, self.heading_raw, self.distance_raw
     
     def straight(self): 
         self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
@@ -213,9 +216,10 @@ class Car(object):
         self.x = self.x0 - self.x_raw
         self.y = self.y_raw - self.y0
         self.heading = self.heading_raw
+        self.distance = self.distance_raw
 
     def printCurr(self):
-        print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.servoAngle))
+        print('State: %f, x: %f, y: %f, heading: %f, distance: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.distance, self.servoAngle))
 
     def filter(self): 
         self.filtLeftVel = ALPHA*self.leftVel + (1 - ALPHA)*self.filtLeftVel
@@ -311,12 +315,17 @@ class Car(object):
                         debug=0,
                         ) #physical size of the apriltag
         _, self.frame = self.cap.read()
-        # self.frame = cv2.resize(self.frame, (640,480))
+        self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrisic, tag_size=self.tagsize)
         if tags:
             for tag in tags:
-                return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
+                if tag.center[0] < 320 - self.threshold:
+                    self.april_tag = 0 # turn left
+                elif tag.center[0] > 320 + self.threshold:
+                    self.april_tag = 1 # turn right
+                else:
+                    self.april_tag = 2 # go straight
 
 if __name__ == "__main__":
     main()

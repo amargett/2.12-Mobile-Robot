@@ -52,7 +52,6 @@ def find_orange_cone():
                 if M["m00"] > 0:
                     cx = int(M["m10"] / M["m00"])
                     cy = int(M["m01"] / M["m00"])
-                    largest_contour_position = (cx, cy)
                     cv2.circle(frame, (cx, cy), 10, (0, 255, 0), -1)
 
                     # Print the position of the cone
@@ -72,8 +71,6 @@ def find_orange_cone():
         # Exit the loop if the 'q' key is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
-
-        
 
     # Release the webcam and close all windows
     cap.release()

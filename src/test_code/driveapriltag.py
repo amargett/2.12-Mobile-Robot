@@ -15,8 +15,8 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
-ALPHA = 0.15
-EPSILON_HEADING = 0.5
+ALPHA = 0.2
+EPSILON_HEADING = 1
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
 
@@ -50,74 +50,44 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        car.readArduino()
-        # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
-            car.setXYH()
-            # print(car.x, car.y, car.heading)
-            # car.look_for_cone()
-            # print('cone position:', car.cone_position)
-            # if car.cone_position: 
-            #     print('i see a cone!')
-            #     car.avoid_cone()
-                # pass
-            if car.state == 0: ## go to AED waypoint
-                car.target_x = 1.5
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 1
-            elif car.state == 1:
-                car.target_x = 1
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 2
-            elif car.state == 2: # go to AED and pick it up
-                if (time.time() - car.april_time) > 100e-3:
-                    car.detect_april_tag()
-                    car.april_time = time.time()
-                if car.april_tag == 0: 
-                    car.left(5)
-                elif car.april_tag == 1: 
-                    car.right(5)
-                elif car.april_tag == 2: 
-                    car.state = 3
-            elif car.state == 3:
-                car.target_x = -0.1
-                car.target_y = 1.65
-                car.straight()
-                if abs(car.x - car.target_x) < EPSILON_DIST and abs(car.y - car.target_y) < EPSILON_DIST:
-                    car.stop()
-                    car.pickupAED()
-                    print('Success! AED picked up')
-                    car.pickup_counter += 1 
-                    if car.pickup_counter > 200:
-                        car.mini_state = 0
-                        car.state = 3
-            elif car.state == 4: # back up
-                car.back()
-                car.backup_counter += 1
-                if car.backup_counter > 200:
-                    car.state = 5
-            elif car.state == 5: # turn around
-                car.target_x = 3
-                car.target_y = 1
-                car.go()
-                if car.mini_state == 2:
-                    car.stop()
-                    car.dropoffAED()
-                    print('Success! AED dropped up')
-                    car.state = 5
-                    car.mini_state = 0
-            elif car.state == 5:
-                car.stop()
-            car.prev_time = time.time()
-            car.filter()
-            car.printCurr()
-            car.sendArduino()
+        print(car.detect_april_tag())
+        # car.readArduino()
+        # # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
+        # if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
+        #     car.setXYH()
+        #     if car.state == 3: 
+        #         car.target_x  = -0.1
+        #         car.target_y = 1.65
+        #         car.straight()
+        #         if abs(car.x - car.target_x) < 5*EPSILON_DIST and abs(car.y - car.target_y) < 5*EPSILON_DIST:
+        #             car.stop()
+        #             car.pickupAED()
+        #             print('Success! AED picked up')
+        #             car.pickup_counter += 1 
+        #             if car.pickup_counter > 200:
+        #                 car.mini_state = 0
+        #                 car.state = 3
+        #     elif car.state == 4: # back up
+        #         car.back()
+        #         car.backup_counter += 1
+        #         if car.backup_counter > 200:
+        #             car.state = 5
+        #     elif car.state == 5: # turn around
+        #         car.target_x = 3
+        #         car.target_y = 1
+        #         car.go()
+        #         if car.mini_state == 2:
+        #             car.stop()
+        #             car.dropoffAED()
+        #             print('Success! AED dropped up')
+        #             car.state = 5
+        #             car.mini_state = 0
+        #     elif car.state == 5:
+        #         car.stop()
+        #     car.prev_time = time.time()
+        #     car.filter()
+        #     car.printCurr()
+        #     car.sendArduino()
                 
 class Car(object): 
     def __init__(self): 
@@ -127,8 +97,8 @@ class Car(object):
         self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.MIDPOINT = self.SCREEN_WIDTH // 2
         
-        self.target_x = 1
-        self.target_y = 1.65
+        self.target_x = 0
+        self.target_y = 0
         self.target_heading = 0
         
         self.leftVel = 0
@@ -139,9 +109,9 @@ class Car(object):
         self.y0 = None
         self.heading0 = None
 
-        self.x = 0
-        self.y = 0
-        self.heading = 0
+        self.x = 1
+        self.y = 1.65
+        self.heading = 180
 
         self.x_raw = 0
         self.y_raw = 0
@@ -151,7 +121,7 @@ class Car(object):
         self.filtRightVel = 0
         self.filtServoAngle = 90
 
-        self.state = 0
+        self.state = 3
         self.prev_time = time.time()
         self.april_time = time.time()
 
@@ -164,7 +134,7 @@ class Car(object):
         self.april_tag = None
 
         self.frame = None
-        self.intrisic = [640,640,960,540]
+        self.intrinsic = [640,640,960,540]
         self.tagsize = 0.100  #physical size of printed tag, unit = meter
         self.threshold = 10  # tolerable yaw
 
@@ -311,12 +281,11 @@ class Car(object):
                         debug=0,
                         ) #physical size of the apriltag
         _, self.frame = self.cap.read()
-        # self.frame = cv2.resize(self.frame, (640,480))
+        self.frame = cv2.resize(self.frame, (640,480))
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrisic, tag_size=self.tagsize)
+        tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrinsic, tag_size=self.tagsize)
         if tags:
-            for tag in tags:
-                return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
+            return tags[0].pose_R
 
 if __name__ == "__main__":
     main()

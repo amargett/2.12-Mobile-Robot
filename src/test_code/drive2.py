@@ -103,7 +103,7 @@ def detect_apriltag(frame):
 
     frame = cv2.resize(frame, (640,480))
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    tags = detector.detect(gray, estimate_tag_pose=True, camera_params=intrisic, tag_size=tagsize)
+    tags = detector.detect(gray, estimate_tag_pose=False, camera_params=intrisic, tag_size=tagsize)
     
     if not tags:
         return 0  #nothing
