@@ -58,7 +58,7 @@ def main():
         car.x0, car.y0, car.heading0 = car.readArduino()
     
 
-    while False:
+    while True:
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
