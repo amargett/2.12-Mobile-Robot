@@ -63,6 +63,7 @@ def main():
 
     while True:
         car.readArduino()
+        print("here")
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
