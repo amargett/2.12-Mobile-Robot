@@ -76,15 +76,20 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED and pick it up
-                if (time.time() - car.april_time) > 100e-3:
+                if (time.time() - car.april_time) > 50e-3:
                     car.detect_april_tag()
-                    car.april_time = time.time()
-                if car.april_tag == 0: 
-                    car.left(5)
-                elif car.april_tag == 1: 
-                    car.right(5)
-                elif car.april_tag == 2: 
-                    car.state = 3
+                    car.april_time = time.time()  
+                    car.target_x = -0.1
+                    dx = car.target_x - car.x
+                    dy = dx/math.tan(math.radians(car.tagangle))
+                    car.target_y = car.y + dy
+                    car.go()
+                # if car.april_tag == 0: 
+                #     car.left(5)
+                # elif car.april_tag == 1: 
+                #     car.right(5)
+                # elif car.april_tag == 2: 
+                #     car.state = 3
             elif car.state == 3:
                 car.target_x = -0.1
                 car.target_y = 1.65
@@ -162,6 +167,7 @@ class Car(object):
         self.mini_state = 0
         self.cone_position = None
         self.april_tag = None
+        self.tagangle = 0
 
         self.frame = None
         self.intrisic = [640,640,960,540]
@@ -304,7 +310,7 @@ class Car(object):
         # detects whether there is an april tag in view
         detector = Detector(families='tag36h11', 
                         nthreads=1,
-                        quad_decimate=1.0,
+                        quad_decimate=2,
                         quad_sigma=0.0,
                         refine_edges=1,
                         decode_sharpening=0.25,
@@ -315,8 +321,8 @@ class Car(object):
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrisic, tag_size=self.tagsize)
         if tags:
-            for tag in tags:
-                return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
+            tag = tags[0]
+            self.tagangle = math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
 
 if __name__ == "__main__":
     main()
