@@ -19,7 +19,7 @@ ALPHA = 0.15
 EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
-K_VEl = 2
+K_VEl = 4
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -193,7 +193,10 @@ class Car(object):
     
     def straight(self, error): 
         val = error * K_VEl
-        self.leftVel, self.rightVel = -val, -val
+        if val > STRAIGHT_VEL:
+            self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
+        else: 
+            self.leftVel, self.rightVel = -val, -val
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
