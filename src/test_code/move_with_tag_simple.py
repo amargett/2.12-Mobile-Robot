@@ -29,6 +29,7 @@ servo_desired_angle = 90
 LINE_LENGTH = 5
 CENTER_COLOR = (0, 255, 0)
 CORNER_COLOR = (255, 0, 255)
+cone_position = 0
 
 ### Some utility functions to simplify drawing on the camera feed
 # draw a crosshair
@@ -68,7 +69,7 @@ while True:
             image = plotText(image, detect.center, CENTER_COLOR, detect.tag_id)
             for corner in detect.corners:
                 image = plotPoint(image, corner, CORNER_COLOR)
-        cone_position = detections[1]
+        cone_position = detections[0]
 	# refresh the camera image
     cv2.imshow('Result', image)
 	# let the system event loop do its thing
@@ -81,11 +82,11 @@ while True:
     if not cone_position:
         left_desired_vel = -3
         right_desired_vel = 3
-    elif(abs(cone_position[0] - midpoint)< midpoint/6):
+    elif(abs(float(cone_position[0]) - midpoint)< midpoint/6):
         left_desired_vel = -3
         right_desired_vel = -3
     #go left
-    elif(cone_position[0] < midpoint):
+    elif(float(cone_position[0]) < midpoint):
         left_desired_vel = -3
         right_desired_vel = -1
     #go right
