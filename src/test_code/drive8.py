@@ -267,7 +267,7 @@ class Car(object):
         cone_detected = 0
         state = 0
         print("len contours =", len(contours))
-        cv2.imshow("Masked Image",mask)
+        cv2.imshow("Masked Image", frame)
         # Process the contours
         if len(contours) > 2000:
             # Find the largest contour
