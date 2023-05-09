@@ -326,7 +326,7 @@ class Car(object):
                     self.leftVel= -vel - 3* fraction_diff
                     self.rightVel = -vel + 3* fraction_diff
             elif self.mini_state ==1: 
-                self.target_x = self.x - 0.4 ## set target to aed point
+                self.target_x = self.x - 0.05 ## set target to aed point
                 self.target_y = self.y
                 self.mini_state = 3
 
