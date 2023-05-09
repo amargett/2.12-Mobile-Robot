@@ -28,6 +28,8 @@ servo_desired_angle = 90
 
 des_vel = 2
 
+cone_position = (0,0)
+
 
 def sendArduino(left_velocity, right_velocity, servo_angle):
     # if arduino.in_waiting > 0:
