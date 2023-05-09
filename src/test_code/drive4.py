@@ -36,11 +36,12 @@ def main():
             if (time.time() - car.obstacle_time) > 100e-3: # look for cones every 100 loops
                 car.look_for_cone()
                 if car.ob: # if object has been detected
-                    if car.state != car.prev_state: # 1st time detecting obstacle
+                    if not car.prev_state: # 1st time detecting obstacle
                         car.prev_state = car.state
                     car.state = 6
                 if not car.ob and car.state == 6: # if object goes out of view
                     car.state = car.prev_state
+                    car.prev_state = None
                 car.obstacle_time = time.time()
             if car.state == 0: # go to 1st waypoint, far from AED
                 car.target_x = 1.5
@@ -83,6 +84,7 @@ def main():
                     print('Success! AED dropped off')
                     car.mini_state = 0  
             elif car.state == 6: # avoid obstacle
+
                 car.avoid_cone()
             car.prev_time = time.time()
             car.filter()
