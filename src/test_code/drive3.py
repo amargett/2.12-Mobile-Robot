@@ -330,9 +330,9 @@ class Car(object):
         if tags:
             print("APRIL TAG")
             tag = tags[0]
-            if tag.center[0] < 320 - 5:
+            if tag.center[0] < 320 - 10:
                 return 1   #turn left
-            elif tag.center[0] > 320 + 5:
+            elif tag.center[0] > 320 + 10:
                 return 2   #turn right
             else:
                 return 3   # go straight
