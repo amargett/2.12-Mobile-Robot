@@ -18,6 +18,9 @@ float y = 0;
 float heading = 0;
 float theta = 0;
 float servo_angle = 90;
+int timeout_millis = 300;
+
+float last_message_millis = 0;
 
 unsigned long prevLoopTimeMicros = 0; // in microseconds
 // how long to wait before updating PID parameters
@@ -71,7 +74,6 @@ void loop()
         readIMU();
         sendIMU();
         readDesiredVel();
-        
 
         updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
 
@@ -116,6 +118,7 @@ void readDesiredVel()
      */
     if (Serial.available() > 0)
     {
+        last_message_millis = millis();
         String data = Serial.readStringUntil('\n');
         int firstCommaIndex = data.indexOf(',');
         int secondCommaIndex = data.indexOf(',', firstCommaIndex + 1);
@@ -123,6 +126,14 @@ void readDesiredVel()
         desiredVelBL = data.substring(0, firstCommaIndex).toFloat();
         desiredVelBR = data.substring(firstCommaIndex + 1, secondCommaIndex).toFloat();
         servo_angle = data.substring(secondCommaIndex + 1).toFloat();
+    }
+    else
+    {
+        //if no message for more than timeout_millis, set velocity zero
+        if(millis() - last_message_millis > timeout_millis){
+            desiredVelBL = 0;
+            desiredVelBR = 0;
+        }
     }
 }
 
