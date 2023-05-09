@@ -21,7 +21,7 @@ midpoint = screen_width // 2
 vote_array = []
 
 #arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
-#arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
+arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 left_desired_vel = 0
 right_desired_vel = 0
 servo_desired_angle = 90
