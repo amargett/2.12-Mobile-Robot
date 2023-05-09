@@ -285,6 +285,7 @@ class Car(object):
         gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
         tags = detector.detect(gray, estimate_tag_pose=True, camera_params=self.intrinsic, tag_size=self.tagsize)
         if tags:
+            tag = tags[0]
             return math.atan(-tag.pose_R[2,0]/math.sqrt(tag.pose_R[2,1]*tag.pose_R[2,1]+tag.pose_R[2,2]*tag.pose_R[2,2]))/math.pi*180
 
 if __name__ == "__main__":
