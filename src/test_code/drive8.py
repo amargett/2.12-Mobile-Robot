@@ -21,6 +21,7 @@ ALPHA = 0.3
 EPSILON_HEADING = 0.5
 K_HEADING = 0.05
 K_VEl = 5
+K_CORR = 0.5
 
 CAP = cv2.VideoCapture(0)
         
@@ -201,12 +202,12 @@ class Car(object):
                 pass
         return self.x_raw, self.y_raw, self.heading_raw
     
-    def straight(self, error): 
+    def straight(self, error, error_heading): 
         val = error * K_VEl + P_CONTROL_BIAS
         if val > STRAIGHT_VEL:
-            self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
+            self.leftVel, self.rightVel = -STRAIGHT_VEL - K_CORR*error_heading, -STRAIGHT_VEL + K_CORR*error_heading
         else: 
-            self.leftVel, self.rightVel = -val, -val
+            self.leftVel, self.rightVel = -val - K_CORR*error_heading, -val + K_CORR*error_heading
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error - P_CONTROL_BIAS, K_HEADING*error + P_CONTROL_BIAS
@@ -260,21 +261,23 @@ class Car(object):
         # mini_state == 0: rotate
         # mini_state == 1: go forward
         # mini_state = 2: success!
+        target_dx = self.target_x - self.x
+        target_dy = self.target_y - self.y
+        self.target_dheading = 360 - (np.degrees(np.arctan2(target_dy, target_dx)) + 360) % 360
+        error_heading = self.heading - self.target_dheading
+        
         if self.mini_state == 0: # rotate
-            target_dx = self.target_x - self.x
-            target_dy = self.target_y - self.y
-            self.target_dheading = 360 - (np.degrees(np.arctan2(target_dy, target_dx)) + 360) % 360
             print(self.mini_state, self.heading, self.target_dheading)
-            if abs(self.heading - self.target_dheading) < EPSILON_HEADING:
+            if abs(error_heading) < EPSILON_HEADING:
                 self.mini_state = 1
             elif self.target_dheading > 180: 
-                self.left(abs(self.heading - self.target_dheading))
+                self.left(abs(error_heading))
             else: 
-                self.right(abs(self.heading - self.target_dheading))
+                self.right(abs(error_heading))
         elif self.mini_state == 1: # go straight
             target_dx = self.target_x - self.x
             target_dy = self.target_y - self.y
-            self.straight(math.sqrt(target_dx**2 + target_dy**2))
+            self.straight(math.sqrt(target_dx**2 + target_dy**2), error_heading)
             if abs(target_dx) < self.epsilon_dist and abs(target_dy) < self.epsilon_dist:
                 self.mini_state = 2
         return self.mini_state
