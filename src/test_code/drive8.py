@@ -17,7 +17,7 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
-ALPHA = 0.15
+ALPHA = 0.2
 EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
@@ -45,7 +45,7 @@ def main():
         car.sendArduino()
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 1e-3:
+        if (time.time() - car.prev_time) > 5e-3:
             car.prev_time = time.time()
             car.mega_counter += 1
             if car.mega_counter % 10 == 0:
@@ -110,7 +110,7 @@ def main():
                         if car.mini_state == 1: 
                             car.state = 7
                             car.mini_state = 0
-                    elif car.state ==7: # dropoff aed
+                    elif car.state == 7: # dropoff aed
                         car.stop()
                         car.dropoffAED()
                         print('Success! AED dropped off')
