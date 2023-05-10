@@ -75,7 +75,7 @@ def main():
                     
                     car.setXYH()
 
-                    print('prev_state: %d, current_state: %d' % (car.prev_state, car.state)) 
+                    print(car.prev_state, car.state)
 
                     if car.cone_position: 
                         car.avoid_cone()
