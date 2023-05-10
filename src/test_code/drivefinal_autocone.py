@@ -89,7 +89,8 @@ def main():
                         car.go_completely_straight()
                         if time.time() > car.drive_straight_until:
                             car.state = car.prev_state
-                            car.mini_state = 0                   
+                            car.prev_state = None
+                            car.mini_state = 0
                     # once done: mini_state = 0
                     elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
@@ -151,7 +152,7 @@ def main():
                     
                 car.filter()
                 car.sendArduino()
-                #car.printCurr()
+                car.printCurr()
                 # print('state' + str(car.state))
                 
 class Car(object): 
@@ -395,19 +396,20 @@ class Car(object):
         
     def avoid_cone(self):
         print('avoiding cone')
-        if(self.cone_position[0] < MIDPOINT):
-            fraction_diff = min(1, self.cone_position[0]/MIDPOINT+0.5)
-        else:
-            fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
+        # if(self.cone_position[0] < MIDPOINT):
+        #     fraction_diff = min(1, self.cone_position[0]/MIDPOINT+0.5)
+        # else:
+        #     fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
 
         # self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
         # self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
 
-        self.leftVel = 2
-        self.rightVel = -2
+        self.leftVel = -2
+        self.rightVel = 2
 
         self.keep_rotating_until = time.time() + 1
-        self.drive_straight_until = self.keep_rotating_until + 2
+        self.drive_straight_until = self.keep_rotating_until + 3
+        
         """"
         left = False
         right = False
