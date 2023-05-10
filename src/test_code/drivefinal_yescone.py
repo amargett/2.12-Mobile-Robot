@@ -78,11 +78,11 @@ def main():
 
                     if car.cone_position:
                         if car.prev_state is None:
-                            car.avoid_cone()
+                            # car.avoid_cone()
                             car.prev_state = car.state
                         car.state = 10
                     elif car.state == 10:
-                        car.go()
+                        car.stop()
                         if car.mini_state == 2:
                             car.mini_state = 0
                             car.state = car.prev_state
