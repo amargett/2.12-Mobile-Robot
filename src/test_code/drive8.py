@@ -43,8 +43,8 @@ def main():
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             car.look_for_cone()
-            if car.cone_position: 
-                car.avoid_cone()
+            # if car.cone_position: 
+            #     car.avoid_cone()
             elif car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
                 car.target_y = 1.65
