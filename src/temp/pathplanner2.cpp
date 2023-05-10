@@ -90,7 +90,10 @@ void loop()
 
         
         prevLoopTimeMicros = micros();
-        
+        //Serial.printf("%2f",joyData.joyX);
+        //Serial.printf("%2f",joyData.joyY);
+        if (joyData.leftPressed){
+            Serial.print("left");}
         if (joyData.rightPressed) {
             if (manual == true){
                 manual = false;
@@ -237,6 +240,7 @@ void getSetPointJoystick(){
     k = (joyData.joyX-512)/(joyData.joyY-512); //curvature = 0 when on the y axis
     desiredVelBL = rr * (1-b * k)/r*0.1;
     desiredVelBR = rr * (1+b * k)/r*0.1;
+    
 }
 
     /*
