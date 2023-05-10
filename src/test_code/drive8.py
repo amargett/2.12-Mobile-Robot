@@ -379,6 +379,7 @@ class Car(object):
         # if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
         left = False
         right = False
+        phi = 360 - self.heading
         if(self.cone_position[0] < MIDPOINT):
             print("turning right")
             right = True
@@ -388,7 +389,6 @@ class Car(object):
         if right: 
             # self.old_target_x = self.target_x
             # self.old_target_y = self.target_y
-            phi = 360 - self.heading
             self.target_x = self.x + 0.5*math.cos(math.radians(phi+45))
             self.target_y = self.y + 0.5*math.sin(math.radians(phi+45))
             pass
