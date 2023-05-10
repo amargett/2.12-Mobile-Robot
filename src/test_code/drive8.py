@@ -17,10 +17,10 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
-ALPHA = 0.3
+ALPHA = 0.4
 EPSILON_HEADING = 0.5
 K_HEADING = 0.05
-K_VEl = 3
+K_VEL = 7
 K_CORR = 0.2
 Ki = 0.1
 
@@ -30,7 +30,7 @@ SCREEN_WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
 SCREEN_HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
 MIDPOINT = SCREEN_WIDTH // 2
 
-P_CONTROL_BIAS = 0
+P_CONTROL_BIAS = 0.25
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -205,7 +205,7 @@ class Car(object):
         return self.x_raw, self.y_raw, self.heading_raw
     
     def straight(self, error, error_heading): 
-        val = error * K_VEl + P_CONTROL_BIAS
+        val = error * K_VEL + P_CONTROL_BIAS
         if val > STRAIGHT_VEL:
             self.leftVel, self.rightVel = -STRAIGHT_VEL - K_CORR*error_heading, -STRAIGHT_VEL + K_CORR*error_heading
         else: 
@@ -395,7 +395,7 @@ class Car(object):
             # Calculate the distance using triangulation
             pixel_width = abs(corners[0][0] - corners[1][0])
             dist_to_tag = 100.0/pixel_width
-            vel = min(dist_to_tag * K_VEl, STRAIGHT_VEL) # P control velocity
+            vel = min(dist_to_tag * K_VEL, STRAIGHT_VEL) # P control velocity
             #pixel size 200: roughly 30 cm
             print(tag_position)
             print("distance" + str(dist_to_tag))
