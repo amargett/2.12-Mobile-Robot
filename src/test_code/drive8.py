@@ -54,7 +54,9 @@ def main():
             car.mega_counter += 1
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
-                car.ret, car.frame = CAP.read()
+                car.cone_ret, car.cone_frame = CAP.read()
+                car.april_ret, car.april_frame = CAP.read()
+
                 if car.state == 2:
                     car.detect_april_tag(0.35)
                 elif car.state == 7:
@@ -148,8 +150,10 @@ def main():
 class Car(object): 
     def __init__(self): 
         self.detector = apriltag.Detector()
-        self.ret = None
-        self.frame = None
+        self.cone_ret = None
+        self.cone_frame = None
+        self.april_ret = None
+        self.april_frame = None
         self.mega_counter = 0
 
         self.epsilon_dist = 0.1
@@ -193,7 +197,6 @@ class Car(object):
         self.april_tag = None
         self.tagangle = 0
 
-        self.frame = None
         self.intrisic = [640,640,960,540]
         self.tagsize = 0.100  #physical size of printed tag, unit = meter
         self.threshold = 14  # tolerable yaw
@@ -310,7 +313,7 @@ class Car(object):
         '''
         Read the frame from the video capture
         '''
-        ret, frame = self.ret, self.frame
+        ret, frame = self.cone_ret, self.cone_frame
         if not ret:
             print("Failed to capture frame from camera")
             return
@@ -405,7 +408,7 @@ class Car(object):
 
     def detect_april_tag(self, dist): 
         print('detecting tag')   
-        ret, frame = self.ret, self.frame
+        ret, frame = self.april_ret, self.april_frame
         grayimg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # look for tags
