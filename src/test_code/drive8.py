@@ -43,9 +43,9 @@ def main():
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
             car.look_for_cone()
-            # if car.cone_position: 
-            #     car.avoid_cone()
-            if car.state == 0: ## go to AED waypoint #1
+            if car.cone_position: 
+                car.avoid_cone()
+            elif car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
                 car.target_y = 1.65
                 car.go()
@@ -267,53 +267,53 @@ class Car(object):
         # Initialize the position of the cone
         self.cone_position = None
         cone_detected = 0
-        state = 0
-        cx = -1
-        cy = -1
-        #print("len contours =", len(contours))
-        #print("x")
-        #cv2.imshow("Masked Image", frame)
-        # Process the contours
-        if len(contours) > 0:
-            # Find the largest contour
-            largest_contour = max(contours, key=cv2.contourArea)
-            # Calculate the area of the largest contour
-            largest_contour_area = cv2.contourArea(largest_contour)
-            if largest_contour_area > 2500:
-                # Calculate the center of the contour
-                M = cv2.moments(largest_contour)
-                if M["m00"] > 0:
-                    cx = int(M["m10"] / M["m00"])
-                    cy = int(M["m01"] / M["m00"])
-                    cone_detected = 1
-                    print("cone detected")
+        # state = 0
+#         cx = -1
+#         cy = -1
+#         #print("len contours =", len(contours))
+#         #print("x")
+#         #cv2.imshow("Masked Image", frame)
+#         # Process the contours
+#         if len(contours) > 0:
+#             # Find the largest contour
+#             largest_contour = max(contours, key=cv2.contourArea)
+#             # Calculate the area of the largest contour
+#             largest_contour_area = cv2.contourArea(largest_contour)
+#             if largest_contour_area > 2500:
+#                 # Calculate the center of the contour
+#                 M = cv2.moments(largest_contour)
+#                 if M["m00"] > 0:
+#                     cx = int(M["m10"] / M["m00"])
+#                     cy = int(M["m01"] / M["m00"])
+#                     cone_detected = 1
+#                     print("cone detected")
+
+# #                     if cx < midpoint and cx !=-1:
+# #                     print("cone on left")
+# #                     state = 1
+# #                     #left_desired_vel = -1
+# #                     #right_desired_vel = -3
                     
-#                     if cx < midpoint and cx !=-1:
-#                     print("cone on left")
-#                     state = 1
-#                     #left_desired_vel = -1
-#                     #right_desired_vel = -3
-                    
-#                     elseif cx >= midpoint and cx != -1:
-#                     print("cone on right")
-#                     state = 2
-#                     #left_desired_vel = -3
-#                     #right_desired_vel = -1
+# #                     elseif cx >= midpoint and cx != -1:
+# #                     print("cone on right")
+# #                     state = 2
+# #                     #left_desired_vel = -3
+# #                     #right_desired_vel = -1
                     
 
-        # Display the frame with the cone position
-        #cv2.imshow("Traffic Cone Detection", frame)
-        # return
-        #Voting to make it more robust
+#         # Display the frame with the cone position
+#         #cv2.imshow("Traffic Cone Detection", frame)
+#         # return
+#         #Voting to make it more robust
         
-        self.vote_array.append(cone_detected)
+#         self.vote_array.append(cone_detected)
         
-        if len(self.vote_array) > 15:
-            self.vote_array.pop(0)
-        if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
-            #self.cone_position = (cx, cy)
-            print("find cone")
-            self.cone_position = (cx,cy)
+#         if len(self.vote_array) > 15:
+#             self.vote_array.pop(0)
+#         if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
+#             #self.cone_position = (cx, cy)
+#             print("find cone")
+#             self.cone_position = (cx,cy)
         
     def avoid_cone(self):
         print('avoiding cone')
