@@ -115,10 +115,10 @@ def main():
                         car.dropoffAED()
                         print('Success! AED dropped off')
                     
-                    car.filter()
-                    car.sendArduino()
-                    car.printCurr()
-                    # print('state' + str(car.state))
+                car.filter()
+                car.sendArduino()
+                car.printCurr()
+                # print('state' + str(car.state))
                 
 class Car(object): 
     def __init__(self): 
