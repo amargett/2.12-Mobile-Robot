@@ -43,7 +43,7 @@ def main():
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            print("pos" + str(car.x, car.y, car.heading))
+            print("pos" + str((car.x, car.y, car.heading)))
             car.cone_position = None
             car.look_for_cone()
             # print('cone position:', car.cone_position)
