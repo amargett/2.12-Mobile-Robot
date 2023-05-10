@@ -97,7 +97,8 @@ def main():
             car.prev_time = time.time()
             car.filter()
             car.sendArduino()
-            print('state' + str(car.state))
+            car.printCurr()
+            # print('state' + str(car.state))
                 
 class Car(object): 
     def __init__(self): 
@@ -370,7 +371,6 @@ class Car(object):
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
                     self.rightVel = -vel + 3* fraction_diff
-        
 
 if __name__ == "__main__":
     main()
