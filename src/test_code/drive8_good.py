@@ -1,3 +1,4 @@
+#func
 import serial
 import time
 import numpy as np
@@ -141,6 +142,7 @@ def main():
                         car.stop()
                         car.dropoffAED()
                         print('Success! AED dropped off')
+                        car.state = 9
                     
                 car.filter()
                 car.sendArduino()
