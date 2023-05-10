@@ -50,11 +50,12 @@ def main():
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
-                car.look_for_cone()
                 if car.state == 2:
                     car.detect_april_tag(-0.1 - car.x)
-                if car.state == 7:
+                elif car.state == 7:
                     car.detect_april_tag(3 - car.x)
+                else:
+                    car.look_for_cone()
                 # if car.state == 6:
                 #     car.detect_april_tag(3 - car.x)
                 # car.mega_state = 1
@@ -311,7 +312,7 @@ class Car(object):
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the area of the largest contour
             largest_contour_area = cv2.contourArea(largest_contour)
-            if largest_contour_area > 2500:
+            if largest_contour_area > 7500:
                 # Calculate the center of the contour
                 M = cv2.moments(largest_contour)
                 if M["m00"] > 0:
