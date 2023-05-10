@@ -57,12 +57,13 @@ def main():
                 car.cone_ret, car.cone_frame = CAP.read()
                 car.april_ret, car.april_frame = CAP.read()
 
-                # if car.state == 2:
-                #     car.detect_april_tag(0.35)
-                # elif car.state == 7:
-                #     car.detect_april_tag(0.6)
-                # else:
-                #     car.look_for_cone()
+                if car.state == 2:
+                    car.detect_april_tag(0.35)
+                elif car.state == 7:
+                    car.detect_april_tag(0.6)
+                else:
+                    # car.look_for_cone()
+                    pass
             else:
                 # print('MEGA' + str(car.mega_state))
                 car.readArduino()
