@@ -17,7 +17,7 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
-ALPHA = 0.1
+ALPHA = 0.05
 EPSILON_HEADING = 1
 K_HEADING = 0.05
 K_VEL = 8
@@ -55,7 +55,7 @@ def main():
                 if car.state == 2:
                     car.detect_april_tag(0.35)
                 elif car.state == 7:
-                    car.detect_april_tag(0.5)
+                    car.detect_april_tag(0.6)
                 else:
                     car.look_for_cone()
                 # if car.state == 6:
