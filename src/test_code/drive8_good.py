@@ -379,8 +379,9 @@ class Car(object):
             fraction_diff = min(1, self.cone_position[0]/MIDPOINT+0.5)
         else:
             fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
-        left_desired_vel = -STRAIGHT_VEL/2 + 5* fraction_diff
-        right_desired_vel = -STRAIGHT_VEL/2 - 5* fraction_diff
+
+        self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
+        self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
         """"
         left = False
         right = False
