@@ -57,15 +57,12 @@ def main():
                 car.cone_ret, car.cone_frame = CAP.read()
                 car.april_ret, car.april_frame = CAP.read()
 
-                if car.state == 2:
-                    car.detect_april_tag(0.35)
-                elif car.state == 7:
-                    car.detect_april_tag(0.6)
-                else:
-                    car.look_for_cone()
-                # if car.state == 6:
-                #     car.detect_april_tag(3 - car.x)
-                # car.mega_state = 1
+                # if car.state == 2:
+                #     car.detect_april_tag(0.35)
+                # elif car.state == 7:
+                #     car.detect_april_tag(0.6)
+                # else:
+                #     car.look_for_cone()
             else:
                 # print('MEGA' + str(car.mega_state))
                 car.readArduino()
@@ -409,41 +406,38 @@ class Car(object):
     def detect_april_tag(self, dist): 
         print('detecting tag')   
         ret, frame = self.april_ret, self.april_frame
-        try:
-            grayimg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        grayimg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # look for tags
+        detections = self.detector.detect(grayimg)
+        if not detections:
+            print("Nothing ")
+            code_present = False
+        else:
+            code_present = True
+            tag_position = detections[0].center
+            # Get the corners of the AprilTag
+            corners = detections[0].corners
+            # Calculate the distance using triangulation
+            pixel_width = abs(corners[0][0] - corners[1][0])
+            dist_to_tag = 100.0/pixel_width
+            vel = min(dist_to_tag * K_VEL_P, STRAIGHT_VEL) # P control velocity
+            #pixel size 200: roughly 30 cm
+            print(tag_position)
+            print("distance" + str(dist_to_tag))
+        if code_present == False:
+            print('no april tag')
+            self.leftVel = 1
+            self.rightVel = -1
 
-            # look for tags
-            detections = self.detector.detect(grayimg)
-            if not detections:
-                print("Nothing ")
-                code_present = False
-            else:
-                code_present = True
-                tag_position = detections[0].center
-                # Get the corners of the AprilTag
-                corners = detections[0].corners
-                # Calculate the distance using triangulation
-                pixel_width = abs(corners[0][0] - corners[1][0])
-                dist_to_tag = 100.0/pixel_width
-                vel = min(dist_to_tag * K_VEL_P, STRAIGHT_VEL) # P control velocity
-                #pixel size 200: roughly 30 cm
-                print(tag_position)
-                print("distance" + str(dist_to_tag))
-            if code_present == False:
-                print('no april tag')
-                self.leftVel = 1
-                self.rightVel = -1
+        else:
+            if self.mini_state == 0: 
+                if dist_to_tag < dist: 
+                    self.mini_state = 2
+                else: 
+                    fraction_diff = (MIDPOINT - tag_position[0])/MIDPOINT
+                    self.leftVel= -vel - 3* fraction_diff
+                    self.rightVel = -vel + 3* fraction_diff
 
-            else:
-                if self.mini_state == 0: 
-                    if dist_to_tag < dist: 
-                        self.mini_state = 2
-                    else: 
-                        fraction_diff = (MIDPOINT - tag_position[0])/MIDPOINT
-                        self.leftVel= -vel - 3* fraction_diff
-                        self.rightVel = -vel + 3* fraction_diff
-        except:
-            pass
 
 if __name__ == "__main__":
     main()
