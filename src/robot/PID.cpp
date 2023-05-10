@@ -100,7 +100,7 @@ void updateVelocity(float dt)
     velFR = dPhiFR / dt;
     velBR = dPhiBR / dt;
     // use first order alpha based filter to get filtered velocities
-    filtVelFL = alpha * velFL + (1 - alpha) * filtVelFR;
+    filtVelFL = alpha * velFL + (1 - alpha) * filtVelFL;
     filtVelBL = alpha * velBL + (1 - alpha) * filtVelBL;
     filtVelFR = alpha * velFR + (1 - alpha) * filtVelFR;
     filtVelBR = alpha * velBR + (1 - alpha) * filtVelBR;
