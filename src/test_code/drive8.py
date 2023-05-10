@@ -406,7 +406,10 @@ class Car(object):
 
     def detect_april_tag(self, dist): 
         print('detecting tag')   
-        # ret, frame = self.april_ret, self.april_frame
+        ret, frame = self.ret, self.frame
+        if not ret:
+            print("Failed to capture frame from camera")
+            return
         print(self.april_frame.shape())
         grayimg = cv2.cvtColor(self.april_frame, cv2.COLOR_BGR2GRAY)
         # look for tags

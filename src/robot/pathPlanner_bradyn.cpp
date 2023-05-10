@@ -1,10 +1,9 @@
-
-
 #include <Arduino.h>
 #include "encoder.h"
 #include "drive.h"
 #include "wireless.h"
 #include "PID.h"
+#include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include "ESP32Servo.h"
@@ -13,8 +12,6 @@
 #define r 0.06
 // distance from back wheel to center in meters
 #define b 0.2
-const int joystickCenter = 512;   // Center value of joystick
-const int joystickDeadzone = 20;  // Deadzone for joystick to avoid small movements
 
 float x = 0;
 float y = 0;
@@ -22,22 +19,8 @@ float heading = 0;
 float theta = 0;
 float servo_angle = 90;
 int timeout_millis = 300;
-int servo = 0
 
 float last_message_millis = 0;
-
-int PICKUP_ANGLE = 40;
-int DROPOFF_ANGLE = 120;
-
-float theta2 = 0;
-float rr = 0;
-float max_r = 0;
-float magnitude = 0;
-float turn_damping = 30;
-float curvature = 0;
-
-
-bool manual = false;
 
 unsigned long prevLoopTimeMicros = 0; // in microseconds
 // how long to wait before updating PID parameters
@@ -51,7 +34,10 @@ void sendIMU();
 void readDesiredVel();
 void updateRobotPose(float dPhiL, float dPhiR);
 void setWheelVel();
+void getSetPointJoystick();
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+
+bool manual_control = true;
 
 int servoPin = 13;
 Servo myservo;
@@ -81,59 +67,39 @@ void setup()
 }
 void loop()
 {
-    
     myservo.write(servo_angle);
+    
     if (micros() - prevLoopTimeMicros > loopDelayMicros)
     {
 
-        
         prevLoopTimeMicros = micros();
-        
-        if (joyData.rightPressed) {
-            if (manual == true){
-                manual = false;
-            }
-            else{
-                manual = true;
-            }
-        }
 
-        if (joyData.leftPressed && manual){
-            if (servo_mode = 0){
-                servo_mode = 1;
-            }
-            else if(servo_mode == 1){
-                servo_mode = 2;
-            }
-            else if(servo_mode ==2){
-                servo_mode = 0;
-            }
-
-        if (manual)
+        readIMU();
+        sendIMU();
+        if(! manual_control)
         {
-            readIMU();
-            getSetPointJoystick();
-            updateRobotPose(dPhiBL, dPhiBR);
-
-        }
-        
-        else {
-            readIMU();
-        
             readDesiredVel();
-
-            updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
-
-            updateRobotPose(dPhiBL, dPhiBR);
+        }
+        else{
+            getSetPointJoystick();
         }
 
-        
+        updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
+
+        updateRobotPose(dPhiBL, dPhiBR);
 
         // sends odometry to the remote
         // updateOdometry();
 
         setWheelVel(); // send new desired wheel velocities
     }
+}
+
+void getSetPointJoystick(){
+    Serial.println(joyData.joyX);
+    //y = map(x, 1, 50, 50, 1);
+    desiredVelBL = map(joyData.joyX, 1,1024,-3,3);
+    desiredVelBR = map(joyData.joyY, 1,1024,-3,3);
 }
 
 void readIMU()
@@ -176,8 +142,6 @@ void readDesiredVel()
         desiredVelBL = data.substring(0, firstCommaIndex).toFloat();
         desiredVelBR = data.substring(firstCommaIndex + 1, secondCommaIndex).toFloat();
         servo_angle = data.substring(secondCommaIndex + 1).toFloat();
-        
-        sendIMU();
     }
     else
     {
@@ -224,4 +188,14 @@ void updateRobotPose(float dPhiL, float dPhiR)
     y += dy;
 }
 
-//Reads the current joystick values and updates the tracking varia
+// stores all the the latest odometry data into the odometry struct
+// void updateOdometry()
+// {
+//     odom_data.millis = millis();
+//     odom_data.pathDistance = pathDistance;
+//     odom_data.x = x;
+//     odom_data.y = y;
+//     odom_data.theta = theta;
+//     odom_data.velL = filtVelBL;
+//     odom_data.velR = filtVelBR;
+// }
