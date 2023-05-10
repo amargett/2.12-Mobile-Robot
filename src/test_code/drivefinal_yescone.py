@@ -194,7 +194,7 @@ class Car(object):
         self.dropoff_counter = 0
 
         self.mini_state = 0
-        # self.cone_position = None
+        self.cone_position = None
         self.april_tag = None
         self.tagangle = 0
 
