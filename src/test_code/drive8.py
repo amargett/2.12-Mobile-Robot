@@ -45,7 +45,7 @@ def main():
             car.look_for_cone()
             # if car.cone_position: 
             #     car.avoid_cone()
-            elif car.state == 0: ## go to AED waypoint #1
+            if car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
                 car.target_y = 1.65
                 car.go()
