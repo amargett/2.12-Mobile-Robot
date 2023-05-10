@@ -108,7 +108,6 @@ def main():
                         car.target_y = 1
                         car.go()
                         if car.mini_state == 2: 
-                            return
                             car.mini_state = 0
                             car.state = 6
                             # car.stop()
