@@ -260,7 +260,7 @@ class Car(object):
         self.filtServoAngle = ALPHA*self.servoAngle + (1 - ALPHA)*self.filtServoAngle
 
     def sendArduino(self): 
-        print('left vel: %f, right vel %f' % (self.filtLeftVel, self.filtRightVel))
+        #print('left vel: %f, right vel %f' % (self.filtLeftVel, self.filtRightVel))
         msg = f"{self.filtLeftVel},{self.filtRightVel},{self.filtServoAngle}\n".encode() # encode message as bytes
         arduino.write(msg)
     
@@ -362,13 +362,16 @@ class Car(object):
         #Voting to make it more robust
         
         self.vote_array.append(cone_detected)
-        
+        """"
         if len(self.vote_array) > 1:
             self.vote_array.pop(0)
         if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
             #self.cone_position = (cx, cy)
             print("find cone")
             self.cone_position = (cx,cy)
+        """
+        if cone_detected:
+            self.cone_position = (cx, cy)
         
     def avoid_cone(self):
         print('avoiding cone')
