@@ -26,7 +26,7 @@ K_CORR_D = 0.008
 Ki = 0.1
 
 CAP = cv2.VideoCapture(0)
-        
+
 SCREEN_WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
 SCREEN_HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
 MIDPOINT = SCREEN_WIDTH // 2
