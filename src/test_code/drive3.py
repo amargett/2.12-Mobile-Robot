@@ -22,7 +22,7 @@ EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
 
-P_CONTROL_BIAS = 0.5
+P_CONTROL_BIAS = 0
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -319,7 +319,7 @@ class Car(object):
             print('no april tag')
         else:
             if self.mini_state == 0: 
-                if dist_to_tag < 0.4: 
+                if dist_to_tag < 0.35: 
                     self.mini_state = 1
                 else: 
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
