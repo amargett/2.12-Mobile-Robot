@@ -335,6 +335,7 @@ class Car(object):
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the area of the largest contour
             largest_contour_area = cv2.contourArea(largest_contour)
+            print(largest_contour_area)
             if largest_contour_area > 5000:
                 # Calculate the center of the contour
                 M = cv2.moments(largest_contour)
