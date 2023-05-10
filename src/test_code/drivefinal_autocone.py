@@ -74,12 +74,22 @@ def main():
                 if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None]: 
                     
                     car.setXYH()
-                    
-                    if car.cone_position:
-                        car.avoid_cone()
-                    elif time.time() < car.drive_straight_until:
-                        car.go_completely_straight()
 
+                    print('prev_state: %d, current_state: %d' % (car.prev_state, car.state)) 
+
+                    if car.cone_position: 
+                        car.avoid_cone()
+                        if car.prev_state is None:
+                            car.prev_state = car.state
+                        state = 10
+                    elif state == 10:
+                        if time.time() > car.keep_rotating_until:
+                            state = 11
+                    elif state == 11:
+                        car.go_completely_straight()
+                        if time.time() > car.drive_straight_until:
+                            car.state = car.prev_state
+                            car.mini_state = 0                   
                     # once done: mini_state = 0
                     elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
@@ -183,7 +193,8 @@ class Car(object):
         self.april_time = time.time()
         self.prev_state = None
 
-        self.drive_straight_until = time.time()
+        self.drive_straight_until = None
+        self.keep_rotating_until = None
 
         self.pickup_counter = 0
         self.backup_counter = 0
@@ -389,9 +400,14 @@ class Car(object):
         else:
             fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
 
-        self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
-        self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
-        self.drive_straight_until = time.time() + 3
+        # self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
+        # self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
+
+        self.leftVel = 10*fraction_diff
+        self.rightVel = -10*fraction_diff
+
+        self.keep_rotating_until = time.time() + 1
+        self.drive_straight_until = self.keep_rotating_until + 2
         """"
         left = False
         right = False
