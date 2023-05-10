@@ -382,8 +382,8 @@ class Car(object):
         detections = self.detector.detect(grayimg)
         target_dx = -0.1 - self.x
         vel = abs(target_dx) * K_VEl # P control velocity
-        if vel> STRAIGHT_VEL: 
-            vel = STRAIGHT_VEL
+        if vel> STRAIGHT_VEL/3: 
+            vel = STRAIGHT_VEL/3
         if not detections:
             print("Nothing ")
             code_present = False
