@@ -44,9 +44,10 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 1e-3:
+        if (time.time() - car.prev_time) > 5e-3:
             car.prev_time = time.time()
-            if car.mega_state == 0:
+            car.mega_counter += 1
+            if car.mega_counter % 10 == 0:
                 print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
                 car.mega_state = 1
@@ -120,6 +121,7 @@ class Car(object):
         self.detector = apriltag.Detector()
         self.ret = None
         self.frame = None
+        self.mega_counter = 0
         
         self.target_x = 1
         self.target_y = 1.65
