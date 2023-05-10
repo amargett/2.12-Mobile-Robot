@@ -42,6 +42,7 @@ def close():
 def main():
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
+        car.sendArduino()
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
         if (time.time() - car.prev_time) > 2e-3:
@@ -51,8 +52,8 @@ def main():
                 print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
                 car.look_for_cone()
-                if car.state == 6:
-                    car.detect_april_tag(3 - car.x)
+                # if car.state == 6:
+                #     car.detect_april_tag(3 - car.x)
                 car.mega_state = 1
             else:
                 print('MEGA' + str(car.mega_state))
@@ -105,6 +106,7 @@ def main():
                         else: 
                             car.right(dheading)
                     elif car.state == 6: # go to april tag
+                        car.detect_april_tag(3 - car.x)
                         if car.mini_state == 1: 
                             car.state = 7
                             car.mini_state = 0
