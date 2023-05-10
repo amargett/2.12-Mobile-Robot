@@ -254,7 +254,8 @@ class Car(object):
         self.heading = self.heading_raw
 
     def printCurr(self):
-        print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.servoAngle))
+        pass
+        #print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.servoAngle))
 
     def filter(self): 
         self.filtLeftVel = ALPHA*self.leftVel + (1 - ALPHA)*self.filtLeftVel
