@@ -76,9 +76,7 @@ def main():
                     car.setXYH()
 
                     if car.cone_position:
-                        if car.prev_state is None:
-                            car.avoid_cone()
-                            car.prev_state = car.state
+                        car.avoid_cone()
                     elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
                         car.target_y = 1.65
@@ -219,7 +217,6 @@ class Car(object):
         val = K_VEL_P*error_dist
         delta_val = K_CORR_P*error_heading + K_CORR_D*(error_heading - self.prev_error_heading)/FRAME_TIME
         # self.leftVel, self.rightVel = min(-val - delta_val, -STRAIGHT_VEL), min(-val + delta_val, -STRAIGHT_VEL)
-
         if val > STRAIGHT_VEL:
             self.leftVel, self.rightVel = -STRAIGHT_VEL - delta_val, -STRAIGHT_VEL + delta_val
         else: 
