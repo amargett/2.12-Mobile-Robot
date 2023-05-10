@@ -140,14 +140,14 @@ while True:
     if sum(vote_array) < len(vote_array) / 2:
         print("no cone detected, or not enough votes")
         left_desired_vel = -des_vel
-        right_desired_vel = des_vel
+        right_desired_vel = -des_vel
     else:
         if(cone_position[0] < midpoint):
             fraction_diff = cone_position[0]/midpoint
         else:
             fraction_diff = cone_position[0]/midpoint - 2
-        left_desired_vel = -des_vel + 4* fraction_diff
-        right_desired_vel = -des_vel - 4* fraction_diff
+        left_desired_vel = -des_vel + 5* fraction_diff
+        right_desired_vel = -des_vel - 5* fraction_diff
             
     # Display the frame with the largest contour position
     cv2.imshow("Orange Cone Detection", mask)
