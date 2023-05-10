@@ -56,7 +56,6 @@ def main():
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
-                print(car.frame.shape)
 
                 if car.state == 2:
                     car.detect_april_tag(0.35)
@@ -80,13 +79,7 @@ def main():
                         if car.prev_state is None:
                             car.avoid_cone()
                             car.prev_state = car.state
-                        car.state = 10
-                    elif car.state == 10:
-                        car.go()
-                        if car.mini_state == 2:
-                            car.state = car.prev_state
-                            car.prev_state = None
-                    if car.state == 0: ## go to AED waypoint #1
+                    elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
                         car.target_y = 1.65
                         car.go()
@@ -380,7 +373,13 @@ class Car(object):
         
     def avoid_cone(self):
         print('avoiding cone')
-        # if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
+        if(self.cone_position[0] < MIDPOINT):
+            fraction_diff = min(1, self.cone_position[0]/MIDPOINT+0.5)
+        else:
+            fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
+        left_desired_vel = -STRAIGHT_VEL/2 + 5* fraction_diff
+        right_desired_vel = -STRAIGHT_VEL/2 - 5* fraction_diff
+        """"
         left = False
         right = False
         phi = 360 - self.heading
@@ -405,6 +404,7 @@ class Car(object):
         print("right vel", self.rightVel)
         #self.leftVel = -STRAIGHT_VEL/3
         #self.rightVel = -STRAIGHT_VEL 
+        """
 
 
     def detect_april_tag(self, dist): 
