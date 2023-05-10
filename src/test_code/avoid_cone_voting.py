@@ -77,7 +77,6 @@ while True:
             if M["m00"] > 0:
                 cx = int(M["m10"] / M["m00"])
                 cy = int(M["m01"] / M["m00"])
-                cv2.circle(frame, (cx, cy), 10, (0, 255, 0), -1)
 
                 # Print the position of the cone
                 #print("Cone position: ({}, {})".format(cx, cy))
