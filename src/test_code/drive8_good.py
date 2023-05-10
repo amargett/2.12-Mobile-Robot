@@ -22,7 +22,7 @@ EPSILON_HEADING = 1
 K_HEADING = 0.05
 K_VEL_P = 8
 K_CORR_P = 0.3
-K_CORR_D = 0.008
+K_CORR_D = 0
 Ki = 0.1
 
 CAP = cv2.VideoCapture(0)
