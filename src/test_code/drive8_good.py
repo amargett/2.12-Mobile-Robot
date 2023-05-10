@@ -74,9 +74,11 @@ def main():
                 if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None]: 
                     
                     car.setXYH()
-
+                    
                     if car.cone_position:
                         car.avoid_cone()
+                    elif time.time() < car.drive_straight_until:
+                        car.go_completely_straight()
                     elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
                         car.target_y = 1.65
@@ -179,6 +181,8 @@ class Car(object):
         self.april_time = time.time()
         self.prev_state = None
 
+        self.drive_straight_until = time.time()
+
         self.pickup_counter = 0
         self.backup_counter = 0
         self.dropoff_counter = 0
@@ -212,6 +216,9 @@ class Car(object):
             except:
                 pass
         return self.x_raw, self.y_raw, self.heading_raw
+    
+    def go_completely_straight(self):
+        self.leftVel, self.rightVel = STRAIGHT_VEL, STRAIGHT_VEL
     
     def straight(self, error_dist, error_heading): 
         val = K_VEL_P*error_dist
@@ -382,6 +389,7 @@ class Car(object):
 
         self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
         self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
+        self.drive_straight_until = time.time() + 2
         """"
         left = False
         right = False
