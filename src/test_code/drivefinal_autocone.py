@@ -121,7 +121,7 @@ def main():
                     elif car.state == 4: # back up
                         car.back()
                         car.backup_counter += 1
-                        if car.backup_counter > 500:
+                        if car.backup_counter > 1000:
                             car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
