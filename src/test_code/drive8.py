@@ -41,8 +41,8 @@ def close():
 
 def main():
     car = Car()
-    car.sendArduino()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
+        car.sendArduino()
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
         if (time.time() - car.prev_time) > 2e-3:
