@@ -45,13 +45,17 @@ def main():
         car.sendArduino()
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 5e-3:
+        if (time.time() - car.prev_time) > 2e-3:
             car.prev_time = time.time()
             car.mega_counter += 1
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
                 car.look_for_cone()
+                if car.state == 2:
+                    car.detect_april_tag(-0.1 - car.x)
+                if car.state == 6:
+                    car.detect_april_tag(3 - car.x)
                 # if car.state == 6:
                 #     car.detect_april_tag(3 - car.x)
                 # car.mega_state = 1
@@ -80,8 +84,7 @@ def main():
                             car.mini_state = 0
                             car.state = 2
                     elif car.state == 2: # go to AED 
-                        car.detect_april_tag(-0.1 - car.x)
-                        if car.mini_state == 1: 
+                        if car.mini_state == 2: 
                             car.state = 3
                             car.mini_state = 0
                     elif car.state == 3: # pickup AED
@@ -96,20 +99,20 @@ def main():
                         car.back()
                         car.backup_counter += 1
                         if car.backup_counter > 200:
+                            car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
-                        dheading = abs(360 -car.heading)
-                        dheading2  = abs(car.heading)
-                        if dheading < EPSILON_HEADING or dheading2< EPSILON_HEADING:
-                            car.state = 6
-                            car.stop()
-                        else: 
-                            car.right(dheading)
-                    elif car.state == 6: # go to april tag
-                        car.detect_april_tag(3 - car.x)
-                        if car.mini_state == 1: 
-                            car.state = 7
+                        car.target_x = 2.5
+                        car.target_y = 1
+                        car.go()
+                        if car.mini_state == 2: 
                             car.mini_state = 0
+                            car.state = 6
+                            # car.stop()
+                    elif car.state == 6: # go to april tag
+                        if car.mini_state == 2: 
+                            car.mini_state = 0
+                            car.state = 7
                     elif car.state == 7: # dropoff aed
                         car.stop()
                         car.dropoffAED()
@@ -386,7 +389,7 @@ class Car(object):
         else:
             if self.mini_state == 0: 
                 if dist_to_tag < 0.4: 
-                    self.mini_state = 1
+                    self.mini_state = 2
                 else: 
                     fraction_diff = (MIDPOINT - tag_position[0])/MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
