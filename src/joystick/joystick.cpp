@@ -19,7 +19,7 @@ uint32_t button_mask = (1 << BUTTON_RIGHT) | (1 << BUTTON_DOWN) |
 #include "wireless.h"
 
 //TODO set address to robot mac adress
-uint8_t broadcastAddress[] = {0x0C, 0xDC, 0x7E, 0xCC, 0x6B, 0xB8};
+uint8_t broadcastAddress[] = {0x44, 0x17, 0x93, 0x5D, 0xA7, 0x68};
 
 // Structure example to send data
 // Must match the receiver structure
