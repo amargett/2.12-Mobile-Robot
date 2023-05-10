@@ -64,15 +64,17 @@ void setup()
 }
 void loop()
 {
-    myservo.write(servo_angle);
     
+    myservo.write(servo_angle);
     if (micros() - prevLoopTimeMicros > loopDelayMicros)
     {
+
+        
 
         prevLoopTimeMicros = micros();
 
         readIMU();
-        sendIMU();
+        
         readDesiredVel();
 
         updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
@@ -126,6 +128,8 @@ void readDesiredVel()
         desiredVelBL = data.substring(0, firstCommaIndex).toFloat();
         desiredVelBR = data.substring(firstCommaIndex + 1, secondCommaIndex).toFloat();
         servo_angle = data.substring(secondCommaIndex + 1).toFloat();
+        
+        sendIMU();
     }
     else
     {
