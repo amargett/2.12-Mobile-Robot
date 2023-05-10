@@ -143,9 +143,9 @@ while True:
         right_desired_vel = -des_vel
     else:
         if(cone_position[0] < midpoint):
-            fraction_diff = cone_position[0]/midpoint
+            fraction_diff = min(1, cone_position[0]/midpoint+0.5)
         else:
-            fraction_diff = cone_position[0]/midpoint - 2
+            fraction_diff = max(-1, cone_position[0]/midpoint - 2.5)
         left_desired_vel = -des_vel + 5* fraction_diff
         right_desired_vel = -des_vel - 5* fraction_diff
             
