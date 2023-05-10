@@ -219,10 +219,11 @@ class Car(object):
     def straight(self, error_dist, error_heading): 
         val = K_VEL_P*error_dist
         delta_val = K_CORR_P*error_heading + K_CORR_D*(error_heading - self.prev_error_heading)/FRAME_TIME
-        if val + delta_val > STRAIGHT_VEL:
-            self.leftVal, self.rightVal = -STRAIGHT_VEL, -STRAIGHT_VEL
-        else:
-            self.leftVal, self.rightVal = (-val - delta_val), (-val + delta_val)
+        self.leftVal, self.rightVal = min(-val - delta_val, -STRAIGHT_VEL), min(-val + delta_val, -STRAIGHT_VEL)
+        # if val + delta_val > STRAIGHT_VEL:
+        #     self.leftVal, self.rightVal = -STRAIGHT_VEL, -STRAIGHT_VEL
+        # else:
+        #     self.leftVal, self.rightVal = (-val - delta_val), (-val + delta_val)
 
         # if val > STRAIGHT_VEL:
         #     self.leftVel, self.rightVel = -STRAIGHT_VEL - delta_val, -STRAIGHT_VEL + delta_val
