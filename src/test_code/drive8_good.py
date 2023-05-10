@@ -393,14 +393,14 @@ class Car(object):
         if right: 
             # self.old_target_x = self.target_x
             # self.old_target_y = self.target_y
-            self.target_x = self.x + 0.5*math.cos(math.radians(phi+45))
-            self.target_y = self.y + 0.5*math.sin(math.radians(phi+45))
+            self.target_x = self.x + 0.5*math.cos(math.radians(phi+15))
+            self.target_y = self.y + 0.5*math.sin(math.radians(phi+15))
             pass
         elif left: 
             # self.old_target_x = self.target_x
             # self.old_target_y = self.target_y
-            self.target_x = self.x + 0.5*math.sin(math.radians(phi-45))
-            self.target_y = self.y + 0.5*math.cos(math.radians(phi-45))
+            self.target_x = self.x + 0.5*math.sin(math.radians(phi-15))
+            self.target_y = self.y + 0.5*math.cos(math.radians(phi-15))
         print("left vel", self.leftVel)
         print("right vel", self.rightVel)
         #self.leftVel = -STRAIGHT_VEL/3
