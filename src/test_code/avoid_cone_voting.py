@@ -146,8 +146,8 @@ while True:
             fraction_diff = cone_position[0]/midpoint
         else:
             fraction_diff = cone_position[0]/midpoint - 2
-        left_desired_vel = -des_vel - 4* fraction_diff
-        right_desired_vel = -des_vel + 4* fraction_diff
+        left_desired_vel = -des_vel + 4* fraction_diff
+        right_desired_vel = -des_vel - 4* fraction_diff
             
     # Display the frame with the largest contour position
     cv2.imshow("Orange Cone Detection", mask)
