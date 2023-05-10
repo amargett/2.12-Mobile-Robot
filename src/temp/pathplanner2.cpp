@@ -22,7 +22,8 @@ float heading = 0;
 float theta = 0;
 float servo_angle = 90;
 int timeout_millis = 300;
-int servo = 0
+int servo = 0;
+int servo_mode = 0;
 
 float last_message_millis = 0;
 
@@ -34,7 +35,7 @@ float rr = 0;
 float max_r = 0;
 float magnitude = 0;
 float turn_damping = 30;
-float curvature = 0;
+float k = 0;
 
 
 bool manual = false;
@@ -51,6 +52,7 @@ void sendIMU();
 void readDesiredVel();
 void updateRobotPose(float dPhiL, float dPhiR);
 void setWheelVel();
+void getSetPointJoystick();
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 int servoPin = 13;
@@ -88,7 +90,10 @@ void loop()
 
         
         prevLoopTimeMicros = micros();
-        
+        //Serial.printf("%2f",joyData.joyX);
+        //Serial.printf("%2f",joyData.joyY);
+        if (joyData.leftPressed){
+            Serial.print("left");}
         if (joyData.rightPressed) {
             if (manual == true){
                 manual = false;
@@ -108,7 +113,7 @@ void loop()
             else if(servo_mode ==2){
                 servo_mode = 0;
             }
-
+        }
         if (manual)
         {
             readIMU();
@@ -224,4 +229,43 @@ void updateRobotPose(float dPhiL, float dPhiR)
     y += dy;
 }
 
-//Reads the current joystick values and updates the tracking varia
+void getSetPointJoystick(){
+    //desiredVelBL = map(joyData.joyY, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
+    //desiredVelBR = map(joystickXValue, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
+    rr = sqrt(abs(joyData.joyX-512) * abs(joyData.joyX-512) + abs(joyData.joyY-512) * abs(joyData.joyY-512));
+    if (rr<30){
+        rr = 0;
+    }
+    //theta2 = atan2(joyData.joyY-512,joyData.joyX-512);
+    k = (joyData.joyX-512)/(joyData.joyY-512); //curvature = 0 when on the y axis
+    desiredVelBL = rr * (1-b * k)/r;
+    desiredVelBR = rr * (1+b * k)/r;
+    
+
+    /*
+    if (servo_mode == 1){
+        servo_angle = 90;
+    }
+    if (servo_mode == 1){
+        servo_angle  = PICKUP_ANGLE;
+        }
+    if (servo_mode ==2){
+        servo_angle = DROPOFF_ANGLE;
+    }
+    }
+     */
+    // theta2 = atan2(joyData.joyX,joyData.joyY);
+    // rr = sqrt(joyData.joyX * joyData.joyX + joyData.joyY * joyData.joyY);
+    // if (abs(joyData.joyX) > abs(joyData.joyY)){
+    //     max_r = abs(rr/joyData.joyX);
+    // }
+    // else{
+    //     max_r = abs(rr / joyData.joyY);
+    // }
+    // magnitude = rr / max_r;
+    // desiredVelBL = magnitude * (sin(theta2)+cos(theta2)/ turn_damping);
+    // desiredVelFL = desiredVelBL;
+    // desiredVelBR = magnitude * (sin(theta2) - cos(theta2) / turn_damping);
+    // desiredVelFR = desiredVelBR;
+
+}

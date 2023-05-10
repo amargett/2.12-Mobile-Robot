@@ -34,7 +34,7 @@ MIDPOINT = SCREEN_WIDTH // 2
 
 P_CONTROL_BIAS = 0.25
 
-FRAME_TIME = 2e-3
+FRAME_TIME = 1e-3
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -56,14 +56,13 @@ def main():
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
-                print(car.frame.shape)
 
                 if car.state == 2:
                     car.detect_april_tag(0.35)
                 elif car.state == 7:
                     car.detect_april_tag(0.6)
-                # else:
-                #     car.look_for_cone()
+                else:
+                    car.look_for_cone()
                 # if car.state == 6:
                 #     car.detect_april_tag(3 - car.x)
                 # car.mega_state = 1
@@ -76,17 +75,23 @@ def main():
                     
                     car.setXYH()
 
-                    # if car.cone_position:
-                    #     if car.prev_state is None:
-                    #         car.avoid_cone()
-                    #         car.prev_state = car.state
-                    #     car.state = 10
-                    # elif car.state == 10:
-                    #     car.go()
-                    #     if car.mini_state == 2:
-                    #         car.state = car.prev_state
-                    #         car.prev_state = None
-                    if car.state == 0: ## go to AED waypoint #1
+                    print('prev_state: %d, current_state: %d' % (car.prev_state, car.state)) 
+
+                    if car.cone_position: 
+                        car.avoid_cone()
+                        if car.prev_state is None:
+                            car.prev_state = car.state
+                        state = 10
+                    elif state == 10:
+                        if time.time() > car.keep_rotating_until:
+                            state = 11
+                    elif state == 11:
+                        car.go_completely_straight()
+                        if time.time() > car.drive_straight_until:
+                            car.state = car.prev_state
+                            car.mini_state = 0                   
+                    # once done: mini_state = 0
+                    elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
                         car.target_y = 1.65
                         car.go()
@@ -146,7 +151,7 @@ def main():
                     
                 car.filter()
                 car.sendArduino()
-                car.printCurr()
+                #car.printCurr()
                 # print('state' + str(car.state))
                 
 class Car(object): 
@@ -188,12 +193,15 @@ class Car(object):
         self.april_time = time.time()
         self.prev_state = None
 
+        self.drive_straight_until = None
+        self.keep_rotating_until = None
+
         self.pickup_counter = 0
         self.backup_counter = 0
         self.dropoff_counter = 0
 
         self.mini_state = 0
-        # self.cone_position = None
+        self.cone_position = None
         self.april_tag = None
         self.tagangle = 0
 
@@ -222,11 +230,13 @@ class Car(object):
                 pass
         return self.x_raw, self.y_raw, self.heading_raw
     
+    def go_completely_straight(self):
+        self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
+    
     def straight(self, error_dist, error_heading): 
         val = K_VEL_P*error_dist
         delta_val = K_CORR_P*error_heading + K_CORR_D*(error_heading - self.prev_error_heading)/FRAME_TIME
         # self.leftVel, self.rightVel = min(-val - delta_val, -STRAIGHT_VEL), min(-val + delta_val, -STRAIGHT_VEL)
-
         if val > STRAIGHT_VEL:
             self.leftVel, self.rightVel = -STRAIGHT_VEL - delta_val, -STRAIGHT_VEL + delta_val
         else: 
@@ -261,7 +271,8 @@ class Car(object):
         self.heading = self.heading_raw
 
     def printCurr(self):
-        print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.servoAngle))
+        pass
+        #print('State: %f, x: %f, y: %f, heading: %f, servoAngle: %f' % (self.state, self.x, self.y, self.heading, self.servoAngle))
 
     def filter(self): 
         self.filtLeftVel = ALPHA*self.leftVel + (1 - ALPHA)*self.filtLeftVel
@@ -269,7 +280,7 @@ class Car(object):
         self.filtServoAngle = ALPHA*self.servoAngle + (1 - ALPHA)*self.filtServoAngle
 
     def sendArduino(self): 
-        print('left vel: %f, right vel %f' % (self.filtLeftVel, self.filtRightVel))
+        #print('left vel: %f, right vel %f' % (self.filtLeftVel, self.filtRightVel))
         msg = f"{self.filtLeftVel},{self.filtRightVel},{self.filtServoAngle}\n".encode() # encode message as bytes
         arduino.write(msg)
     
@@ -310,106 +321,127 @@ class Car(object):
         return self.mini_state
     
    
-#     def look_for_cone(self): 
-#         '''
-#         Read the frame from the video capture
-#         '''
-#         ret, frame = self.ret, self.frame
-#         if not ret:
-#             print("Failed to capture frame from camera")
-#             return
-#         # Convert the frame to the HSV color space
-#         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-#         # Create a mask based on the orange color range
-#         mask = cv2.inRange(hsv, orange_lower, orange_upper)
-#         # Perform morphological operations to remove noise
-#         mask = cv2.erode(mask, None, iterations=2)
-#         mask = cv2.dilate(mask, None, iterations=2)
-#         # Find contours in the mask
-#         _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-#         # Initialize the position of the cone
-#         self.cone_position = None
-#         cone_detected = 0
-#         state = 0
-#         cx = -1
-#         cy = -1
-#         #print("len contours =", len(contours))
-#         #print("x")
-#         #cv2.imshow("Masked Image", frame)
-#         # Process the contours
-#         if len(contours) > 0:
-#             # Find the largest contour
-#             largest_contour = max(contours, key=cv2.contourArea)
-#             # Calculate the area of the largest contour
-#             largest_contour_area = cv2.contourArea(largest_contour)
-#             if largest_contour_area > 10000:
-#                 # Calculate the center of the contour
-#                 M = cv2.moments(largest_contour)
-#                 if M["m00"] > 0:
-#                     cx = int(M["m10"] / M["m00"])
-#                     cy = int(M["m01"] / M["m00"])
-#                     cone_detected = 1
-#                     print("cone detected")
+    def look_for_cone(self): 
+        '''
+        Read the frame from the video capture
+        '''
+        ret, frame = self.ret, self.frame
+        if not ret:
+            print("Failed to capture frame from camera")
+            return
+        # Convert the frame to the HSV color space
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # Create a mask based on the orange color range
+        mask = cv2.inRange(hsv, orange_lower, orange_upper)
+        # Perform morphological operations to remove noise
+        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.dilate(mask, None, iterations=2)
+        # Find contours in the mask
+        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Initialize the position of the cone
+        self.cone_position = None
+        cone_detected = 0
+        state = 0
+        cx = -1
+        cy = -1
+        #print("len contours =", len(contours))
+        #print("x")
+        #cv2.imshow("Masked Image", frame)
+        # Process the contours
+        if len(contours) > 0:
+            # Find the largest contour
+            largest_contour = max(contours, key=cv2.contourArea)
+            # Calculate the area of the largest contour
+            largest_contour_area = cv2.contourArea(largest_contour)
+            print(largest_contour_area)
+            if largest_contour_area > 10000:
+                # Calculate the center of the contour
+                M = cv2.moments(largest_contour)
+                if M["m00"] > 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    cone_detected = 1
+                    print("cone detected")
 
-# #                     if cx < midpoint and cx !=-1:
-# #                     print("cone on left")
-# #                     state = 1
-# #                     #left_desired_vel = -1
-# #                     #right_desired_vel = -3
+#                     if cx < midpoint and cx !=-1:
+#                     print("cone on left")
+#                     state = 1
+#                     #left_desired_vel = -1
+#                     #right_desired_vel = -3
                     
-# #                     elseif cx >= midpoint and cx != -1:
-# #                     print("cone on right")
-# #                     state = 2
-# #                     #left_desired_vel = -3
-# #                     #right_desired_vel = -1
+#                     elseif cx >= midpoint and cx != -1:
+#                     print("cone on right")
+#                     state = 2
+#                     #left_desired_vel = -3
+#                     #right_desired_vel = -1
                     
 
-#         # Display the frame with the cone position
-#         #cv2.imshow("Traffic Cone Detection", frame)
-#         # return
-#         #Voting to make it more robust
+        # Display the frame with the cone position
+        #cv2.imshow("Traffic Cone Detection", frame)
+        # return
+        #Voting to make it more robust
         
-#         self.vote_array.append(cone_detected)
+        self.vote_array.append(cone_detected)
+        """"
+        if len(self.vote_array) > 1:
+            self.vote_array.pop(0)
+        if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
+            #self.cone_position = (cx, cy)
+            print("find cone")
+            self.cone_position = (cx,cy)
+        """
+        if cone_detected:
+            self.cone_position = (cx, cy)
         
-#         if len(self.vote_array) > 5:
-#             self.vote_array.pop(0)
-#         if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
-#             #self.cone_position = (cx, cy)
-#             print("find cone")
-#             self.cone_position = (cx,cy)
-        
-#     def avoid_cone(self):
-#         print('avoiding cone')
-#         # if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
-#         left = False
-#         right = False
-#         phi = 360 - self.heading
-#         if(self.cone_position[0] < MIDPOINT):
-#             print("turning right")
-#             right = True
-#         else:
-#             print("turning left")
-#             left = True
-#         if right: 
-#             # self.old_target_x = self.target_x
-#             # self.old_target_y = self.target_y
-#             self.target_x = self.x + 0.5*math.cos(math.radians(phi+45))
-#             self.target_y = self.y + 0.5*math.sin(math.radians(phi+45))
-#             pass
-#         elif left: 
-#             # self.old_target_x = self.target_x
-#             # self.old_target_y = self.target_y
-#             self.target_x = self.x + 0.5*math.sin(math.radians(phi-45))
-#             self.target_y = self.y + 0.5*math.cos(math.radians(phi-45))
-#         print("left vel", self.leftVel)
-#         print("right vel", self.rightVel)
-#         #self.leftVel = -STRAIGHT_VEL/3
-#         #self.rightVel = -STRAIGHT_VEL 
+    def avoid_cone(self):
+        print('avoiding cone')
+        if(self.cone_position[0] < MIDPOINT):
+            fraction_diff = min(1, self.cone_position[0]/MIDPOINT+0.5)
+        else:
+            fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
+
+        # self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
+        # self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
+
+        self.leftVel = 2
+        self.rightVel = -2
+
+        self.keep_rotating_until = time.time() + 1
+        self.drive_straight_until = self.keep_rotating_until + 2
+        """"
+        left = False
+        right = False
+        phi = 360 - self.heading
+        if(self.cone_position[0] < MIDPOINT):
+            print("turning right")
+            right = True
+        else:
+            print("turning left")
+            left = True
+        if right: 
+            # self.old_target_x = self.target_x
+            # self.old_target_y = self.target_y
+            self.target_x = self.x + 0.5*math.cos(math.radians(phi+15))
+            self.target_y = self.y + 0.5*math.sin(math.radians(phi+15))
+            pass
+        elif left: 
+            # self.old_target_x = self.target_x
+            # self.old_target_y = self.target_y
+            self.target_x = self.x + 0.5*math.sin(math.radians(phi-15))
+            self.target_y = self.y + 0.5*math.cos(math.radians(phi-15))
+        print("left vel", self.leftVel)
+        print("right vel", self.rightVel)
+        #self.leftVel = -STRAIGHT_VEL/3
+        #self.rightVel = -STRAIGHT_VEL 
+        """
 
 
     def detect_april_tag(self, dist): 
         print('detecting tag')   
-        frame = self.frame
+        ret, frame = self.ret, self.frame
+        if not ret:
+            print("Failed to capture frame from camera")
+            return
         print(frame.shape)
         grayimg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
