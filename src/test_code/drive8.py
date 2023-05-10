@@ -44,7 +44,7 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 5e-3:
+        if (time.time() - car.prev_time) > 10e-3:
             car.prev_time = time.time()
             car.mega_counter += 1
             if car.mega_counter % 10 == 0:
