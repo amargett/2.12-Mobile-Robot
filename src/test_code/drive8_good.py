@@ -218,7 +218,7 @@ class Car(object):
         return self.x_raw, self.y_raw, self.heading_raw
     
     def go_completely_straight(self):
-        self.leftVel, self.rightVel = STRAIGHT_VEL, STRAIGHT_VEL
+        self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
     
     def straight(self, error_dist, error_heading): 
         val = K_VEL_P*error_dist
