@@ -394,7 +394,7 @@ class Car(object):
             # Calculate the distance using triangulation
             pixel_width = abs(corners[0][0] - corners[1][0])
             dist_to_tag = 100.0/pixel_width
-            vel = dist_to_tag * K_VEl # P control velocity
+            vel = min(dist_to_tag * K_VEl, STRAIGHT_VEL) # P control velocity
             #pixel size 200: roughly 30 cm
             print(tag_position)
             print("distance" + str(dist_to_tag))
