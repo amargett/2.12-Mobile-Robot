@@ -22,7 +22,8 @@ EPSILON_HEADING = 0.5
 EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
-vote_array = []
+
+P_CONTROL_BIAS = 0.5
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
@@ -33,25 +34,18 @@ def close():
     return True
 
 def main():
-    
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        print("cone" + str(car.cone_position))
         car.readArduino()
         # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
         if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
             car.setXYH()
-            print("pos" + str((car.x, car.y, car.heading)))
-            car.cone_position = None
             car.look_for_cone()
-            # print('cone position:', car.cone_position)
             if car.cone_position: 
-                print('i see a cone!')
                 car.avoid_cone()
-                # pass
-            elif car.state == 0: ## go to AED waypoint #1
+            if car.state == 0: ## go to AED waypoint #1
                 car.target_x = 1.5
                 car.target_y = 1.65
                 car.go()
@@ -66,7 +60,7 @@ def main():
                     car.mini_state = 0
                     car.state = 2
             elif car.state == 2: # go to AED 
-                car.detect_april_tag()
+                car.detect_april_tag(-0.1 - car.x)
                 if car.mini_state == 1: 
                     car.state = 3
                     car.mini_state = 0
@@ -84,14 +78,15 @@ def main():
                 if car.backup_counter > 200:
                     car.state = 5
             elif car.state == 5: # turn around
-                car.target_x = car.x + 0.5
-                car.target_y = car.y -0.5
-                car.go()
-                if car.mini_state == 2:
+                dheading = abs(360 -car.heading)
+                dheading2  = abs(car.heading)
+                if dheading < EPSILON_HEADING or dheading2< EPSILON_HEADING:
                     car.state =6
-                    car.mini_state =0
+                    car.stop()
+                else: 
+                    car.right(dheading)
             elif car.state ==6: # go to april tag
-                car.detect_april_tag()
+                car.detect_april_tag(3 - car.x)
                 if car.mini_state == 1: 
                     car.state = 7
                     car.mini_state = 0
@@ -102,7 +97,7 @@ def main():
             car.prev_time = time.time()
             car.filter()
             car.sendArduino()
-            #print('state' + str(car.state))
+            print('state' + str(car.state))
                 
 class Car(object): 
     def __init__(self): 
@@ -154,6 +149,7 @@ class Car(object):
         self.intrisic = [640,640,960,540]
         self.tagsize = 0.100  #physical size of printed tag, unit = meter
         self.threshold = 14  # tolerable yaw
+        self.vote_array = []
 
     def readArduino(self):
         '''
@@ -172,19 +168,19 @@ class Car(object):
         return self.x_raw, self.y_raw, self.heading_raw
     
     def straight(self, error): 
-        val = error * K_VEl
+        val = error * K_VEl + P_CONTROL_BIAS
         if val > STRAIGHT_VEL:
             self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
         else: 
             self.leftVel, self.rightVel = -val, -val
 
     def left(self, error): 
-        self.leftVel, self.rightVel = -K_HEADING*error, K_HEADING*error
+        self.leftVel, self.rightVel = -K_HEADING*error - P_CONTROL_BIAS, K_HEADING*error + P_CONTROL_BIAS
         if self.rightVel > 2.5: 
             self.leftVel, self.rightVel = -2.5, 2.5
 
     def right(self, error): 
-        self.leftVel, self.rightVel = K_HEADING*error, -K_HEADING*error
+        self.leftVel, self.rightVel = K_HEADING*error + P_CONTROL_BIAS, -K_HEADING*error - P_CONTROL_BIAS
         if self.leftVel > 2.5: 
             self.leftVel, self.rightVel = 2.5, -2.5
 
@@ -249,9 +245,11 @@ class Car(object):
                 self.mini_state = 2
         return self.mini_state
     
+   
     def look_for_cone(self): 
-        
-        # Read the frame from the video capture
+        '''
+        Read the frame from the video capture
+        '''
         ret, frame = self.cap.read()
         if not ret:
             print("Failed to capture frame from camera")
@@ -307,80 +305,14 @@ class Car(object):
         # return
         #Voting to make it more robust
         
-        vote_array.append(cone_detected)
+        self.vote_array.append(cone_detected)
         
-        if len(vote_array) > 15:
-            vote_array.pop(0)
-        if sum(vote_array) > len(vote_array) / 2 and cx != -1 and cy != -1:
+        if len(self.vote_array) > 15:
+            self.vote_array.pop(0)
+        if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
             #self.cone_position = (cx, cy)
             print("find cone")
             self.cone_position = (cx,cy)
-          
-        ''' 
-        ret, frame = self.cap.read()
-        if ret == True:
-    # convert the image to HSV because easier to represent color in
-    # HSV as opposed to in BGR 
-            hsv_img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-
-            # define range of orange traffic cone color in HSV
-            lower_orange1 = np.array([0, 135, 135])
-            lower_orange2 = np.array([15, 255, 255])
-            upper_orange1 = np.array([159, 135, 80])
-            upper_orange2 = np.array([179, 255, 255])
-
-            # threshold the HSV image to get only bright orange colors
-            imgThreshLow = cv2.inRange(hsv_img, lower_orange1, lower_orange2)
-            imgThreshHigh = cv2.inRange(hsv_img, upper_orange1, upper_orange2)
-
-            # Bitwise-OR low and high threshes
-            threshed_img = cv2.bitwise_or(imgThreshLow, imgThreshHigh)
-
-            # smooth the image with erosion, dialation, and smooth gaussian
-            # first create a kernel with standard size of 5x5 pixels
-            kernel = np.ones((5,5),np.uint8)
-
-            # get rid of small artifacts by eroding first and then dialating 
-            threshed_img_smooth = cv2.erode(threshed_img, kernel, iterations = 3)
-            threshed_img_smooth = cv2.dilate(threshed_img_smooth, kernel, iterations = 2)
-
-            # account for cones with reflective tape by dialating first to bridge the gap between one orange edge
-            # and another and then erode to bring the traffic cone back to standard size
-            smoothed_img = cv2.dilate(threshed_img_smooth, kernel, iterations = 11)
-            smoothed_img = cv2.erode(smoothed_img, kernel, iterations = 7)
-
-            # detect all edges witin the image
-            edges_img = cv2.Canny(smoothed_img, 100, 200)
-            _,contours, hierarchy = cv2.findContours(edges_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-            # set parameters for writing text and drawing lines
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            fontScale = 2
-            fontColor = (0, 0, 255)
-            lineType = 2
-
-            # analyze each contour and deterime if it is a triangle
-            for cnt in contours:
-                boundingRect = cv2.boundingRect(cnt)
-                approx = cv2.approxPolyDP(cnt, 0.06 * cv2.arcLength(cnt, True), True)
-                print(len(approx))
-                # if the contour is a triangle, draw a bounding box around it and tag a traffic_cone label to it
-                if len(approx) == 3:
-                    print("cone_detected")
-#                     x, y, w, h = cv2.boundingRect(approx)
-#                     rect = (x, y, w, h)
-#                     cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 3)
-#                     bottomLeftCornerOfText = (x, y)
-#                     cv2.putText(frame,'traffic_cone', 
-#                         bottomLeftCornerOfText, 
-#                         font, 
-#                         fontScale,
-#                         fontColor,
-#                         lineType)
-
-            # display the resulting frame
-            cv2.imshow('Frame',frame)
-        '''
         
     def avoid_cone(self):
         print('avoiding cone')
@@ -403,20 +335,19 @@ class Car(object):
         #self.leftVel = -STRAIGHT_VEL/3
         #self.rightVel = -STRAIGHT_VEL 
 
-    def detect_april_tag(self):    
+
+    def detect_april_tag(self, target_dx): 
+        print('detecting tag')   
         result, image = self.cap.read()
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # look for tags
         detections = self.detector.detect(grayimg)
         target_dx = -0.1 - self.x
-        target_dy = 1.65 - self.y
-        print(target_dx, target_dy)
         vel = abs(target_dx) * K_VEl # P control velocity
         if vel> STRAIGHT_VEL/2: 
             vel = STRAIGHT_VEL/2
         if not detections:
             print("Nothing ")
-            cone_position = None
             code_present = False
         else:
             code_present = True
@@ -439,36 +370,7 @@ class Car(object):
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
                     self.rightVel = -vel + 3* fraction_diff
-            # elif self.mini_state ==1: 
-            #     self.target_x = self.x - 0.05 ## set target to aed point
-            #     self.target_y = self.y
-            #     self.mini_state = 3
-
-        # # detects whether there is an april tag in view
-        # detector = Detector(families='tag36h11', 
-        #                 nthreads=1,
-        #                 quad_decimate=2,
-        #                 quad_sigma=0.0,
-        #                 refine_edges=1,
-        #                 decode_sharpening=0.25,
-        #                 debug=0,
-        #                 ) #physical size of the apriltag
-        # _, self.frame = self.cap.read()
-        # self.frame = cv2.resize(self.frame, (640,480))
-        # gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
-        # tags = detector.detect(gray, estimate_tag_pose=False, camera_params=self.intrisic, tag_size=self.tagsize)
         
-        # if tags:
-        #     tag = tags[0]
-        #     print("TAG: " + str(tag))
-        #     if tag.center[0] < 320 - 7:
-        #         print("turn left")
-        #         return 1   #turn left
-        #     elif tag.center[0] > 320 + 7:
-        #         print("turn right")
-        #         return 2   #turn right
-        #     else:
-        #         return 3   # go straight
 
 if __name__ == "__main__":
     main()
