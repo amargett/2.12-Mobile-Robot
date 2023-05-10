@@ -44,8 +44,6 @@ def close():
     return True
 
 def main():
-    CAP.release()
-    cv2.closeAllWindows()
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.sendArduino()
@@ -56,7 +54,7 @@ def main():
             car.mega_counter += 1
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
-                car.cone_ret, car.cone_frame = CAP.read()
+                #car.cone_ret, car.cone_frame = CAP.read()
                 car.april_ret, car.april_frame = CAP.read()
 
                 if car.state == 2:
