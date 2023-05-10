@@ -79,7 +79,7 @@ def main():
                             car.mini_state = 0
                             car.state = 1
                     elif car.state == 1: # go to AED waypoint #2
-                        car.target_x = 1
+                        car.target_x = 0.75
                         car.target_y = 1.65
                         car.go()
                         if car.mini_state == 2:
@@ -104,7 +104,6 @@ def main():
                             car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
-                        car.epsilon_dist *= 2
                         car.target_x = 2
                         car.target_y = 1
                         car.go()
@@ -112,8 +111,8 @@ def main():
                             car.mini_state = 0
                             car.state = 6
                             # car.stop()
-                    elif car.state == 6: # turn around
-                        car.target_x = 2.5
+                    elif car.state == 6: # go forward
+                        car.target_x = 2.75
                         car.target_y = 1
                         car.go()
                         if car.mini_state == 2: 
@@ -141,7 +140,7 @@ class Car(object):
         self.frame = None
         self.mega_counter = 0
 
-        self.epsilon_dist = 0.15
+        self.epsilon_dist = 0.1
         
         self.target_x = 1
         self.target_y = 1.65
