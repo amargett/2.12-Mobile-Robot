@@ -1,7 +1,7 @@
 import socket
 
 # IP address and port of the Linux computer
-host = '192.168.0.100'
+host = '192.168.239.1'
 port = 12345
 
 # Float values to send
