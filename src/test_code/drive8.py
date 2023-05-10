@@ -44,6 +44,8 @@ def close():
     return True
 
 def main():
+    CAP.release()
+    cv2.closeAllWindows()
     car = Car()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.sendArduino()
@@ -406,9 +408,9 @@ class Car(object):
 
     def detect_april_tag(self, dist): 
         print('detecting tag')   
-        ret, frame = self.april_ret, self.april_frame
-        print(frame.shape())
-        grayimg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # ret, frame = self.april_ret, self.april_frame
+        print(self.april_frame.shape())
+        grayimg = cv2.cvtColor(self.april_frame, cv2.COLOR_BGR2GRAY)
         # look for tags
         detections = self.detector.detect(grayimg)
         if not detections:
