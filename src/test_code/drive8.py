@@ -251,22 +251,23 @@ class Car(object):
         '''
         Read the frame from the video capture
         '''
-        ret, frame = self.cap.read()
-        if not ret:
-            print("Failed to capture frame from camera")
-            return
-        # Convert the frame to the HSV color space
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # Create a mask based on the orange color range
-        mask = cv2.inRange(hsv, orange_lower, orange_upper)
-        # Perform morphological operations to remove noise
-        mask = cv2.erode(mask, None, iterations=2)
-        mask = cv2.dilate(mask, None, iterations=2)
-        # Find contours in the mask
-        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # Initialize the position of the cone
-        self.cone_position = None
-        cone_detected = 0
+        pass
+        # ret, frame = self.cap.read()
+        # if not ret:
+        #     print("Failed to capture frame from camera")
+        #     return
+        # # Convert the frame to the HSV color space
+        # hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # # Create a mask based on the orange color range
+        # mask = cv2.inRange(hsv, orange_lower, orange_upper)
+        # # Perform morphological operations to remove noise
+        # mask = cv2.erode(mask, None, iterations=2)
+        # mask = cv2.dilate(mask, None, iterations=2)
+        # # Find contours in the mask
+        # _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # # Initialize the position of the cone
+        # self.cone_position = None
+        # cone_detected = 0
         # state = 0
 #         cx = -1
 #         cy = -1
