@@ -22,7 +22,8 @@ float heading = 0;
 float theta = 0;
 float servo_angle = 90;
 int timeout_millis = 300;
-int servo = 0
+int servo = 0;
+int servo_mode = 0;
 
 float last_message_millis = 0;
 
@@ -34,7 +35,7 @@ float rr = 0;
 float max_r = 0;
 float magnitude = 0;
 float turn_damping = 30;
-float curvature = 0;
+float k = 0;
 
 
 bool manual = false;
@@ -51,6 +52,7 @@ void sendIMU();
 void readDesiredVel();
 void updateRobotPose(float dPhiL, float dPhiR);
 void setWheelVel();
+void getSetPointJoystick();
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
 int servoPin = 13;
@@ -108,7 +110,7 @@ void loop()
             else if(servo_mode ==2){
                 servo_mode = 0;
             }
-
+        }
         if (manual)
         {
             readIMU();
@@ -233,9 +235,9 @@ void getSetPointJoystick(){
     }
     //theta2 = atan2(joyData.joyY-512,joyData.joyX-512);
     k = (joyData.joyX-512)/(joyData.joyY-512); //curvature = 0 when on the y axis
-    desiredVelBL = rr * (1-b * k)/r;
-    desiredVelBR = rr * (1+b * k)/r;
-    
+    desiredVelBL = rr * (1-b * k)/r*0.1;
+    desiredVelBR = rr * (1+b * k)/r*0.1;
+}
 
     /*
     if (servo_mode == 1){
@@ -263,4 +265,4 @@ void getSetPointJoystick(){
     // desiredVelBR = magnitude * (sin(theta2) - cos(theta2) / turn_damping);
     // desiredVelFR = desiredVelBR;
 
-}
+
