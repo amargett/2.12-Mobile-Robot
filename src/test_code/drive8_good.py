@@ -406,6 +406,7 @@ class Car(object):
     def detect_april_tag(self, dist): 
         print('detecting tag')   
         ret, frame = self.ret, self.frame
+        print(frame.shape)
         grayimg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # look for tags
