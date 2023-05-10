@@ -50,6 +50,7 @@ def main():
             if car.mega_counter % 10 == 0:
                 print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
+                car.look_for_cone()
                 car.mega_state = 1
             else:
                 print('MEGA' + str(car.mega_state))
@@ -57,7 +58,7 @@ def main():
                 car.mega_state = 0
                 # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
                 if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None]: 
-                    car.look_for_cone()
+                    
                     car.setXYH()
                     if car.cone_position: 
                         car.avoid_cone()
