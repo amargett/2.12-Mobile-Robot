@@ -71,7 +71,7 @@ while True:
         print("largest_contour", largest_contour_area)
 
         # Check if the largest contour has a large enough magnitude (area)
-        if largest_contour_area > 5000:
+        if largest_contour_area > 8000:
             # Calculate the center of the contour
             M = cv2.moments(largest_contour)
             if M["m00"] > 0:
