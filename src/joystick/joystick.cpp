@@ -164,6 +164,11 @@ bool readJoystick(){
         leftPressed != newLeftPressed || 
         upPressed != newUpPressed || 
         selPressed != newSelPressed){
+        rightPressed = newRightPressed;
+        downPressed = newDownPressed;
+        leftPressed = newLeftPressed;
+        upPressed = newUpPressed;
+        selPressed = newSelPressed;
         newReading = true;
     }
 
