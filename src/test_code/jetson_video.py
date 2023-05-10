@@ -1,51 +1,53 @@
-import socket
 import cv2
 import numpy as np
+import socket
 
-# IP address and port for receiving frames
-receiver_ip = '0.0.0.0'  # Listen on all available network interfaces
-receiver_port = 12345  # The same port number used on the Jetson device
+# IP address and port for the receiver
+receiver_ip = '10.29.100.148'  # Replace with the receiver's IP address
+receiver_port = 12345  # Replace with the desired port number
 
-# Create a UDP socket
+# Maximum packet size to send over UDP
+max_packet_size = 65507  # Adjust the value based on your network's MTU
+
+# Open the video capture
+cap = cv2.VideoCapture(0)  # Use the appropriate camera index if multiple cameras are connected
+
+# Check if the camera opened successfully
+if not cap.isOpened():
+    print("Failed to open camera")
+    exit()
+
+# Create UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# Bind the socket to the receiver IP address and port
-sock.bind((receiver_ip, receiver_port))
-
-# Constants for packet size and buffer size
-packet_size = 65507  # Adjust packet size as needed
-buffer_size = 65536  # Adjust buffer size as needed
-
-# Buffer to store the received frame data
-received_data = bytearray()
-
-# Loop to receive and process frames
 while True:
-    # Receive data from the socket
-    packet, sender_address = sock.recvfrom(buffer_size)
+    # Capture frame-by-frame
+    ret, frame = cap.read()
 
-    # Append the received packet to the buffer
-    received_data += packet
+    # Check if the frame is valid
+    if not ret:
+        print("Failed to capture frame")
+        break
 
-    # Check if the complete frame has been received
-    if len(packet) < packet_size:
-        # Convert the received data to a NumPy array
-        frame = np.frombuffer(received_data, dtype=np.uint8)
+    # Split the frame into smaller packets
+    frame_bytes = frame.tobytes()
+    num_packets = len(frame_bytes) // max_packet_size + 1
+    for i in range(num_packets):
+        start = i * max_packet_size
+        end = (i + 1) * max_packet_size
+        packet = frame_bytes[start:end]
 
-        # Reshape the array to the original frame dimensions
-        frame = frame.reshape((height, width, channels))  # Replace with the actual frame dimensions
+        # Send the packet to the receiver
+        sock.sendto(packet, (receiver_ip, receiver_port))
 
-        # Process the received frame
-        # Example: Display the received frame
-        cv2.imshow('Received Frame', frame)
-
-        # Reset the buffer for the next frame
-        received_data = bytearray()
+    # Display the frame locally
+    cv2.imshow('Camera Stream', frame)
 
     # Exit if 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 # Release resources
+cap.release()
 cv2.destroyAllWindows()
 sock.close()
