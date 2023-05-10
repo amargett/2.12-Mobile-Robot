@@ -21,8 +21,8 @@ ALPHA = 0.05
 EPSILON_HEADING = 1
 K_HEADING = 0.05
 K_VEL_P = 8
-K_VEL_D = 5
 K_CORR_P = 0.2
+K_CORR_D = 0.1
 Ki = 0.1
 
 CAP = cv2.VideoCapture(0)
@@ -190,6 +190,7 @@ class Car(object):
         self.vote_array = []
 
         self.sumerror = 0
+        self.prev_error_heading = 0
 
     def readArduino(self):
         '''
@@ -207,12 +208,14 @@ class Car(object):
                 pass
         return self.x_raw, self.y_raw, self.heading_raw
     
-    def straight(self, error, error_heading): 
-        val = K_VEL_P*error  + P_CONTROL_BIAS
+    def straight(self, error_dist, error_heading): 
+        val = K_VEL_P*error_dist
+        delta_val = K_CORR_P*error_heading + K_CORR_D*(error_heading - self.prev_error_heading)/FRAME_TIME
         if val > STRAIGHT_VEL:
-            self.leftVel, self.rightVel = -STRAIGHT_VEL - K_CORR_P*error_heading - K_CORR_D*(error_heading - self.prev_error_heading), -STRAIGHT_VEL + K_CORR_P*error_heading + K_CORR_D*(error_heading - self.prev_error_heading)
+            self.leftVel, self.rightVel = -STRAIGHT_VEL - delta_val, -STRAIGHT_VEL + delta_val
         else: 
-            self.leftVel, self.rightVel = -val - K_CORR_P*error_heading - K_CORR_D*(error_heading - self.prev_error_heading), -val + K_CORR_P*error_heading + K_CORR_D*(error_heading - self.prev_error_heading)
+            self.leftVel, self.rightVel = -val - delta_val, -val + delta_val
+        self.prev_error_heading = error_heading
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error - P_CONTROL_BIAS, K_HEADING*error + P_CONTROL_BIAS
