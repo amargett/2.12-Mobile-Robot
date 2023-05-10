@@ -19,7 +19,6 @@ PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
 ALPHA = 0.2
 EPSILON_HEADING = 0.5
-EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
 
@@ -102,6 +101,7 @@ def main():
                             car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
+                        car.epsilon_dist *= 3
                         car.target_x = 2
                         car.target_y = 1
                         car.go()
@@ -137,6 +137,8 @@ class Car(object):
         self.ret = None
         self.frame = None
         self.mega_counter = 0
+
+        self.epsilon_dist = 0.1
         
         self.target_x = 1
         self.target_y = 1.65
