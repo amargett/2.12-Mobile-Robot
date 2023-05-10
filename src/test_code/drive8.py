@@ -139,7 +139,7 @@ class Car(object):
         self.frame = None
         self.mega_counter = 0
 
-        self.epsilon_dist = 0.1
+        self.epsilon_dist = 0.15
         
         self.target_x = 1
         self.target_y = 1.65
