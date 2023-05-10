@@ -100,7 +100,8 @@ def main():
             car.prev_time = time.time()
             car.filter()
             car.sendArduino()
-            print('state' + str(car.state))
+            # print('state' + str(car.state))
+            car.printCurr()
                 
 class Car(object): 
     def __init__(self): 
