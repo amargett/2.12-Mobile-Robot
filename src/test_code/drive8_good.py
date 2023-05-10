@@ -389,7 +389,7 @@ class Car(object):
 
         self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
         self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
-        self.drive_straight_until = time.time() + 4
+        self.drive_straight_until = time.time() + 3
         """"
         left = False
         right = False
