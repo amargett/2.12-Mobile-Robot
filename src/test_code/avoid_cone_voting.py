@@ -71,7 +71,7 @@ while True:
         print("largest_contour", largest_contour_area)
 
         # Check if the largest contour has a large enough magnitude (area)
-        if largest_contour_area > 2500:
+        if largest_contour_area > 5000:
             # Calculate the center of the contour
             M = cv2.moments(largest_contour)
             if M["m00"] > 0:
@@ -110,7 +110,7 @@ while True:
         
 
     # If the vote array has more than 9 elements, remove the oldest one
-    if len(vote_array) > 15:
+    if len(vote_array) > 5:
         vote_array.pop(0)
 
 
