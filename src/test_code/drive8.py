@@ -266,68 +266,69 @@ class Car(object):
         '''
         Read the frame from the video capture
         '''
-        # if not ret:
-        #     print("Failed to capture frame from camera")
-        #     return
-        # # Convert the frame to the HSV color space
-        # hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        # # Create a mask based on the orange color range
-        # mask = cv2.inRange(hsv, orange_lower, orange_upper)
-        # # Perform morphological operations to remove noise
-        # mask = cv2.erode(mask, None, iterations=2)
-        # mask = cv2.dilate(mask, None, iterations=2)
-        # # Find contours in the mask
-        # _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # # Initialize the position of the cone
-        # self.cone_position = None
-        # cone_detected = 0
-        # state = 0
-#         cx = -1
-#         cy = -1
-#         #print("len contours =", len(contours))
-#         #print("x")
-#         #cv2.imshow("Masked Image", frame)
-#         # Process the contours
-#         if len(contours) > 0:
-#             # Find the largest contour
-#             largest_contour = max(contours, key=cv2.contourArea)
-#             # Calculate the area of the largest contour
-#             largest_contour_area = cv2.contourArea(largest_contour)
-#             if largest_contour_area > 2500:
-#                 # Calculate the center of the contour
-#                 M = cv2.moments(largest_contour)
-#                 if M["m00"] > 0:
-#                     cx = int(M["m10"] / M["m00"])
-#                     cy = int(M["m01"] / M["m00"])
-#                     cone_detected = 1
-#                     print("cone detected")
+        ret, frame = self.ret, self.frame
+        if not ret:
+            print("Failed to capture frame from camera")
+            return
+        # Convert the frame to the HSV color space
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # Create a mask based on the orange color range
+        mask = cv2.inRange(hsv, orange_lower, orange_upper)
+        # Perform morphological operations to remove noise
+        mask = cv2.erode(mask, None, iterations=2)
+        mask = cv2.dilate(mask, None, iterations=2)
+        # Find contours in the mask
+        _, contours, _ = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Initialize the position of the cone
+        self.cone_position = None
+        cone_detected = 0
+        state = 0
+        cx = -1
+        cy = -1
+        #print("len contours =", len(contours))
+        #print("x")
+        #cv2.imshow("Masked Image", frame)
+        # Process the contours
+        if len(contours) > 0:
+            # Find the largest contour
+            largest_contour = max(contours, key=cv2.contourArea)
+            # Calculate the area of the largest contour
+            largest_contour_area = cv2.contourArea(largest_contour)
+            if largest_contour_area > 2500:
+                # Calculate the center of the contour
+                M = cv2.moments(largest_contour)
+                if M["m00"] > 0:
+                    cx = int(M["m10"] / M["m00"])
+                    cy = int(M["m01"] / M["m00"])
+                    cone_detected = 1
+                    print("cone detected")
 
-# #                     if cx < midpoint and cx !=-1:
-# #                     print("cone on left")
-# #                     state = 1
-# #                     #left_desired_vel = -1
-# #                     #right_desired_vel = -3
+#                     if cx < midpoint and cx !=-1:
+#                     print("cone on left")
+#                     state = 1
+#                     #left_desired_vel = -1
+#                     #right_desired_vel = -3
                     
-# #                     elseif cx >= midpoint and cx != -1:
-# #                     print("cone on right")
-# #                     state = 2
-# #                     #left_desired_vel = -3
-# #                     #right_desired_vel = -1
+#                     elseif cx >= midpoint and cx != -1:
+#                     print("cone on right")
+#                     state = 2
+#                     #left_desired_vel = -3
+#                     #right_desired_vel = -1
                     
 
-#         # Display the frame with the cone position
-#         #cv2.imshow("Traffic Cone Detection", frame)
-#         # return
-#         #Voting to make it more robust
+        # Display the frame with the cone position
+        #cv2.imshow("Traffic Cone Detection", frame)
+        # return
+        #Voting to make it more robust
         
-#         self.vote_array.append(cone_detected)
+        self.vote_array.append(cone_detected)
         
-#         if len(self.vote_array) > 15:
-#             self.vote_array.pop(0)
-#         if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
-#             #self.cone_position = (cx, cy)
-#             print("find cone")
-#             self.cone_position = (cx,cy)
+        if len(self.vote_array) > 15:
+            self.vote_array.pop(0)
+        if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
+            #self.cone_position = (cx, cy)
+            print("find cone")
+            self.cone_position = (cx,cy)
         
     def avoid_cone(self):
         print('avoiding cone')
