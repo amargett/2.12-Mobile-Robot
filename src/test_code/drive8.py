@@ -47,9 +47,11 @@ def main():
         if (time.time() - car.prev_time) > 5e-3:
             car.prev_time = time.time()
             if car.mega_state == 0:
+                print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
                 car.mega_state = 1
             else:
+                print('MEGA' + str(car.mega_state))
                 car.readArduino()
                 car.mega_state = 0
                 # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
