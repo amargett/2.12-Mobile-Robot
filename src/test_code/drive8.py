@@ -44,7 +44,7 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 1000e-3:
+        if (time.time() - car.prev_time) > 1e-3:
             car.prev_time = time.time()
             if car.mega_state == 0:
                 print('MEGA' + str(car.mega_state))
