@@ -252,9 +252,9 @@ class Car(object):
         Read the frame from the video capture
         '''
         ret, frame = self.cap.read()
-        if not ret:
-            print("Failed to capture frame from camera")
-            return
+        # if not ret:
+        #     print("Failed to capture frame from camera")
+        #     return
         # # Convert the frame to the HSV color space
         # hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
         # # Create a mask based on the orange color range
