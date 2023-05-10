@@ -41,8 +41,8 @@ def close():
 
 def main():
     car = Car()
+    car.sendArduino()
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
-        car.sendArduino()
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
         if (time.time() - car.prev_time) > 2e-3:
@@ -336,13 +336,14 @@ class Car(object):
         
     def avoid_cone(self):
         print('avoiding cone')
-        #if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
+        # if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
         if (abs(self.cone_position[0] - SCREEN_WIDTH) < MIDPOINT/6) or (abs(self.cone_position[0] - 0) < MIDPOINT/6):
+            self.cone_position = None
             print("straight")
-            self.leftVel = -3
-            self.rightVel = -3
+            # self.leftVel = -3
+            # self.rightVel = -3
             
-        elif(self.cone_position[0] < MIDPOINT):
+        if(self.cone_position[0] < MIDPOINT):
             print("turning right")
             self.leftVel = -1
             self.rightVel = -3
