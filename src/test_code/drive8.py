@@ -21,7 +21,7 @@ ALPHA = 0.3
 EPSILON_HEADING = 0.5
 K_HEADING = 0.05
 K_VEl = 5
-K_CORR = 0.3
+K_CORR = 0.2
 Ki = 0.1
 
 CAP = cv2.VideoCapture(0)
