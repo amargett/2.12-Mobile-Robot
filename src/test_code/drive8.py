@@ -72,8 +72,17 @@ def main():
                 if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None]: 
                     
                     car.setXYH()
-                    if car.cone_position: 
-                        car.avoid_cone()
+
+                    if car.cone_position:
+                        if car.prev_state is None:
+                            car.avoid_cone()
+                            car.prev_state = car.state
+                        car.state = 10
+                    elif car.state == 10:
+                        car.go()
+                        if car.mini_state == 2:
+                            car.state = car.prev_state
+                            car.prev_state = None
                     elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
                         car.target_y = 1.65
@@ -173,6 +182,7 @@ class Car(object):
         self.state = 0
         self.prev_time = time.time()
         self.april_time = time.time()
+        self.prev_state = None
 
         self.pickup_counter = 0
         self.backup_counter = 0
@@ -326,7 +336,7 @@ class Car(object):
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the area of the largest contour
             largest_contour_area = cv2.contourArea(largest_contour)
-            if largest_contour_area > 7500:
+            if largest_contour_area > 10000:
                 # Calculate the center of the contour
                 M = cv2.moments(largest_contour)
                 if M["m00"] > 0:
@@ -365,20 +375,26 @@ class Car(object):
     def avoid_cone(self):
         print('avoiding cone')
         # if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
-        if (abs(self.cone_position[0] - SCREEN_WIDTH) < MIDPOINT/6) or (abs(self.cone_position[0] - 0) < MIDPOINT/6):
-            self.cone_position = None
-            print("straight")
-            # self.leftVel = -3
-            # self.rightVel = -3
-            
-        elif(self.cone_position[0] < MIDPOINT):
+        left = False
+        right = False
+        if(self.cone_position[0] < MIDPOINT):
             print("turning right")
-            self.leftVel = -1
-            self.rightVel = -3
+            right = True
         else:
             print("turning left")
-            self.leftVel = -3
-            self.rightVel = -1
+            left = True
+        if right: 
+            # self.old_target_x = self.target_x
+            # self.old_target_y = self.target_y
+            phi = 360 - self.heading
+            self.target_x = self.x + 0.5*math.cos(math.radians(45-phi))
+            self.target_y = self.y - 0.5*math.sin(math.radians(45-phi))
+            pass
+        elif left: 
+            # self.old_target_x = self.target_x
+            # self.old_target_y = self.target_y
+            self.target_x = self.x + 0.5*math.sin(math.radians(45-phi))
+            self.target_y = self.y + 0.5*math.cos(math.radians(45-phi))
         print("left vel", self.leftVel)
         print("right vel", self.rightVel)
         #self.leftVel = -STRAIGHT_VEL/3
