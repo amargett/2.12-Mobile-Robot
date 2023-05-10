@@ -380,36 +380,9 @@ class Car(object):
             self.cone_position = (cx,cy)
         
     def avoid_cone(self):
-        # print('avoiding cone')
-        # # if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
-        # left = False
-        # right = False
-        # phi = 360 - self.heading
-        # if(self.cone_position[0] < MIDPOINT):
-        #     print("turning right")
-        #     right = True
-        # else:
-        #     print("turning left")
-        #     left = True
-        # if right: 
-        #     # self.old_target_x = self.target_x
-        #     # self.old_target_y = self.target_y
-        #     self.target_x = self.x + 0.5*math.cos(math.radians(phi+45))
-        #     self.target_y = self.y + 0.5*math.sin(math.radians(phi+45))
-        #     pass
-        # elif left: 
-        #     # self.old_target_x = self.target_x
-        #     # self.old_target_y = self.target_y
-        #     self.target_x = self.x + 0.5*math.sin(math.radians(phi-45))
-        #     self.target_y = self.y + 0.5*math.cos(math.radians(phi-45))
-        # print("left vel", self.leftVel)
-        # print("right vel", self.rightVel)
-        #self.leftVel = -STRAIGHT_VEL/3
-        #self.rightVel = -STRAIGHT_VEL 
-
-        self.leftVel = 0
-        self.rightVel = 0
-
+        print('stopping for cone')
+        self.stop()
+        self.mini_state = 0
 
     def detect_april_tag(self, dist): 
         print('detecting tag')   
