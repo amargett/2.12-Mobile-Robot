@@ -34,6 +34,8 @@ float rr = 0;
 float max_r = 0;
 float magnitude = 0;
 float turn_damping = 30;
+float curvature = 0;
+
 
 bool manual = false;
 
@@ -95,7 +97,8 @@ void loop()
                 manual = true;
             }
         }
-        else if (joyData.leftPressed){
+
+        if (joyData.leftPressed && manual){
             if (servo_mode = 0){
                 servo_mode = 1;
             }
@@ -222,8 +225,19 @@ void updateRobotPose(float dPhiL, float dPhiR)
 }
 
 void getSetPointJoystick(){
-    desiredVelBL = map(joyData.joyY, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
-    desiredVelBR = map(joystickXValue, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
+    //desiredVelBL = map(joyData.joyY, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
+    //desiredVelBR = map(joystickXValue, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
+    rr = sqrt(abs(joyData.joyX-512) * abs(joyData.joyX-512) + abs(joyData.joyY-512) * abs(joyData.joyY-512));
+    if (rr<30){
+        rr = 0;
+    }
+    //theta2 = atan2(joyData.joyY-512,joyData.joyX-512);
+    k = (joyData.joyX-512)/(joyData.joyY-512); //curvature = 0 when on the y axis
+    desiredVelBL = rr * (1-b * k)/r;
+    desiredVelBR = rr * (1+b * k)/r;
+    
+
+    /*
     if (servo_mode == 1){
         servo_angle = 90;
     }
@@ -234,7 +248,7 @@ void getSetPointJoystick(){
         servo_angle = DROPOFF_ANGLE;
     }
     }
-     
+     */
     // theta2 = atan2(joyData.joyX,joyData.joyY);
     // rr = sqrt(joyData.joyX * joyData.joyX + joyData.joyY * joyData.joyY);
     // if (abs(joyData.joyX) > abs(joyData.joyY)){
