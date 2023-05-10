@@ -9,8 +9,7 @@ import random as rng
 
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 # arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
-
-orange_lower = np.array([1, 100, 150])
+x
 orange_upper = np.array([15, 200, 255])
 
 STRAIGHT_VEL = 5
@@ -221,10 +220,11 @@ class Car(object):
     def straight(self, error_dist, error_heading): 
         val = K_VEL_P*error_dist
         delta_val = K_CORR_P*error_heading + K_CORR_D*(error_heading - self.prev_error_heading)/FRAME_TIME
-        if val > STRAIGHT_VEL:
-            self.leftVel, self.rightVel = -STRAIGHT_VEL - delta_val, -STRAIGHT_VEL + delta_val
-        else: 
-            self.leftVel, self.rightVel = -val - delta_val, -val + delta_val
+        self.leftVal, self.rightVal = min(-val - delta_val, -STRAIGHT_VEL), min(-val + delta_val, -STRAIGHT_VEL)
+        # if val > STRAIGHT_VEL:
+        #     self.leftVel, self.rightVel = -STRAIGHT_VEL - delta_val, -STRAIGHT_VEL + delta_val
+        # else: 
+        #     self.leftVel, self.rightVel = -val - delta_val, -val + delta_val
         self.prev_error_heading = error_heading
 
     def left(self, error): 
@@ -387,14 +387,14 @@ class Car(object):
             # self.old_target_x = self.target_x
             # self.old_target_y = self.target_y
             phi = 360 - self.heading
-            self.target_x = self.x + 0.5*math.cos(math.radians(45-phi))
-            self.target_y = self.y - 0.5*math.sin(math.radians(45-phi))
+            self.target_x = self.x + 0.5*math.cos(math.radians(phi+45))
+            self.target_y = self.y + 0.5*math.sin(math.radians(phi+45))
             pass
         elif left: 
             # self.old_target_x = self.target_x
             # self.old_target_y = self.target_y
-            self.target_x = self.x + 0.5*math.sin(math.radians(45-phi))
-            self.target_y = self.y + 0.5*math.cos(math.radians(45-phi))
+            self.target_x = self.x + 0.5*math.sin(math.radians(phi-45))
+            self.target_y = self.y + 0.5*math.cos(math.radians(phi-45))
         print("left vel", self.leftVel)
         print("right vel", self.rightVel)
         #self.leftVel = -STRAIGHT_VEL/3
