@@ -119,6 +119,7 @@ void setDesiredVel(float vel, float k){
 }
 
 void getSetPointJoystick(){
+    
     theta2 = atan2(joyData.joyX,joyData.joyY);
     rr = sqrt(joyData.joyX * joyData.joyX + joyData.joyY * joyData.joyY);
     if (abs(joyData.joyX) > abs(joyData.joyY)){

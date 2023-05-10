@@ -77,17 +77,13 @@ def main():
                     car.setXYH()
 
                     if car.cone_position:
-                        if car.prev_state is None:
-                            # car.avoid_cone()
-                            car.prev_state = car.state
-                        car.state = 10
-                    elif car.state == 10:
-                        car.stop()
-                        if car.mini_state == 2:
-                            car.mini_state = 0
-                            car.state = car.prev_state
-                            car.prev_state = None
-                    if car.state == 0: ## go to AED waypoint #1
+                        car.avoid_cone()
+                        # car.prev_state = car.state
+                        # car.stop()
+                        # car.mini_state = 0
+                        # car.state = car.prev_state
+                        # car.prev_state = None
+                    elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
                         car.target_y = 1.65
                         car.go()
