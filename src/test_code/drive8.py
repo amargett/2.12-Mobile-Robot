@@ -325,7 +325,7 @@ class Car(object):
         
         self.vote_array.append(cone_detected)
         
-        if len(self.vote_array) > 15:
+        if len(self.vote_array) > 5:
             self.vote_array.pop(0)
         if sum(self.vote_array) > len(self.vote_array) / 2 and cx != -1 and cy != -1:
             #self.cone_position = (cx, cy)
