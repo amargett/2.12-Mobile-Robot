@@ -33,7 +33,7 @@ MIDPOINT = SCREEN_WIDTH // 2
 
 P_CONTROL_BIAS = 0.25
 
-FRAME_TIME = 5e-3
+FRAME_TIME = 2e-3
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
