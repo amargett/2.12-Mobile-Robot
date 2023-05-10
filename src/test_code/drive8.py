@@ -356,7 +356,7 @@ class Car(object):
             # self.leftVel = -3
             # self.rightVel = -3
             
-        if(self.cone_position[0] < MIDPOINT):
+        elif(self.cone_position[0] < MIDPOINT):
             print("turning right")
             self.leftVel = -1
             self.rightVel = -3
