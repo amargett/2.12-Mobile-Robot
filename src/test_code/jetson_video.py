@@ -1,45 +1,51 @@
+import socket
 import cv2
 import numpy as np
-import socket
 
-# IP address and port for the receiver
-receiver_ip = '10.29.100.148'  # Replace with the receiver's IP address
-receiver_port = 12345  # Replace with the desired port number
+# IP address and port for receiving frames
+receiver_ip = '0.0.0.0'  # Listen on all available network interfaces
+receiver_port = 12345  # The same port number used on the Jetson device
 
-# Open the video capture
-cap = cv2.VideoCapture(0)  # Use the appropriate camera index if multiple cameras are connected
-
-# Check if the camera opened successfully
-if not cap.isOpened():
-    print("Failed to open camera")
-    exit()
-
-# Create UDP socket
+# Create a UDP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
+# Bind the socket to the receiver IP address and port
+sock.bind((receiver_ip, receiver_port))
+
+# Constants for packet size and buffer size
+packet_size = 65507  # Adjust packet size as needed
+buffer_size = 65536  # Adjust buffer size as needed
+
+# Buffer to store the received frame data
+received_data = bytearray()
+
+# Loop to receive and process frames
 while True:
-    # Capture frame-by-frame
-    ret, frame = cap.read()
+    # Receive data from the socket
+    packet, sender_address = sock.recvfrom(buffer_size)
 
-    # Check if the frame is valid
-    if not ret:
-        print("Failed to capture frame")
-        break
+    # Append the received packet to the buffer
+    received_data += packet
 
-    # Convert the frame to a byte array
-    frame_data = frame.tobytes()
+    # Check if the complete frame has been received
+    if len(packet) < packet_size:
+        # Convert the received data to a NumPy array
+        frame = np.frombuffer(received_data, dtype=np.uint8)
 
-    # Send the frame data to the receiver
-    sock.sendto(frame_data, (receiver_ip, receiver_port))
+        # Reshape the array to the original frame dimensions
+        frame = frame.reshape((height, width, channels))  # Replace with the actual frame dimensions
 
-    # Display the frame locally
-    cv2.imshow('Camera Stream', frame)
+        # Process the received frame
+        # Example: Display the received frame
+        cv2.imshow('Received Frame', frame)
+
+        # Reset the buffer for the next frame
+        received_data = bytearray()
 
     # Exit if 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
 # Release resources
-cap.release()
 cv2.destroyAllWindows()
 sock.close()
