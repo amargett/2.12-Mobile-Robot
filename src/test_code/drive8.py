@@ -408,7 +408,6 @@ class Car(object):
         image = self.frame
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-
         # look for tags
         detections = self.detector.detect(grayimg)
         if not detections:
