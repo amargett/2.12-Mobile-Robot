@@ -17,10 +17,10 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
-ALPHA = 0.4
-EPSILON_HEADING = 0.5
+ALPHA = 0.5
+EPSILON_HEADING = 1
 K_HEADING = 0.05
-K_VEL = 7
+K_VEL = 8
 K_CORR = 0.2
 Ki = 0.1
 
@@ -53,9 +53,9 @@ def main():
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
                 if car.state == 2:
-                    car.detect_april_tag()
+                    car.detect_april_tag(0.35)
                 elif car.state == 7:
-                    car.detect_april_tag()
+                    car.detect_april_tag(0.5)
                 else:
                     car.look_for_cone()
                 # if car.state == 6:
@@ -378,7 +378,7 @@ class Car(object):
         #self.rightVel = -STRAIGHT_VEL 
 
 
-    def detect_april_tag(self): 
+    def detect_april_tag(self, dist): 
         print('detecting tag')   
         image = self.frame
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -406,7 +406,7 @@ class Car(object):
 
         else:
             if self.mini_state == 0: 
-                if dist_to_tag < 0.35: 
+                if dist_to_tag < dist: 
                     self.mini_state = 2
                 else: 
                     fraction_diff = (MIDPOINT - tag_position[0])/MIDPOINT
