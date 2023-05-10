@@ -252,8 +252,7 @@ class Car(object):
         '''
         Read the frame from the video capture
         '''
-        pass
-        # ret, frame = CAP.read()
+        ret, frame = CAP.read()
         # if not ret:
         #     print("Failed to capture frame from camera")
         #     return
