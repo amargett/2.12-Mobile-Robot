@@ -377,16 +377,12 @@ class Car(object):
         #self.rightVel = -STRAIGHT_VEL 
 
 
-    def detect_april_tag(self, target_dx): 
+    def detect_april_tag(self): 
         print('detecting tag')   
         image = self.frame
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # look for tags
         detections = self.detector.detect(grayimg)
-        target_dx = -0.1 - self.x
-        vel = abs(target_dx) * K_VEl # P control velocity
-        if vel> STRAIGHT_VEL/3: 
-            vel = STRAIGHT_VEL/3
         if not detections:
             print("Nothing ")
             code_present = False
@@ -398,11 +394,15 @@ class Car(object):
             # Calculate the distance using triangulation
             pixel_width = abs(corners[0][0] - corners[1][0])
             dist_to_tag = 100.0/pixel_width
+            vel = dist_to_tag * K_VEl # P control velocity
             #pixel size 200: roughly 30 cm
             print(tag_position)
             print("distance" + str(dist_to_tag))
         if code_present == False:
             print('no april tag')
+            self.leftVel = 1
+            self.rightVel = -1
+
         else:
             if self.mini_state == 0: 
                 if dist_to_tag < 0.35: 
