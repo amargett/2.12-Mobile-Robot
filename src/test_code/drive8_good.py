@@ -139,7 +139,7 @@ def main():
                     
                 car.filter()
                 car.sendArduino()
-                car.printCurr()
+                #car.printCurr()
                 # print('state' + str(car.state))
                 
 class Car(object): 
