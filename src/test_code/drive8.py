@@ -9,7 +9,6 @@ import random as rng
 
 arduino = serial.Serial(port='/dev/ttyUSB0', baudrate=115200, timeout=.1)
 # arduino = serial.Serial(port='/dev/tty.usbserial-0264FEA5', baudrate=115200, timeout=.1)
-x
 orange_upper = np.array([15, 200, 255])
 
 STRAIGHT_VEL = 5
