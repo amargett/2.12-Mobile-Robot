@@ -274,7 +274,7 @@ class Car(object):
             target_dx = self.target_x - self.x
             target_dy = self.target_y - self.y
             self.straight(math.sqrt(target_dx**2 + target_dy**2))
-            if abs(target_dx) < EPSILON_DIST and abs(target_dy) < EPSILON_DIST:
+            if abs(target_dx) < self.epsilon_dist and abs(target_dy) < self.epsilon_dist:
                 self.mini_state = 2
         return self.mini_state
     
