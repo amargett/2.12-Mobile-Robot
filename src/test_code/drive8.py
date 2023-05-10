@@ -54,7 +54,7 @@ def main():
                 car.look_for_cone()
                 if car.state == 2:
                     car.detect_april_tag(-0.1 - car.x)
-                if car.state == 6:
+                if car.state == 7:
                     car.detect_april_tag(3 - car.x)
                 # if car.state == 6:
                 #     car.detect_april_tag(3 - car.x)
@@ -103,17 +103,25 @@ def main():
                             car.state = 5
                     elif car.state == 5: # turn around
                         car.target_x = 2
-                        car.target_y = 1.5
+                        car.target_y = 1
                         car.go()
                         if car.mini_state == 2: 
                             car.mini_state = 0
                             car.state = 6
                             # car.stop()
-                    elif car.state == 6: # go to april tag
+                    elif car.state == 6: # turn around
+                        car.target_x = 2.5
+                        car.target_y = 1
+                        car.go()
                         if car.mini_state == 2: 
                             car.mini_state = 0
                             car.state = 7
-                    elif car.state == 7: # dropoff aed
+                            # car.stop()
+                    elif car.state == 7: # go to april tag
+                        if car.mini_state == 2: 
+                            car.mini_state = 0
+                            car.state = 8
+                    elif car.state == 8: # dropoff aed
                         car.stop()
                         car.dropoffAED()
                         print('Success! AED dropped off')
