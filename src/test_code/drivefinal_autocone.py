@@ -120,7 +120,7 @@ def main():
                     elif car.state == 4: # back up
                         car.back()
                         car.backup_counter += 1
-                        if car.backup_counter > 200:
+                        if car.backup_counter > 500:
                             car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
@@ -257,7 +257,7 @@ class Car(object):
         self.leftVel, self.rightVel = 0, 0
     
     def back(self): 
-        self.leftVel, self.rightVel = STRAIGHT_VEL, STRAIGHT_VEL
+        self.leftVel, self.rightVel = STRAIGHT_VEL/4, STRAIGHT_VEL/4
 
     def pickupAED(self):
         self.servoAngle = PICKUP_ANGLE
