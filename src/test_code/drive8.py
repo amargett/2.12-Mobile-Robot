@@ -109,16 +109,16 @@ def main():
                         car.go()
                         if car.mini_state == 2: 
                             car.mini_state = 0
-                            car.state = 6
-                            # car.stop()
-                    elif car.state == 6: # go forward
-                        car.target_x = 2.75
-                        car.target_y = 1
-                        car.go()
-                        if car.mini_state == 2: 
-                            car.mini_state = 0
                             car.state = 7
                             # car.stop()
+                    # elif car.state == 6: # go forward
+                    #     car.target_x = 2.75
+                    #     car.target_y = 1
+                    #     car.go()
+                    #     if car.mini_state == 2: 
+                    #         car.mini_state = 0
+                    #         car.state = 7
+                    #         # car.stop()
                     elif car.state == 7: # go to april tag
                         if car.mini_state == 2: 
                             car.mini_state = 0
