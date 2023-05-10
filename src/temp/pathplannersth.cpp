@@ -1,91 +1,230 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include <Encoder_Buffer.h>
 #include "encoder.h"
+#include "drive.h"
+#include "wireless.h"
+#include "PID.h"
+//wheel radius in meters
+#define r 0.06
+//distance from back wheel to center in meters
+#define b 0.2
 
-//Chip select pins
-//In order to read each encoder separately, one of these
-//pins is set to high at a time
-#define CS1 4
-#define CS2 16
-#define CS3 17
-#define CS4 21
+//holds the odometry data to be sent to the microcontroller
+odometry_message odom_data;
+
+float pathDistance = 0;
+//x and y position of the robot in meters
+float x = 0;
+float y = 0;
+float theta = 0;
+
+float dPhiFL = 0;
+float dPhiBL = 0;
+float dPhiFR = 0;
+float dPhiBR = 0;
+
+//allows the intergral control to max contribution at the max drive voltage
+//prevents integral windum
+float maxSumError = (DRIVE_VOLTAGE/ki)/2;
+
+unsigned long prevLoopTimeMicros = 0; //in microseconds
+//how long to wait before updating PID parameters
+unsigned long loopDelayMicros = 5000; //in microseconds
+
+unsigned long prevPrintTimeMillis = 0;
+unsigned long printDelayMillis = 50;
+//
+float theta2 = 0;
+float rr = 0;
+float max_r = 0;
+float magnitude = 0;
+float turn_damping = 30;
+
+bool manual = false;
+
+void setDesiredVel(float vel, float k);
+void updateRobotPose(float dPhiL, float dPhiR);
+void getSetPointTrajectory();
+void updateOdometry();
+void printOdometry();
 
 
-//Pulses per revolution of the motor
-//Differs based on gear ratio
-//For the 312 RPM Motor 
-#define ENC_PPR 537.7
-
-
-
-//Encoder Objects for each motor
-Encoder_Buffer EncoderFL(CS1);
-Encoder_Buffer EncoderBL(CS2);
-Encoder_Buffer EncoderFR(CS3); 
-Encoder_Buffer EncoderBR(CS4);
-
-// //Encoder Counts
-long encFLCount = 0;
-long encBLCount = 0;
-long encFRCount = 0;
-long encBRCount = 0;
-
-float encFLRad = 0;
-float encBLRad = 0;
-float encFRRad = 0;
-float encBRRad = 0;
-
-
-//should be called once to initialize encoders
-void encoderSetup() {
-  //Starts communication protocol to communicate with the encoder breakout
-  SPI.begin();
-  //Initialize all the encoders
-  EncoderFL.initEncoder();
-  EncoderBL.initEncoder();
-  EncoderFR.initEncoder();
-  EncoderBR.initEncoder();
-}
-//Delay (in milliseconds) between consecutive reads of the encoders
-//Prevents constantly
-
-void readEncoders() {
-  //check to see if anything changed
-
-  //read all the encoders
-  //note that the front right and back right encoders are flipped
-  //this is to maintain movement forward as positive for both sides
-  encFLCount = EncoderFL.readEncoder();
-  encBLCount = EncoderBL.readEncoder();
-  encFRCount = -EncoderFR.readEncoder();
-  encBRCount = -EncoderBR.readEncoder();
-
-  //store as radians
-  encFLRad = encFLCount*2*PI/ENC_PPR;
-  encBLRad = encBLCount*2*PI/ENC_PPR;
-  encFRRad = encFRCount*2*PI/ENC_PPR;
-  encBRRad = encBRCount*2*PI/ENC_PPR;
+void setup(){
+    Serial.begin(115200);
+    encoderSetup();
+    driveSetup();
+    wirelessSetup();
 }
 
-//Clears all of the encoder values 
-void clearEncoders(){
-  //Encoder Counts
-  encFLCount = 0;
-  encBLCount = 0;
-  encFRCount = 0;
-  encBRCount = 0;
+void loop(){
+    if (micros() - prevLoopTimeMicros > loopDelayMicros){
+        prevLoopTimeMicros = micros();
+        //get new encoder readings and update the velocity
+        //also updates dPhi values for the change in angle of each motor
+        updateVelocity(loopDelayMicros*1e-6);
 
-  encFLRad = 0;
-  encBLRad = 0;
-  encFRRad = 0;
-  encBRRad = 0;
+        //dRad is the change in radians since the last reading of the encoders
+        //just use the back left and back right encoders to calculate trajectory
+        updateRobotPose(dPhiBL, dPhiBR);
 
-  EncoderFL.clearEncoderCount();
-  EncoderBL.clearEncoderCount();
-  EncoderFR.clearEncoderCount();
-  EncoderBR.clearEncoderCount();
+        //sends odometry to the remote
+        updateOdometry();
+        sendOdometry();
+        if (joyData.leftPressed)
+        {
+            Serial.printf("left");
+        }
+        else if (joyData.rightPressed)
+        {
+            Serial.printf("right");
+        }
+        else if (joyData.downPressed)
+        {
+            Serial.printf("down");
+        }
+
+        else if (joyData.upPressed)
+        {
+            Serial.printf("up");
+        }
+        
+        
+
+
+        //uncomment the desired method for updating the PI setpoint
+        if (joyData.rightPressed) {
+            manual = true;
+        }
+        else if (joyData.leftPressed){
+            manual = false;
+        }
+
+        if (manual)
+        {
+            getSetPointJoystick();
+        }
+        
+        else {
+            getSetPointTrajectory();  
+        }
+        //getSetPointDriveTest();
+        
+        
+        //calculate error for each motor
+        float newErrorFL = desiredVelFL - filtVelFL;
+        float newErrorBL = desiredVelBL - filtVelBL;
+        float newErrorFR = desiredVelFR - filtVelFR;
+        float newErrorBR = desiredVelBR - filtVelBR;
+
+        //get control signal by running PID on all for motors
+        voltageFL = runPID(newErrorFL, errorFL, kp, ki, kd, sumErrorFL, maxSumError, loopDelayMicros*1e-6);      
+        voltageBL = runPID(newErrorBL, errorBL, kp, ki, kd, sumErrorBL, maxSumError, loopDelayMicros*1e-6);
+        voltageFR = runPID(newErrorFR, errorFR, kp, ki, kd, sumErrorFR, maxSumError, loopDelayMicros*1e-6);            
+        voltageBR = runPID(newErrorBR, errorBR, kp, ki, kd, sumErrorBR, maxSumError, loopDelayMicros*1e-6);
+        
+        //only drive the back motors
+        driveVolts(0, voltageBL, 0, voltageBR);
+    }
+
+    //put print statements here
+    if (millis() - prevPrintTimeMillis > printDelayMillis){
+        prevPrintTimeMillis = millis();
+        printOdometry();
+        //Serial.printf("Left Vel: %.2f Right Vel %.2f\n", filtVelBL, filtVelBR);
+        //Serial.printf("dPhiBL: %.4f dPhiBR %.4f\n", dPhiBL, dPhiBR);
+    }
+
 }
 
+//sets the desired velocity based on desired velocity vel in m/s
+//and k curvature in 1/m representing 1/(radius of curvature)
+void setDesiredVel(float vel, float k){
+    //TODO convert the velocity and k curvature to new values for desiredVelBL and desiredVelBR
+    desiredVelBL = vel * (1-b * k)/r;
+    desiredVelFL = vel * (1-b * k)/r;
+    desiredVelBR = vel * (1+b * k)/r;
+    desiredVelFR = vel * (1+b * k)/r;
+}
 
+void getSetPointJoystick(){
+    /*
+    theta2 = atan2(joyData.joyX,joyData.joyY);
+    rr = sqrt(joyData.joyX * joyData.joyX + joyData.joyY * joyData.joyY);
+    if (abs(joyData.joyX) > abs(joyData.joyY)){
+        max_r = abs(rr/joyData.joyX);
+    }
+    else{
+        max_r = abs(rr / joyData.joyY);
+    }
+    magnitude = rr / max_r;
+    desiredVelBL = magnitude * (sin(theta2)+cos(theta2)/ turn_damping);
+    desiredVelFL = desiredVelBL;
+    desiredVelBR = magnitude * (sin(theta2) - cos(theta2) / turn_damping);
+    desiredVelFR = desiredVelBR;
+    */
+    Serial.println(joyData.joyX);
+    //y = map(x, 1, 50, 50, 1);
+    desiredVelBL = map(joyData.joyX, 1,1024,-0.5,0.5);
+    desiredVelBR = map(joyData.joyY, 1,1024,-0.5,0.5);
 
+}
+
+//makes robot follow a trajectory
+void getSetPointTrajectory(){
+    //default to not moving
+    //velocity in m/s
+    //k is 1/radius from center of rotation circle
+    float vel = 0 , k = 0;
+    //TODO Add trajectory planning by changing the value of vel and k
+    //based on odemetry conditions
+    if (pathDistance <= 1.0){
+        //STRAIGHT LINE FORWARD
+        vel = 0;
+        k = 0;
+    } else if (pathDistance > 1 && pathDistance < (1+0.25*PI)){
+        //TURN IN SEMICIRCLE
+        vel = 0;
+        k = 0;
+    } else if (pathDistance > (1+ 0.25*PI) && pathDistance < (2 + 0.25*PI)){
+        //STRAIGHT LINE BACK
+        vel = 0;
+        k = 0;
+    } else {
+        //STOP
+        vel = 0;
+        k = 0;
+    }
+    setDesiredVel(vel, k);
+}
+
+//updates the robot's path distance variable based on the latest change in angle
+void updateRobotPose(float dPhiL, float dPhiR){
+    //TODO change in angle
+    float dtheta = 0;
+    //TODO update theta value
+    theta += 0;
+    //TODO use the equations from the handout to calculate the change in x and y
+    float dx = 0;
+    float dy = 0;
+    //TODO update x and y positions
+    x += 0;
+    y += 0;
+    //TODO update the pathDistance
+    pathDistance += 0;
+    //Serial.printf("x: %.2f y: %.2f\n", x, y);
+}
+
+//stores all the the latest odometry data into the odometry struct
+void updateOdometry(){
+    odom_data.millis = millis();
+    odom_data.pathDistance = pathDistance;
+    odom_data.x = x;
+    odom_data.y = y;
+    odom_data.theta = theta;
+    odom_data.velL = filtVelBL;
+    odom_data.velR = filtVelBR;
+}
+//prints current odometry to be read into MATLAB
+void printOdometry(){
+    //convert the time to seconds
+    Serial.printf("%.2f\t%.4f\t%.4f\t%.4f\t%.4f\n", odom_data.millis/1000.0, odom_data.x, odom_data.y, odom_data.theta, odom_data.pathDistance);
+}
