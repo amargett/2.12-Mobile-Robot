@@ -53,9 +53,9 @@ def main():
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
                 if car.state == 2:
-                    car.detect_april_tag(-0.1 - car.x)
+                    car.detect_april_tag()
                 elif car.state == 7:
-                    car.detect_april_tag(3 - car.x)
+                    car.detect_april_tag()
                 else:
                     car.look_for_cone()
                 # if car.state == 6:
