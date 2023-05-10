@@ -403,8 +403,8 @@ class Car(object):
         # self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
         # self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
 
-        self.leftVel = 10*fraction_diff
-        self.rightVel = -10*fraction_diff
+        self.leftVel = 2
+        self.rightVel = -2
 
         self.keep_rotating_until = time.time() + 1
         self.drive_straight_until = self.keep_rotating_until + 2
