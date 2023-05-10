@@ -407,8 +407,8 @@ class Car(object):
         self.leftVel = -2
         self.rightVel = 2
 
-        self.keep_rotating_until = time.time() + 2
-        self.drive_straight_until = self.keep_rotating_until + 4
+        self.keep_rotating_until = time.time() + 1
+        self.drive_straight_until = self.keep_rotating_until + 3
         
         """"
         left = False
