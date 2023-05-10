@@ -44,19 +44,18 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 1000e-3:
-            car.prev_time = time.time()
+            
             if car.mega_state == 0:
                 print('MEGA' + str(car.mega_state))
-                car.ret, car.frame = CAP.read()
+                # car.ret, car.frame = CAP.read()
                 car.mega_state = 1
             else:
                 print('MEGA' + str(car.mega_state))
                 car.readArduino()
                 car.mega_state = 0
                 # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-                if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None]: 
-                    car.look_for_cone()
+                if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
+                    # car.look_for_cone()
                     car.setXYH()
                     if car.mega_state == 1:
                         if car.cone_position: 
@@ -110,6 +109,7 @@ def main():
                             car.stop()
                             car.dropoffAED()
                             print('Success! AED dropped off')
+                    car.prev_time = time.time()
                     car.filter()
                     car.sendArduino()
                     car.printCurr()
