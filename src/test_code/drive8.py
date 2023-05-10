@@ -20,8 +20,9 @@ DROPOFF_ANGLE = 120
 ALPHA = 0.3
 EPSILON_HEADING = 0.5
 K_HEADING = 0.05
-K_VEl = 7
+K_VEl = 5
 K_CORR = 0.5
+Ki = 0.1
 
 CAP = cv2.VideoCapture(0)
         
@@ -186,6 +187,8 @@ class Car(object):
         self.threshold = 14  # tolerable yaw
         self.vote_array = []
 
+        self.sumerror = 0
+
     def readArduino(self):
         '''
         Read output from Arduino: x, y, heading.
@@ -205,9 +208,9 @@ class Car(object):
     def straight(self, error, error_heading): 
         val = error * K_VEl + P_CONTROL_BIAS
         if val > STRAIGHT_VEL:
-            self.leftVel, self.rightVel = -STRAIGHT_VEL - K_CORR*error_heading, -STRAIGHT_VEL + K_CORR*error_heading
+            self.leftVel, self.rightVel = -STRAIGHT_VEL + K_CORR*error_heading, -STRAIGHT_VEL - K_CORR*error_heading
         else: 
-            self.leftVel, self.rightVel = -val - K_CORR*error_heading, -val + K_CORR*error_heading
+            self.leftVel, self.rightVel = -val + K_CORR*error_heading, -val - K_CORR*error_heading
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error - P_CONTROL_BIAS, K_HEADING*error + P_CONTROL_BIAS
