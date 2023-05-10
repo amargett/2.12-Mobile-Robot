@@ -125,7 +125,7 @@ def main():
                             car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
-                        car.target_x = 2
+                        car.target_x = 2.5
                         car.target_y = 1
                         car.go()
                         if car.mini_state == 2: 
