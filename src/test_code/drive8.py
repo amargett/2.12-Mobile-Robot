@@ -23,6 +23,12 @@ EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
 
+CAP = cv2.VideoCapture(0)
+        
+SCREEN_WIDTH = int(CAP.get(cv2.CAP_PROP_FRAME_WIDTH))
+SCREEN_HEIGHT = int(CAP.get(cv2.CAP_PROP_FRAME_HEIGHT))
+MIDPOINT = SCREEN_WIDTH // 2
+
 P_CONTROL_BIAS = 0
 
 def obstacle(): 
@@ -102,12 +108,7 @@ def main():
                 
 class Car(object): 
     def __init__(self): 
-        self.cap = cv2.VideoCapture(0)
         self.detector = apriltag.Detector()
-        
-        self.SCREEN_WIDTH = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        self.SCREEN_HEIGHT = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        self.MIDPOINT = self.SCREEN_WIDTH // 2
         
         self.target_x = 1
         self.target_y = 1.65
@@ -251,7 +252,8 @@ class Car(object):
         '''
         Read the frame from the video capture
         '''
-        ret, frame = self.cap.read()
+        pass
+        # ret, frame = CAP.read()
         # if not ret:
         #     print("Failed to capture frame from camera")
         #     return
@@ -317,13 +319,13 @@ class Car(object):
         
     def avoid_cone(self):
         print('avoiding cone')
-        #if(abs(self.cone_position[0] - self.MIDPOINT)< self.MIDPOINT/6):
-        if (abs(self.cone_position[0] - self.SCREEN_WIDTH) < self.MIDPOINT/6) or (abs(self.cone_position[0] - 0) < self.MIDPOINT/6):
+        #if(abs(self.cone_position[0] - MIDPOINT)< MIDPOINT/6):
+        if (abs(self.cone_position[0] - SCREEN_WIDTH) < MIDPOINT/6) or (abs(self.cone_position[0] - 0) < MIDPOINT/6):
             print("straight")
             self.leftVel = -3
             self.rightVel = -3
             
-        elif(self.cone_position[0] < self.MIDPOINT):
+        elif(self.cone_position[0] < MIDPOINT):
             print("turning right")
             self.leftVel = -1
             self.rightVel = -3
@@ -339,7 +341,7 @@ class Car(object):
 
     def detect_april_tag(self, target_dx): 
         print('detecting tag')   
-        result, image = self.cap.read()
+        result, image = CAP.read()
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # look for tags
         detections = self.detector.detect(grayimg)
@@ -368,7 +370,7 @@ class Car(object):
                 if dist_to_tag < 0.4: 
                     self.mini_state = 1
                 else: 
-                    fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
+                    fraction_diff = (MIDPOINT - tag_position[0])/MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
                     self.rightVel = -vel + 3* fraction_diff
 
