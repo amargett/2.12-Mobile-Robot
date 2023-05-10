@@ -102,7 +102,7 @@ def main():
                             car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
-                        car.epsilon_dist *= 3
+                        car.epsilon_dist *= 2
                         car.target_x = 2
                         car.target_y = 1
                         car.go()
@@ -399,7 +399,7 @@ class Car(object):
             print('no april tag')
         else:
             if self.mini_state == 0: 
-                if dist_to_tag < 0.4: 
+                if dist_to_tag < 0.35: 
                     self.mini_state = 2
                 else: 
                     fraction_diff = (MIDPOINT - tag_position[0])/MIDPOINT
