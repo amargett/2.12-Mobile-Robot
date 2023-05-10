@@ -44,7 +44,7 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 1e-3:
+        if (time.time() - car.prev_time) > 5e-3:
             car.prev_time = time.time()
             car.mega_counter += 1
             if car.mega_counter % 10 == 0:
@@ -57,7 +57,7 @@ def main():
                 car.mega_state = 0
                 # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
                 if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None]: 
-                    # car.look_for_cone()
+                    car.look_for_cone()
                     car.setXYH()
                     if car.cone_position: 
                         car.avoid_cone()
