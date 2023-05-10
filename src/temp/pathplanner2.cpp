@@ -1,6 +1,5 @@
 
 
-
 #include <Arduino.h>
 #include "encoder.h"
 #include "drive.h"
@@ -14,6 +13,8 @@
 #define r 0.06
 // distance from back wheel to center in meters
 #define b 0.2
+const int joystickCenter = 512;   // Center value of joystick
+const int joystickDeadzone = 20;  // Deadzone for joystick to avoid small movements
 
 float x = 0;
 float y = 0;
@@ -21,8 +22,12 @@ float heading = 0;
 float theta = 0;
 float servo_angle = 90;
 int timeout_millis = 300;
+int servo = 0
 
 float last_message_millis = 0;
+
+int PICKUP_ANGLE = 40;
+int DROPOFF_ANGLE = 120;
 
 float theta2 = 0;
 float rr = 0;
@@ -80,19 +85,33 @@ void loop()
     {
 
         
-        
         prevLoopTimeMicros = micros();
         
         if (joyData.rightPressed) {
-            manual = true;
+            if (manual == true){
+                manual = false;
+            }
+            else{
+                manual = true;
+            }
         }
         else if (joyData.leftPressed){
-            manual = false;
-        }
+            if (servo_mode = 0){
+                servo_mode = 1;
+            }
+            else if(servo_mode == 1){
+                servo_mode = 2;
+            }
+            else if(servo_mode ==2){
+                servo_mode = 0;
+            }
 
         if (manual)
         {
+            readIMU();
             getSetPointJoystick();
+            updateRobotPose(dPhiBL, dPhiBR);
+
         }
         
         else {
@@ -203,31 +222,31 @@ void updateRobotPose(float dPhiL, float dPhiR)
 }
 
 void getSetPointJoystick(){
-    theta2 = atan2(joyData.joyX,joyData.joyY);
-    rr = sqrt(joyData.joyX * joyData.joyX + joyData.joyY * joyData.joyY);
-    if (abs(joyData.joyX) > abs(joyData.joyY)){
-        max_r = abs(rr/joyData.joyX);
+    desiredVelBL = map(joyData.joyY, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
+    desiredVelBR = map(joystickXValue, joystickCenter - joystickDeadzone, joystickCenter + joystickDeadzone, -0.2, 0.2);
+    if (servo_mode == 1){
+        servo_angle = 90;
     }
-    else{
-        max_r = abs(rr / joyData.joyY);
+    if (servo_mode == 1){
+        servo_angle  = PICKUP_ANGLE;
+        }
+    if (servo_mode ==2){
+        servo_angle = DROPOFF_ANGLE;
     }
-    magnitude = rr / max_r;
-    desiredVelBL = magnitude * (sin(theta2)+cos(theta2)/ turn_damping);
-    desiredVelFL = desiredVelBL;
-    desiredVelBR = magnitude * (sin(theta2) - cos(theta2) / turn_damping);
-    desiredVelFR = desiredVelBR;
-
+    }
+     
+    // theta2 = atan2(joyData.joyX,joyData.joyY);
+    // rr = sqrt(joyData.joyX * joyData.joyX + joyData.joyY * joyData.joyY);
+    // if (abs(joyData.joyX) > abs(joyData.joyY)){
+    //     max_r = abs(rr/joyData.joyX);
+    // }
+    // else{
+    //     max_r = abs(rr / joyData.joyY);
+    // }
+    // magnitude = rr / max_r;
+    // desiredVelBL = magnitude * (sin(theta2)+cos(theta2)/ turn_damping);
+    // desiredVelFL = desiredVelBL;
+    // desiredVelBR = magnitude * (sin(theta2) - cos(theta2) / turn_damping);
+    // desiredVelFR = desiredVelBR;
 
 }
-
-// stores all the the latest odometry data into the odometry struct
-// void updateOdometry()
-// {
-//     odom_data.millis = millis();
-//     odom_data.pathDistance = pathDistance;
-//     odom_data.x = x;
-//     odom_data.y = y;
-//     odom_data.theta = theta;
-//     odom_data.velL = filtVelBL;
-//     odom_data.velR = filtVelBR;
-// }
