@@ -319,7 +319,7 @@ class Car(object):
             print('no april tag')
         else:
             if self.mini_state == 0: 
-                if dist_to_tag < 0.4: 
+                if dist_to_tag < 0.35: 
                     self.mini_state = 1
                 else: 
                     fraction_diff = (self.MIDPOINT - tag_position[0])/self.MIDPOINT
