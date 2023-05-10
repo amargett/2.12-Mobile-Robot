@@ -55,6 +55,8 @@ def main():
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
+                print(car.frame.shape)
+
                 if car.state == 2:
                     car.detect_april_tag(0.35)
                 elif car.state == 7:
@@ -405,7 +407,7 @@ class Car(object):
 
     def detect_april_tag(self, dist): 
         print('detecting tag')   
-        ret, frame = self.ret, self.frame
+        frame = self.frame
         print(frame.shape)
         grayimg = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
