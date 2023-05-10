@@ -108,6 +108,7 @@ def main():
                         car.target_y = 1
                         car.go()
                         if car.mini_state == 2: 
+                            return
                             car.mini_state = 0
                             car.state = 6
                             # car.stop()
@@ -281,6 +282,8 @@ class Car(object):
             target_dy = self.target_y - self.y
             self.straight(math.sqrt(target_dx**2 + target_dy**2), error_heading)
             if abs(target_dx) < self.epsilon_dist and abs(target_dy) < self.epsilon_dist:
+                print("You did it!")
+                print("target x: " + str(self.target_x) + ' target y: ' + str(self.target_y) + ' target dx: ' + str(target_dx) + ' target dy: ' + str(target_dy))
                 self.mini_state = 2
         return self.mini_state
     
