@@ -81,11 +81,11 @@ def main():
                         car.avoid_cone()
                         if car.prev_state is None:
                             car.prev_state = car.state
-                        state = 10
-                    elif state == 10:
+                        car.state = 10
+                    elif car.state == 10:
                         if time.time() > car.keep_rotating_until:
-                            state = 11
-                    elif state == 11:
+                            car.state = 11
+                    elif car.state == 11:
                         car.go_completely_straight()
                         if time.time() > car.drive_straight_until:
                             car.state = car.prev_state
@@ -341,7 +341,7 @@ class Car(object):
         # Initialize the position of the cone
         self.cone_position = None
         cone_detected = 0
-        state = 0
+        # state = 0
         cx = -1
         cy = -1
         #print("len contours =", len(contours))
