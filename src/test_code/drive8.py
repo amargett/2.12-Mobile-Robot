@@ -406,7 +406,9 @@ class Car(object):
     def detect_april_tag(self, dist): 
         print('detecting tag')   
         image = self.frame
-        grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        bgr_image = image[:, :, :3]  # Keep only the first three channels (BGR)
+        gray_img = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2GRAY)
+
         # look for tags
         detections = self.detector.detect(grayimg)
         if not detections:
