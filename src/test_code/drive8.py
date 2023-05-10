@@ -17,11 +17,12 @@ STRAIGHT_VEL = 5
 TURN_VEL = STRAIGHT_VEL/2
 PICKUP_ANGLE = 40
 DROPOFF_ANGLE = 120
-ALPHA = 0.2
+ALPHA = 0.3
 EPSILON_HEADING = 0.5
-EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
+K_CORR = 0.3
+Ki = 0.1
 
 CAP = cv2.VideoCapture(0)
         
@@ -45,13 +46,18 @@ def main():
         car.sendArduino()
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        if (time.time() - car.prev_time) > 5e-3:
+        if (time.time() - car.prev_time) > 2e-3:
             car.prev_time = time.time()
             car.mega_counter += 1
             if car.mega_counter % 10 == 0:
                 # print('MEGA' + str(car.mega_state))
                 car.ret, car.frame = CAP.read()
-                car.look_for_cone()
+                if car.state == 2:
+                    car.detect_april_tag()
+                elif car.state == 7:
+                    car.detect_april_tag()
+                else:
+                    car.look_for_cone()
                 # if car.state == 6:
                 #     car.detect_april_tag(3 - car.x)
                 # car.mega_state = 1
@@ -73,15 +79,14 @@ def main():
                             car.mini_state = 0
                             car.state = 1
                     elif car.state == 1: # go to AED waypoint #2
-                        car.target_x = 1
+                        car.target_x = 0.75
                         car.target_y = 1.65
                         car.go()
                         if car.mini_state == 2:
                             car.mini_state = 0
                             car.state = 2
                     elif car.state == 2: # go to AED 
-                        car.detect_april_tag(-0.1 - car.x)
-                        if car.mini_state == 1: 
+                        if car.mini_state == 2: 
                             car.state = 3
                             car.mini_state = 0
                     elif car.state == 3: # pickup AED
@@ -96,21 +101,30 @@ def main():
                         car.back()
                         car.backup_counter += 1
                         if car.backup_counter > 200:
+                            car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
-                        dheading = abs(360 -car.heading)
-                        dheading2  = abs(car.heading)
-                        if dheading < EPSILON_HEADING or dheading2< EPSILON_HEADING:
-                            car.state = 6
-                            car.stop()
-                        else: 
-                            car.right(dheading)
-                    elif car.state == 6: # go to april tag
-                        car.detect_april_tag(3 - car.x)
-                        if car.mini_state == 1: 
-                            car.state = 7
+                        car.target_x = 2
+                        car.target_y = 1
+                        car.go()
+                        if car.mini_state == 2: 
+                            return
                             car.mini_state = 0
-                    elif car.state == 7: # dropoff aed
+                            car.state = 6
+                            # car.stop()
+                    elif car.state == 6: # go forward
+                        car.target_x = 2.75
+                        car.target_y = 1
+                        car.go()
+                        if car.mini_state == 2: 
+                            car.mini_state = 0
+                            car.state = 7
+                            # car.stop()
+                    elif car.state == 7: # go to april tag
+                        if car.mini_state == 2: 
+                            car.mini_state = 0
+                            car.state = 8
+                    elif car.state == 8: # dropoff aed
                         car.stop()
                         car.dropoffAED()
                         print('Success! AED dropped off')
@@ -126,6 +140,8 @@ class Car(object):
         self.ret = None
         self.frame = None
         self.mega_counter = 0
+
+        self.epsilon_dist = 0.1
         
         self.target_x = 1
         self.target_y = 1.65
@@ -171,6 +187,8 @@ class Car(object):
         self.threshold = 14  # tolerable yaw
         self.vote_array = []
 
+        self.sumerror = 0
+
     def readArduino(self):
         '''
         Read output from Arduino: x, y, heading.
@@ -187,12 +205,12 @@ class Car(object):
                 pass
         return self.x_raw, self.y_raw, self.heading_raw
     
-    def straight(self, error): 
+    def straight(self, error, error_heading): 
         val = error * K_VEl + P_CONTROL_BIAS
         if val > STRAIGHT_VEL:
-            self.leftVel, self.rightVel = -STRAIGHT_VEL, -STRAIGHT_VEL
+            self.leftVel, self.rightVel = -STRAIGHT_VEL - K_CORR*error_heading, -STRAIGHT_VEL + K_CORR*error_heading
         else: 
-            self.leftVel, self.rightVel = -val, -val
+            self.leftVel, self.rightVel = -val - K_CORR*error_heading, -val + K_CORR*error_heading
 
     def left(self, error): 
         self.leftVel, self.rightVel = -K_HEADING*error - P_CONTROL_BIAS, K_HEADING*error + P_CONTROL_BIAS
@@ -246,22 +264,26 @@ class Car(object):
         # mini_state == 0: rotate
         # mini_state == 1: go forward
         # mini_state = 2: success!
+        target_dx = self.target_x - self.x
+        target_dy = self.target_y - self.y
+        self.target_dheading = 360 - (np.degrees(np.arctan2(target_dy, target_dx)) + 360) % 360
+        error_heading = self.heading - self.target_dheading
+        
         if self.mini_state == 0: # rotate
-            target_dx = self.target_x - self.x
-            target_dy = self.target_y - self.y
-            self.target_dheading = 360 - (np.degrees(np.arctan2(target_dy, target_dx)) + 360) % 360
             print(self.mini_state, self.heading, self.target_dheading)
-            if abs(self.heading - self.target_dheading) < EPSILON_HEADING:
+            if abs(error_heading) < EPSILON_HEADING:
                 self.mini_state = 1
             elif self.target_dheading > 180: 
-                self.left(abs(self.heading - self.target_dheading))
+                self.left(abs(error_heading))
             else: 
-                self.right(abs(self.heading - self.target_dheading))
+                self.right(abs(error_heading))
         elif self.mini_state == 1: # go straight
             target_dx = self.target_x - self.x
             target_dy = self.target_y - self.y
-            self.straight(math.sqrt(target_dx**2 + target_dy**2))
-            if abs(target_dx) < EPSILON_DIST and abs(target_dy) < EPSILON_DIST:
+            self.straight(math.sqrt(target_dx**2 + target_dy**2), error_heading)
+            if abs(target_dx) < self.epsilon_dist and abs(target_dy) < self.epsilon_dist:
+                print("You did it!")
+                print("target x: " + str(self.target_x) + ' target y: ' + str(self.target_y) + ' target dx: ' + str(target_dx) + ' target dy: ' + str(target_dy))
                 self.mini_state = 2
         return self.mini_state
     
@@ -298,7 +320,7 @@ class Car(object):
             largest_contour = max(contours, key=cv2.contourArea)
             # Calculate the area of the largest contour
             largest_contour_area = cv2.contourArea(largest_contour)
-            if largest_contour_area > 2500:
+            if largest_contour_area > 7500:
                 # Calculate the center of the contour
                 M = cv2.moments(largest_contour)
                 if M["m00"] > 0:
@@ -343,7 +365,7 @@ class Car(object):
             # self.leftVel = -3
             # self.rightVel = -3
             
-        if(self.cone_position[0] < MIDPOINT):
+        elif(self.cone_position[0] < MIDPOINT):
             print("turning right")
             self.leftVel = -1
             self.rightVel = -3
@@ -357,16 +379,12 @@ class Car(object):
         #self.rightVel = -STRAIGHT_VEL 
 
 
-    def detect_april_tag(self, target_dx): 
+    def detect_april_tag(self): 
         print('detecting tag')   
         image = self.frame
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # look for tags
         detections = self.detector.detect(grayimg)
-        target_dx = -0.1 - self.x
-        vel = abs(target_dx) * K_VEl # P control velocity
-        if vel> STRAIGHT_VEL/2: 
-            vel = STRAIGHT_VEL/2
         if not detections:
             print("Nothing ")
             code_present = False
@@ -378,15 +396,19 @@ class Car(object):
             # Calculate the distance using triangulation
             pixel_width = abs(corners[0][0] - corners[1][0])
             dist_to_tag = 100.0/pixel_width
+            vel = min(dist_to_tag * K_VEl, STRAIGHT_VEL) # P control velocity
             #pixel size 200: roughly 30 cm
             print(tag_position)
             print("distance" + str(dist_to_tag))
         if code_present == False:
             print('no april tag')
+            self.leftVel = 1
+            self.rightVel = -1
+
         else:
             if self.mini_state == 0: 
-                if dist_to_tag < 0.4: 
-                    self.mini_state = 1
+                if dist_to_tag < 0.35: 
+                    self.mini_state = 2
                 else: 
                     fraction_diff = (MIDPOINT - tag_position[0])/MIDPOINT
                     self.leftVel= -vel - 3* fraction_diff
