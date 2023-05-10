@@ -22,7 +22,7 @@ EPSILON_DIST = 0.1
 K_HEADING = 0.05
 K_VEl = 5
 
-P_CONTROL_BIAS = 0.5
+P_CONTROL_BIAS = 0
 
 def obstacle(): 
     # CV, determine whether or not there is an obstacle there
