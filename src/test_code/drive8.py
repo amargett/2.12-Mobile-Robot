@@ -44,71 +44,79 @@ def main():
     while [car.x0, car.y0, car.heading0] == [None, None, None]: # wait until readArduino receives usable data
         car.x0, car.y0, car.heading0 = car.readArduino()
     while True:
-        car.readArduino()
-        # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
-        if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
-            car.setXYH()
-            car.look_for_cone()
-            if car.cone_position: 
-                car.avoid_cone()
-            elif car.state == 0: ## go to AED waypoint #1
-                car.target_x = 1.5
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 1
-            elif car.state == 1: # go to AED waypoint #2
-                car.target_x = 1
-                car.target_y = 1.65
-                car.go()
-                if car.mini_state == 2:
-                    car.mini_state = 0
-                    car.state = 2
-            elif car.state == 2: # go to AED 
-                car.detect_april_tag(-0.1 - car.x)
-                if car.mini_state == 1: 
-                    car.state = 3
-                    car.mini_state = 0
-            elif car.state == 3: # pickup AED
-                car.stop()
-                car.pickupAED()
-                print('Success! AED picked up')
-                car.pickup_counter += 1 
-                if car.pickup_counter > 200:
-                    car.mini_state = 0
-                    car.state = 4
-            elif car.state == 4: # back up
-                car.back()
-                car.backup_counter += 1
-                if car.backup_counter > 200:
-                    car.state = 5
-            elif car.state == 5: # turn around
-                dheading = abs(360 -car.heading)
-                dheading2  = abs(car.heading)
-                if dheading < EPSILON_HEADING or dheading2< EPSILON_HEADING:
-                    car.state =6
-                    car.stop()
-                else: 
-                    car.right(dheading)
-            elif car.state ==6: # go to april tag
-                car.detect_april_tag(3 - car.x)
-                if car.mini_state == 1: 
-                    car.state = 7
-                    car.mini_state = 0
-            elif car.state ==7: # dropoff aed
-                car.stop()
-                car.dropoffAED()
-                print('Success! AED dropped off')
-            car.prev_time = time.time()
-            car.filter()
-            car.sendArduino()
-            car.printCurr()
-            # print('state' + str(car.state))
+        if car.mega_state == 0:
+            car.ret, car.frame = CAP.read()
+            car.mega_state = 1
+        else:
+            car.readArduino()
+            car.mega_state = 0
+            # continue looping until readArduino receives usable data and at least 5 milliseconds have passed
+            if [car.x_raw, car.y_raw, car.heading_raw] != [None, None, None] and (time.time() - car.prev_time) > 1e-3: 
+                car.look_for_cone
+                car.setXYH()
+                if car.mega_state == 1:
+                    if car.cone_position: 
+                        car.avoid_cone()
+                    elif car.state == 0: ## go to AED waypoint #1
+                        car.target_x = 1.5
+                        car.target_y = 1.65
+                        car.go()
+                        if car.mini_state == 2:
+                            car.mini_state = 0
+                            car.state = 1
+                    elif car.state == 1: # go to AED waypoint #2
+                        car.target_x = 1
+                        car.target_y = 1.65
+                        car.go()
+                        if car.mini_state == 2:
+                            car.mini_state = 0
+                            car.state = 2
+                    elif car.state == 2: # go to AED 
+                        car.detect_april_tag(-0.1 - car.x)
+                        if car.mini_state == 1: 
+                            car.state = 3
+                            car.mini_state = 0
+                    elif car.state == 3: # pickup AED
+                        car.stop()
+                        car.pickupAED()
+                        print('Success! AED picked up')
+                        car.pickup_counter += 1 
+                        if car.pickup_counter > 200:
+                            car.mini_state = 0
+                            car.state = 4
+                    elif car.state == 4: # back up
+                        car.back()
+                        car.backup_counter += 1
+                        if car.backup_counter > 200:
+                            car.state = 5
+                    elif car.state == 5: # turn around
+                        dheading = abs(360 -car.heading)
+                        dheading2  = abs(car.heading)
+                        if dheading < EPSILON_HEADING or dheading2< EPSILON_HEADING:
+                            car.state = 6
+                            car.stop()
+                        else: 
+                            car.right(dheading)
+                    elif car.state == 6: # go to april tag
+                        car.detect_april_tag(3 - car.x)
+                        if car.mini_state == 1: 
+                            car.state = 7
+                            car.mini_state = 0
+                    elif car.state ==7: # dropoff aed
+                        car.stop()
+                        car.dropoffAED()
+                        print('Success! AED dropped off')
+                car.prev_time = time.time()
+                car.filter()
+                car.sendArduino()
+                car.printCurr()
+                # print('state' + str(car.state))
                 
 class Car(object): 
     def __init__(self): 
         self.detector = apriltag.Detector()
+        self.ret = None
+        self.frame = None
         
         self.target_x = 1
         self.target_y = 1.65
@@ -134,6 +142,7 @@ class Car(object):
         self.filtRightVel = 0
         self.filtServoAngle = 90
 
+        self.mega_state = 0
         self.state = 0
         self.prev_time = time.time()
         self.april_time = time.time()
@@ -252,7 +261,6 @@ class Car(object):
         '''
         Read the frame from the video capture
         '''
-        ret, frame = CAP.read()
         # if not ret:
         #     print("Failed to capture frame from camera")
         #     return
@@ -340,7 +348,7 @@ class Car(object):
 
     def detect_april_tag(self, target_dx): 
         print('detecting tag')   
-        result, image = CAP.read()
+        image = self.frame
         grayimg = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         # look for tags
         detections = self.detector.detect(grayimg)
