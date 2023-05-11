@@ -75,21 +75,22 @@ def main():
                     
                     car.setXYH()
 
-                    print('prev_state: %d, current_state: %d' % (car.prev_state, car.state)) 
+                    print(car.prev_state, car.state)
 
                     if car.cone_position: 
                         car.avoid_cone()
                         if car.prev_state is None:
                             car.prev_state = car.state
-                        state = 10
-                    elif state == 10:
+                        car.state = 10
+                    elif car.state == 10:
                         if time.time() > car.keep_rotating_until:
-                            state = 11
-                    elif state == 11:
+                            car.state = 11
+                    elif car.state == 11:
                         car.go_completely_straight()
                         if time.time() > car.drive_straight_until:
                             car.state = car.prev_state
-                            car.mini_state = 0                   
+                            car.prev_state = None
+                            car.mini_state = 0
                     # once done: mini_state = 0
                     elif car.state == 0: ## go to AED waypoint #1
                         car.target_x = 1.5
@@ -120,11 +121,11 @@ def main():
                     elif car.state == 4: # back up
                         car.back()
                         car.backup_counter += 1
-                        if car.backup_counter > 200:
+                        if car.backup_counter > 1000:
                             car.mini_state = 0
                             car.state = 5
                     elif car.state == 5: # turn around
-                        car.target_x = 2
+                        car.target_x = 2.5
                         car.target_y = 1
                         car.go()
                         if car.mini_state == 2: 
@@ -151,7 +152,7 @@ def main():
                     
                 car.filter()
                 car.sendArduino()
-                #car.printCurr()
+                car.printCurr()
                 # print('state' + str(car.state))
                 
 class Car(object): 
@@ -257,7 +258,7 @@ class Car(object):
         self.leftVel, self.rightVel = 0, 0
     
     def back(self): 
-        self.leftVel, self.rightVel = STRAIGHT_VEL, STRAIGHT_VEL
+        self.leftVel, self.rightVel = STRAIGHT_VEL/4, STRAIGHT_VEL/4
 
     def pickupAED(self):
         self.servoAngle = PICKUP_ANGLE
@@ -341,7 +342,7 @@ class Car(object):
         # Initialize the position of the cone
         self.cone_position = None
         cone_detected = 0
-        state = 0
+        # state = 0
         cx = -1
         cy = -1
         #print("len contours =", len(contours))
@@ -395,19 +396,20 @@ class Car(object):
         
     def avoid_cone(self):
         print('avoiding cone')
-        if(self.cone_position[0] < MIDPOINT):
-            fraction_diff = min(1, self.cone_position[0]/MIDPOINT+0.5)
-        else:
-            fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
+        # if(self.cone_position[0] < MIDPOINT):
+        #     fraction_diff = min(1, self.cone_position[0]/MIDPOINT+0.5)
+        # else:
+        #     fraction_diff = max(-1, self.cone_position[0]/MIDPOINT - 2.5)
 
         # self.leftVel = -STRAIGHT_VEL/2 + 5* fraction_diff
         # self.rightVel = -STRAIGHT_VEL/2 - 5* fraction_diff
 
-        self.leftVel = 2
-        self.rightVel = -2
+        self.leftVel = -2
+        self.rightVel = 2
 
-        self.keep_rotating_until = time.time() + 1
-        self.drive_straight_until = self.keep_rotating_until + 2
+        self.keep_rotating_until = time.time() + 0.5
+        self.drive_straight_until = self.keep_rotating_until + 3
+        
         """"
         left = False
         right = False
