@@ -37,10 +37,10 @@ void setWheelVel();
 void getSetPointJoystick();
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 
-bool manual_control = true;
-
 int servoPin = 13;
 Servo myservo;
+
+bool manual = false;
 
 void setup()
 {
@@ -76,12 +76,30 @@ void loop()
 
         readIMU();
         sendIMU();
-        if(! manual_control)
-        {
-            readDesiredVel();
+
+        //uncomment the desired method for updating the PI setpoint
+        if (joyData.rightPressed) {
+            manual = true;
         }
-        else{
+        else if (joyData.leftPressed){
+            manual = false;
+        }
+        if (joyData.upPressed){
+            servo_angle = min(150.0,servo_angle + 0.1);
+            Serial.print("pressed up");
+
+        }
+        else if (joyData.downPressed){
+            servo_angle = max(40.0, servo_angle - 0.1);
+        }
+
+        if (manual)
+        {
             getSetPointJoystick();
+        }
+        
+        else {
+            readDesiredVel();  
         }
 
         updateVelocity(loopDelayMicros * 1e-6); // update current wheel velocities
@@ -96,10 +114,27 @@ void loop()
 }
 
 void getSetPointJoystick(){
-    Serial.println(joyData.joyX);
+    /*
+    theta2 = atan2(joyData.joyX,joyData.joyY);
+    rr = sqrt(joyData.joyX * joyData.joyX + joyData.joyY * joyData.joyY);
+    if (abs(joyData.joyX) > abs(joyData.joyY)){
+        max_r = abs(rr/joyData.joyX);
+    }
+    else{
+        max_r = abs(rr / joyData.joyY);
+    }
+    magnitude = rr / max_r;
+    desiredVelBL = magnitude * (sin(theta2)+cos(theta2)/ turn_damping);
+    desiredVelFL = desiredVelBL;
+    desiredVelBR = magnitude * (sin(theta2) - cos(theta2) / turn_damping);
+    desiredVelFR = desiredVelBR;
+    */
+    //Serial.println(joyData.joyX);
     //y = map(x, 1, 50, 50, 1);
-    desiredVelBL = map(joyData.joyX, 1,1024,-3,3);
-    desiredVelBR = map(joyData.joyY, 1,1024,-3,3);
+    desiredVelBL = 3*float(joyData.joyY-512.0)/512.0;
+    desiredVelBR = 3*float(joyData.joyX-512.0)/512.0;
+    Serial.println(desiredVelBL);
+
 }
 
 void readIMU()
